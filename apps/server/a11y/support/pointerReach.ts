@@ -7,6 +7,10 @@
  *      that its container clips, is pressed only where it shows; neither a size measurement (the box stays 24 px)
  *      nor a script's `element.click()` notices that, and Playwright's own click tries the centre only. This check
  *      covers controls that sit in a strip a library sizes as a share of the player (CoursePresentation's footer).
+ *      Such a strip is laid out again by script after the player changes size, a moment after the library marks
+ *      the new state: H5P sets its full-screen class while the footer still stands where the old size put it, and
+ *      a measurement in that moment finds controls cut off that a person never meets. `waitForSteadyBoxes` waits
+ *      for the layout a person sees.
  * Spec: UD-008, UD-005
  * Invariants:
  *   - A control counts when part of its box is inside the document's viewport, it is not disabled (`:disabled`,
@@ -15,6 +19,8 @@
  *   - It can be pressed fully when the points that hit it span 24 rows and 24 columns (all of its rows and columns
  *     inside the viewport, if it is smaller): a round 24 px button passes, one that the bar's links or a clipping
  *     container cut to 11 rows does not.
+ *   - A layout counts as steady when the viewport and the box of every control have been the same in ten samples
+ *     in a row, 100 ms apart; one that still changes after 15 s is an error that says what was last seen.
  * Collaborators: apps/server/a11y/reflowAndMotion.a11y.test.ts, ./views.ts.
  * Tests: apps/server/a11y/reflowAndMotion.a11y.test.ts
  */
@@ -82,4 +88,34 @@ function judgeControls(selector: string): PointerReach {
  */
 export function pointerReach(frame: Frame, selector: string): Promise<PointerReach> {
   return frame.evaluate(judgeControls, selector);
+}
+
+/** Runs in the page: the viewport's size and the box of every control `selector` matches, as one line. */
+function viewportAndBoxes(selector: string): string {
+  const boxes = [...document.querySelectorAll(selector)].map((el) => {
+    const r = el.getBoundingClientRect();
+    return [r.left, r.top, r.width, r.height].map((n) => n.toFixed(1)).join(' ');
+  });
+  return `${innerWidth} × ${innerHeight}: ${boxes.join(', ')}`;
+}
+
+/** How many samples in a row must agree, and the time between two samples. */
+const [STEADY_SAMPLES, SAMPLE_MS, STEADY_TIMEOUT_MS] = [10, 100, 15_000];
+
+/**
+ * Waits until the document's viewport and the boxes of the controls have stayed the same for a second.
+ * @param frame - The document (an H5P player's frame, or a page's main frame).
+ * @param selector - CSS selector of the controls.
+ * @throws Error when the layout still changes after 15 s; the message holds the layout last seen.
+ */
+export async function waitForSteadyBoxes(frame: Frame, selector: string): Promise<void> {
+  const deadline = Date.now() + STEADY_TIMEOUT_MS;
+  let [last, same] = ['', 0];
+  while (same < STEADY_SAMPLES) {
+    if (Date.now() > deadline) throw new Error(`the layout of ${selector} still changed after 15 s: ${last}`);
+    await frame.waitForTimeout(SAMPLE_MS);
+    const now = await frame.evaluate(viewportAndBoxes, selector);
+    same = now === last ? same + 1 : 0;
+    last = now;
+  }
 }

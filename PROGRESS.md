@@ -3621,3 +3621,12 @@ Append one entry per session: date, session, what was done, gate output, and any
       MAPPE-004), and the answer-prefix test above, which passed on its own after its correction (3 of 3 in
       its file)
   ```
+  - GitHub's run on the pull request failed in one accessibility test, the one that failed once in step 34's
+    gate: the footer controls of H5P.CoursePresentation at 640 × 320 in full screen. The cause is found and can
+    be shown at will. H5P sets its full-screen class before the frame has the screen's size and before the footer
+    is laid out for it; a measurement taken in that moment finds the controls cut off, in the words of GitHub's
+    log («Vis sidemeny» pressed in 13 rows only), and a second later nothing is cut off. A person never meets
+    that state; the test did, when the machine was slow at the wrong moment. The test now waits until the frame
+    has the screen's size and the footer's boxes have stood still for a second
+    (`a11y/support/pointerReach.ts` `waitForSteadyBoxes`). After the change the six footer cases passed four
+    times, twice of them with every processor kept busy twice over, and the whole file passed (124 tests).
