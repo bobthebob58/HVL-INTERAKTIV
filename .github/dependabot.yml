@@ -12,9 +12,16 @@ updates:
     schedule:
       interval: monthly
     versioning-strategy: increase
-    open-pull-requests-limit: 2
+    open-pull-requests-limit: 3
     groups:
+      # WHY: Playwright's version names the Chromium the image copies (deploy/Dockerfile) and the browser the
+      # cookie tests were proven on (D-065), so it is updated as a step of its own. A group of its own gives it its
+      # own monthly pull request: it stays open as the reminder and no longer holds the other updates back (D-148).
+      playwright:
+        patterns: ['playwright-core']
+        update-types: [minor, patch]
       minor-and-patch:
+        exclude-patterns: ['playwright-core']
         update-types: [minor, patch]
     ignore:
       - dependency-name: '*'
@@ -43,3 +50,9 @@ updates:
     ignore:
       - dependency-name: '*'
         update-types: ['version-update:semver-major']
+      # WHY: Ubuntu's version is a choice between long-term releases, not a number to raise. 24.04 has security
+      # support until 2029; a release between two long-term ones loses its support after nine months, and its
+      # packages then leave the archive, so the image cannot be built on it (24.10, D-148). A new digest of 24.04
+      # is a new copy of the same version and is still proposed.
+      - dependency-name: 'ubuntu'
+        update-types: ['version-update:semver-minor']
