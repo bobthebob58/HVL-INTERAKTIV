@@ -5,7 +5,7 @@
  *
  * Why: UD-030, UD-008 and DATA-011 say "every route" and "every type". One list keeps the suites from drifting
  *      apart: a route added to the web app is added here once and every check covers it.
- * Spec: UD-030, UD-008, DATA-011, PROD-002, LTI-012, INS-008
+ * Spec: UD-030, UD-008, DATA-011, PROD-002, LTI-012, INS-008, PROD-014
  * Invariants:
  *   - `CONTENT_TYPES` is exactly the ten authorable types (PROD-002); never `H5P.DragQuestion`.
  *   - Routes are paths of the built web app (apps/web/src/app); `activity` and `canvas` are opened through their
@@ -66,6 +66,7 @@ export const STUDIO_VIEWS = [
   'learningDesign',
   'sharing',
   'copy',
+  'repetition',
 ] as const;
 
 /** One of the studio's seeded views. */
@@ -79,6 +80,7 @@ export const STUDIO_VIEW_NAMES: Readonly<Record<StudioView, string>> = {
   learningDesign: '/aktivitet/<id> (Læringsdesign)',
   sharing: '/aktivitet/<id> (Deling)',
   copy: '/aktivitet/<copy> (attribution)',
+  repetition: '/aktivitet/<id> (Sjekk og publiser, published Etterarbeid)',
 };
 
 /** The S6 tabs that show learning data (D-104, D-106): «Poeng til Canvas» and «Innsikt». */

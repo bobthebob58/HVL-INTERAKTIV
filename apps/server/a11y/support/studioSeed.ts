@@ -35,6 +35,8 @@ export interface StudioSeed {
   readonly colleagueActivityId: string;
   /** The author's copy of the colleague's activity. */
   readonly copyId: string;
+  /** The author's published activity whose phase is Etterarbeid (the repetition suggestion, PROD-014). */
+  readonly etterarbeidId: string;
   /** A findable colleague who is not on the designed activity yet, and a query that finds only them there. */
   readonly searchable: { readonly name: string; readonly query: string };
 }
@@ -148,13 +150,17 @@ export async function seedStudio(app: RealWebApp): Promise<StudioSeed> {
     minutes: 10,
     rationale: 'Ei kort prøve før samlinga hentar fram det studentane kan frå før.',
   });
-  await design(app, example(app, 'H5P.QuestionSet'), {
+  const etterarbeidId = example(app, 'H5P.QuestionSet');
+  await design(app, etterarbeidId, {
     phase: 'etterarbeid',
     courseCode: COURSE,
     outcomes: [KNOW],
     minutes: 15,
   });
   await design(app, example(app, 'H5P.DragText'), { courseCode: COURSE });
+  // WHY: the examples are marked published in the database; the publish flow also records when, which the
+  // repetition suggestion counts from (PROD-014).
+  await db.h5PContent.update({ where: { id: etterarbeidId }, data: { publishedAt: new Date() } });
   await db.h5PContent.update({ where: { id: designedId }, data: { bankListedAt: new Date() } });
   await db.contentCollaborator.create({
     data: { contentId: designedId, userId: coAuthor, role: 'coauthor' },
@@ -171,6 +177,7 @@ export async function seedStudio(app: RealWebApp): Promise<StudioSeed> {
     designedId,
     colleagueActivityId,
     copyId,
+    etterarbeidId,
     searchable: { name: searchableName, query: tag },
   };
 }

@@ -2,14 +2,15 @@
  * axe on the læringsdesign studio (S5) in the states the seed gives it, in the light theme and with forced colours
  * emulated: a pattern page signed out (its sign-in prompt) and signed in (its create form), the planner of a course
  * with gaps and of one with more activities than a planner shows, the content bank with entries, `/mappe` with every activity chosen and its word count, an activity's
- * **Læringsdesign** tab (outcomes, purpose, time) and **Deling** tab (a co-author, the bank listing), and a copy's page
- * with its attribution sign. The plain studio routes (the guide with the real guide text, the planner's chooser, the
+ * **Læringsdesign** tab (outcomes, purpose, time) and **Deling** tab (a co-author, the bank listing), a copy's page
+ * with its attribution sign, and the **Sjekk og publiser** tab of a published Etterarbeid activity with its
+ * repetition suggestion. The plain studio routes (the guide with the real guide text, the planner's chooser, the
  * bank and `/mappe`, signed out and in) are scanned by axeWebRoutes.a11y.test.ts through ./support/catalogue.ts. The
  * guide page is also held to axe's best-practice rules `landmark-unique` and `region`: its «Kva dette betyr for
  * aktiviteten din» boxes are regions that need distinct names, and no text may stand outside a landmark. No serious
  * or critical violation besides the recorded H5P upstream problems of the copy's player.
  *
- * Spec: UD-030, PED-002, PED-010, PED-030, PED-031, PROD-001, PROD-007, MAPPE-001
+ * Spec: UD-030, PED-002, PED-010, PED-030, PED-031, PROD-001, PROD-007, MAPPE-001, PROD-014
  */
 import { AxeBuilder } from '@axe-core/playwright';
 import { PLANNER_MAX_ACTIVITIES, type Guide } from '@hvl-interaktiv/api-contract';
@@ -106,6 +107,10 @@ describeA11y('[UD-030] axe on the læringsdesign studio', (env) => {
 
     it('[UD-030][PROD-007] signed in: a copy’s page with its attribution sign has only recorded upstream problems', async () => {
       expectOnlyRecorded(await scan('copy'), recordedFor('player', 'H5P.MultiChoice', { forced }));
+    });
+
+    it('[UD-030][PROD-014] signed in: Sjekk og publiser with the repetition suggestion has no serious or critical violation', async () => {
+      expectOnlyRecorded(await scan('repetition'), []);
     });
   });
 
