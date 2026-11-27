@@ -236,6 +236,9 @@ changes (adding, removing or reordering questions) reset saved progress. It offe
 After publishing an *Etterarbeid* activity, the author is shown suggested repetition dates (for
 example +7 and +21 days) and a one-click copy to place in a later Canvas module.
 - **Verify:** Component test.
+- **Amended (D-152, 2026-11-27):** built as the calendar days 7 and 21 days after the day of publishing, shown
+  on **Sjekk og publiser** for as long as the activity is published, with the studio's copy (`PROD-007`) in one
+  press. The suggestion advises: it sets no reminder and stores nothing.
 
 ---
 

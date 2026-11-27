@@ -57,7 +57,7 @@ to the specs through TRACEABILITY.md.
 | S6 (2026-11-06) | The xAPI → Canvas grade bridge, teacher insight with *k*-suppression, the privacy operations (yearly purge, data-subject requests, database roles, production checks, request log, DPIA input), operations (Docker image, compose smoke test, a separate files origin, ClamAV, backups, a load harness, the conformance report), the HVL language overlay, problem reporting for the pilot, upstream drafts, this index | `LTI-008`, `LTI-010`…`LTI-013`, `DATA-012`, `INS-001`…`INS-003`, `INS-005`…`INS-010`, `PROD-010`, `DATA-003`…`DATA-005`, `DATA-007`, `DATA-008`, `DATA-010`, `NFR-001`, `NFR-002`, `NFR-006`, `NFR-007`, `SEC-006`, `UD-040`, `H5P-010` | D-101…D-115; `src/xapi`, `src/grades`, `src/insight`, `src/privacy`, `src/h5p/languageOverlay` with `content/h5p-tekstar/`, `deploy/`, `docs/ops/`, `docs/privacy/`, `docs/testing/`, `docs/upstream/` |
 
 S6's gate passed on 2026-11-06 (PROGRESS.md, session log «2026-11-06 · S6 gate»); GitHub CI has not run on S6 yet.
-Not built at all: `PROD-014` (COULD, a spaced-retrieval suggestion), `LTI-009` and `INS-004` (section 3). TRACEABILITY.md marks a
+Not built at all: `LTI-009` and `INS-004` (section 3); `PROD-014` was built on 2026-11-27 (D-152). TRACEABILITY.md marks a
 requirement *tested* once one test names it, so it does not show what is only partly built, such as `LTI-005`'s
 picker parts above.
 
