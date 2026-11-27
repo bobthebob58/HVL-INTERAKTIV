@@ -33,8 +33,9 @@ export const OWN_PAGE_POST = Object.freeze({ 'Sec-Fetch-Site': 'same-origin' });
 export const decodeEntities = (text) =>
   text.replace(/&(amp|lt|gt|quot|#39|#x27|apos);/g, (_, name) => ENTITIES[name]);
 
+// WHY: HTML attribute names are not case-sensitive either (`SRC=` is `src=`).
 const attribute = (tag, name) => {
-  const match = new RegExp(`\\s${name}="([^"]*)"`).exec(tag);
+  const match = new RegExp(`\\s${name}="([^"]*)"`, 'i').exec(tag);
   return match ? decodeEntities(match[1]) : undefined;
 };
 
@@ -87,7 +88,8 @@ export function pageAssets(html) {
   return found;
 }
 
-const stylesheetHref = (tag) => (attribute(tag, 'rel') === 'stylesheet' ? attribute(tag, 'href') : undefined);
+const stylesheetHref = (tag) =>
+  attribute(tag, 'rel')?.toLowerCase() === 'stylesheet' ? attribute(tag, 'href') : undefined;
 
 /**
  * H5P's category IRI of a library, as the bridge and the server compare it.

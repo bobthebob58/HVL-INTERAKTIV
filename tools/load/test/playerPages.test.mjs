@@ -96,6 +96,16 @@ describe('the virtual user reads the launch pages', () => {
     expect(assets).toEqual(['/a.js', '/b.css']);
   });
 
+  it('[NFR-001] reads a tag’s attributes whatever their letter case', () => {
+    // Act
+    const assets = pageAssets(
+      '<SCRIPT SRC="/a.js"></SCRIPT><LINK REL="StyleSheet" HREF="/b.css"><LINK REL="ICON" HREF="/c.ico">',
+    );
+
+    // Assert
+    expect(assets).toEqual(['/a.js', '/b.css']);
+  });
+
   it('[NFR-001] reads the activity, its version, its questions and the root state URL from the player page', () => {
     // Act
     const context = playerContext(playerPage());
