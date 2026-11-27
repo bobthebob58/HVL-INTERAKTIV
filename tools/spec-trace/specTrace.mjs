@@ -152,7 +152,7 @@ function render(requirements, { code, tests }) {
     for (const r of requirements.filter((x) => x.file === file)) {
       const list = (m) => (m.get(r.id) ?? []).map((f) => `\`${f}\``).join('<br>') || '—';
       out.push(
-        `| ${r.id} | ${r.priority} | ${r.session} | ${r.title.replace(/\|/g, '\\|')} | ${list(code)} | ${list(tests)} | ${status(r)} |`,
+        `| ${r.id} | ${r.priority} | ${r.session} | ${r.title.replace(/[\\|]/g, '\\$&')} | ${list(code)} | ${list(tests)} | ${status(r)} |`,
       );
     }
   }

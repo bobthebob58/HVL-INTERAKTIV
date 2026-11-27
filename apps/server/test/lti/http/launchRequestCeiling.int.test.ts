@@ -10,11 +10,11 @@ import express from 'express';
 import { HttpMethod } from 'ltijs';
 import request from 'supertest';
 import { afterAll, beforeAll, expect, it } from 'vitest';
+import { addressFingerprint } from '../../../src/http/addressRequestCeiling.js';
 import { connectRedis, type Redis } from '../../../src/infra/redisClient.js';
 import { ExpressRouterHttpHandler } from '../../../src/lti/http/ExpressRouterHttpHandler.js';
 import {
   LAUNCH_REQUESTS_PER_MINUTE,
-  addressFingerprint,
   launchRequestCeiling,
 } from '../../../src/lti/http/launchRequestCeiling.js';
 import { IdentityHasher } from '../../../src/security/keys/IdentityHasher.js';

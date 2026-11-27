@@ -39,6 +39,20 @@ describe('[DOC-004] traceability matrix', () => {
     expect(matrix).toContain('| TST-002 | MUST | S1 | Second one | — | — | planned |');
   });
 
+  it('[DOC-004] keeps a requirement title in its cell when it holds `|` or a backslash', () => {
+    // Arrange: a title that ends a table cell early unless both characters are escaped
+    const root = makeRepo({
+      'docs/specs/00-test.md': '#### TST-001 · MUST · S1 · Paths like C:\\x\\|y and a | b\n',
+    });
+    // Act
+    const { code } = trace(root);
+    // Assert
+    expect(code).toBe(0);
+    expect(readFileSync(join(root, 'docs/TRACEABILITY.md'), 'utf8')).toContain(
+      '| TST-001 | MUST | S1 | Paths like C:\\\\x\\\\\\|y and a \\| b | — | — | planned |',
+    );
+  });
+
   it('[DOC-004] is deterministic and --check passes right after regeneration', () => {
     const root = makeRepo({ 'tools/w/test/w.test.mjs': TESTED });
     trace(root);

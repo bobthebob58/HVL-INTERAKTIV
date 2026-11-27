@@ -16,7 +16,7 @@ what is done, what is verified, and what is blocked.
 | S4+ | Whole-code-base simplification pass (owner decision, 2026-10-24) | — | ✅ Done (2026-10-25): 59 changes, 569 lines shorter, every test kept, S4 gate green again; a second round is the owner's call |
 | S5 | Læringsdesign studio, patterns, planner, pedagogisk mappe export | 04; 00 S5 rows | ✅ Gate passed (2026-10-30); the ALU and pilot review (Q17), the bank consent text and the manual PDF check open; the Canvas side in S6 |
 | S6 | xAPI → AGS grade bridge, insight, privacy jobs, Docker, conformance report | 02 §4–§8; 05; 00 §3 (journeys J1–J5), §6; 01 `H5P-009`, `H5P-010`, `SEC-004`, `SEC-006`; 03 `UD-003`, §6 (`UD-040`); 04 `MAPPE-003`, `MAPPE-004` (D-101) | ✅ Done (gate passed 2026-11-06; started 2026-10-30; D-101…D-116) |
-| SR | Security repairs after the S6 gate: 33 steps, each with tests, a gate run and a decision entry | The spec a step names | ✅ Done (2026-11-20 to 2026-11-27; D-117…D-149; session log, steps 1–33); open: HVL IT's and the owner's questions Q32, Q33 and Q34, with the earlier ones |
+| SR | Security repairs after the S6 gate: 34 steps, each with tests, a gate run and a decision entry | The spec a step names | ✅ Done (2026-11-20 to 2026-11-27; D-117…D-150; session log, steps 1–34); open: HVL IT's and the owner's questions Q32, Q33 and Q34, with the earlier ones |
 
 Legend: ⬜ not started · 🟨 in progress · ✅ done (gate passed, output pasted below) · ⛔ blocked
 
@@ -992,7 +992,7 @@ under the step that does it):
 | Q31 | Name a system owner (*systemeigar*) and a maintainer (*forvaltar*) at HVL for HVL Interaktiv. Neither is named anywhere, and the IT assurance pack asks for them (D-116; `docs/assurance/README.md`, «Who is accountable»; ROS-19 in `docs/assurance/ros-analyse.md`): the system owner, and who owns the test install and its tester list, before stage 1; the maintainer, who rebuilds and redeploys the image with fixes and runs the key rotations, the yearly purge and the backups (`docs/ops/runbook.md` §2, §4–§7), before stage 2 at the latest. Until then the repository owner makes the product decisions; the bachelor students' project (D-101) does not replace either role | Owner, HVL IT / ALU | Stage 1 of the IT assurance pack (`docs/assurance/test-environment.md`) |
 | Q32 | May a Feide ID (`eduPersonPrincipalName`) hold letters outside a–z, digits and `.`, `-`, `_` before the `@`, for example æ, ø or å? The server keeps such a letter as written and folds only `A`–`Z` (D-142); if Feide never issues one, the Feide ID pattern can refuse it | HVL IT, Sikt | Nothing; a stricter Feide ID pattern |
 | Q33 | Where is the production image built, and is it signed there? No workflow publishes, signs or attests an image: `docker.yml` builds it only to test it. Decide the place (HVL's own pipeline or registry), whether the image is signed and carries a statement of the commit it was built from, and who checks both at deployment (threat model T-92, ROS-21; D-145) | HVL IT | Nothing in the code; the production deployment |
-| Q34 | A secret scan of the repository. The owner switched on GitHub's secret scanning and push protection on 2026-11-27, with private vulnerability reporting and Dependabot alerts (the repository's Advanced Security settings; no check holds them); CI runs no scanner of its own (D-145). Open: name the scan HVL IT uses once the code lives with HVL | HVL IT | Nothing |
+| Q34 | A secret scan of the repository. The owner switched on GitHub's secret scanning and push protection on 2026-11-27, with private vulnerability reporting, Dependabot alerts and code scanning (CodeQL, default setup; D-150) (the repository's Advanced Security settings; no check holds them); CI runs no scanner of its own (D-145). Open: name the scan HVL IT uses once the code lives with HVL | HVL IT | Nothing |
 
 ## Risk register
 
@@ -3472,4 +3472,77 @@ Append one entry per session: date, session, what was done, gate output, and any
   $ npx vitest run --project server                    27157 passed, 31 skipped; 1 failed in 4 files: a
       privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
       MAPPE-004). The pin file added after this run, `emulatedPixelRatio.browser.test.ts`, passes on its own (2)
+  ```
+
+- **2026-11-27 · Security repairs, step 34 (D-150)** — the first results of GitHub's code scanning, a ceiling on
+  the Feide login, and the Ubuntu base image of November.
+  - The scanner (CodeQL in its default setup, on since 2026-11-27) lists 36 findings on `main`, all with the
+    severity "High" that their queries carry: 12 in the running server, 3 in the build tools, 17 in tests and
+    their support files, and 4 in the copied Markdown library. Each was read against the code it names. None is
+    a weakness that can be used; one names a limit the risk list already had.
+  - The repair (AUTH-001, NFR-006): one network address may send 4 000 requests a minute to
+    `/auth/feide/login` and `/auth/feide/callback` together. Past that the answer is the portal's page with 429
+    and `Retry-After`, before a login is stored or a callback is looked at. The counting is the launch
+    ceiling's (D-141), now in one module for both (`src/http/addressRequestCeiling.ts`): a fixed minute in
+    Redis, the address only as its keyed fingerprint, and a request that goes ahead when Redis cannot be
+    reached. `feideLoginCeiling.int.test.ts` (5) failed before the routes ran the ceiling and passes after.
+  - What a ceiling per address costs is written down (D-150's residual, ROS-07, T-111): everyone behind one
+    address shares its count, so one sender on a campus network can use up that address's minute for the others
+    there; with `TRUST_PROXY` left at 0 behind a proxy, every visitor shares one count.
+  - Three lines in the tools (UD-040, DOC-004, NFR-001): the accessibility report and the traceability matrix
+    escape `\` as well as `|` in a table cell, and the load tool reads a tag and its attributes in any letter
+    case. Five new tests; each fails on the old line.
+  - No change, with the reason in D-150: eight routes without a limit of their own (small requests of a
+    signed-in author, or files behind a signed grant and the pages' own files); two readers of blanks that
+    follow how H5P.Blanks reads a blank and are no cleaners of markup (each place now says so); the 17 findings
+    in tests; the 4 in the copied library. The owner closes these on GitHub by dismissal, each with its reason;
+    the scanner stays in its default setup.
+  - The base image (SEC-007, amends D-148): the digest of `ubuntu:24.04` of 2026-11, taken by hand in the
+    Dockerfile, the SBOM and the architecture paper together; the Docker smoke test ran on the image built from
+    it. The SBOM lists 478 npm packages, as before.
+  - A second read of the change against the project's rules found a header sentence that said too much, two
+    members without TSDoc, and attribute names read in one letter case only. The three were corrected after the
+    long suites; the checks and the tests they touch ran again (below).
+  - One accessibility test failed once in the gate's run and not again: the footer controls of
+    H5P.CoursePresentation at 640 × 320 in full screen. Its message (points inside the frame's height that hit
+    nothing) says the footer was measured while the frame was taking its full-screen size; the test waits for
+    the full-screen class and for animations, not for the size. It passed five times on its own afterwards,
+    twice of them with every processor kept busy, and nothing in this step touches the player. Gate output:
+
+  ```
+  $ npm run build                                      exit 0
+  $ HVLI_DOCKER_SANDBOX=1 bash deploy/smoke/dockerSmoke.sh   passed in 330 s (image built from
+      ubuntu:24.04@sha256:562111b8…; the PDF printed as uid 10001 with the sandbox seen in /proc)
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run lint:css                                   exit 0
+  $ npm run doc:lint && npm run check:filesize         11 checks passed; file-size passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run privacy:dpia-check                         13 sections, the developer key and the residuals agree
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins && npm run check:licences       every version pinned; 489 production packages compatible
+  $ npm run check:lockfile                             949 packages from the registry with sha512; 4 install scripts reviewed
+  $ npm run check:workflows                            3 workflows: actions by commit, images by digest
+  $ npm run check:audit                                2 high/critical advisories, both covered by reviewed exceptions
+  $ npm run sbom -- --check                            current: 478 npm packages, 12 H5P components, 3 images
+  $ npm run content:check && npm run tokens:check      exit 0
+  $ node tools/spec-site/buildSpecSite.mjs --check     up to date
+  $ node tools/deploy-check/checkDeployFiles.mjs       exit 0
+  $ npm run docs:api                                   exit 0
+  $ npm run a11y:report -- --check                     exit 0
+  $ npx vitest run --project web                       644 passed (100 files)
+  $ npx vitest run --project api-contract              123 passed (15 files)
+  $ npx vitest run --project tools                     604 passed (81 files); 603 in the gate's own run, before
+      the test of attribute names
+  $ npx vitest run --project design-tokens             156 passed
+  $ npx vitest run --project hvl-h5p-theme             206 passed
+  $ LIVE_TARGET=mock npm run test:live                 36 passed
+  $ npm run test:a11y                                  562 passed, 1 failed (18 files): the footer test above,
+      which passed five times on its own afterwards
+  $ npm run test:e2e                                   36 passed, 1 skipped; 1 file failed: learnerDataRights
+      (needs the privileged database, like DATA-010's tests)
+  $ npx vitest run --project server                    27164 passed, 31 skipped; 1 failed in 4 files: a
+      privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
+      MAPPE-004). After the second read's corrections, the Feide and launch-ceiling tests ran again: 159 passed
+      (14 files)
   ```

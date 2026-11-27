@@ -12,7 +12,7 @@
  *     routes and the request authentication.
  *   - Building contacts nothing: Feide's discovery runs at the first login (../auth/feide/FeideClient.ts).
  * Collaborators: ./createApp.ts (mounts the routes), ../auth/feide/feideLoginRoutes.ts, ../auth/feide/FeideClient.ts,
- *   ../auth/feide/loginTransactions.ts, ../auth/identity/AccountResolver.ts.
+ *   ../auth/feide/loginTransactions.ts, ../auth/feide/loginRequestCeiling.ts, ../auth/identity/AccountResolver.ts.
  * Tests: apps/server/test/server/createApp.int.test.ts, apps/server/test/http/api/apiDocs.int.test.ts (both sign in
  *   with the mock Feide through the whole app)
  */
@@ -21,6 +21,7 @@ import type { Logger } from 'pino';
 import type { AuthAuditRecorder } from '../auth/audit/AuthAuditRecorder.js';
 import { FeideClient } from '../auth/feide/FeideClient.js';
 import { feideLoginRoutes } from '../auth/feide/feideLoginRoutes.js';
+import { feideLoginRequestCeiling } from '../auth/feide/loginRequestCeiling.js';
 import { LoginTransactions } from '../auth/feide/loginTransactions.js';
 import { AccountResolver } from '../auth/identity/AccountResolver.js';
 import type { SessionStore } from '../auth/session/SessionStore.js';
@@ -64,6 +65,7 @@ export function portalFeideLoginRoutes(inputs: FeideLoginWiringInputs): Router {
     transactions: new LoginTransactions(redis),
     sessions,
     audit,
+    ceiling: feideLoginRequestCeiling({ redis, hasher, logger }),
     publicBaseUrl: base,
     logger,
     login: {

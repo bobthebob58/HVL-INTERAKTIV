@@ -95,7 +95,7 @@ file does not list»).
 
 | Component | Version or pin | What it does here | Evidence |
 |---|---|---|---|
-| Base image | `ubuntu:24.04` by digest `sha256:fe81560990fa…` | Every image stage | `deploy/Dockerfile:24`; D-110 (P3 amendment) |
+| Base image | `ubuntu:24.04` by digest `sha256:562111b88caa…` | Every image stage | `deploy/Dockerfile:24`; D-110 (P3 amendment) |
 | Node.js | 24; the image copies it from `node:24-bookworm-slim` by digest `sha256:c86ecead9e55…` (v24.22.2) | Runtime; engines `>=24.0.0 <25` | `deploy/Dockerfile:22,25-29`; `package.json` `engines`; `docs/DECISIONS.md:3685-3689` |
 | tsx | 4.23.15 | Runs the server's TypeScript directly; there is no compile step | `deploy/Dockerfile:141`; `apps/server/package.json` |
 | Express | 5.3.0 | HTTP routing; `X-Powered-By` off | `apps/server/package.json`; `src/server/createApp.ts:159` |
@@ -385,6 +385,6 @@ HVL facts this document needs **(IT to fill in)**:
 Known technical gaps from the repository, for the [threat model](threat-model.md) and the
 [ROS-analyse](ros-analyse.md): CVE-2025-7062 unpatched upstream (D-003); editor files on the app origin (D-110);
 `/healthz` without S3 or clamd; no server-side egress test; unpinned Ubuntu packages and Chromium hash;
-no image signing (Q33); the only secret scan is GitHub's own, switched on in the owner's settings on 2026-11-27 (Q34); the bundle hash list not committed; the build-secret scan is a heuristic; the LTI tool key pair has no rotation procedure; the
+no image signing (Q33); the only secret scan is GitHub's own, switched on in the owner's settings on 2026-11-27 (Q34), and so is the only static code scan, GitHub's code scanning in its default setup (D-150); the bundle hash list not committed; the build-secret scan is a heuristic; the LTI tool key pair has no rotation procedure; the
 container hardening is in the local compose file only; the SBOM leaves out Ubuntu packages, Chromium and 110 H5P
 libraries.

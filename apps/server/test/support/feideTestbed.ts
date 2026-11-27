@@ -14,6 +14,7 @@ import { AuthAuditRecorder } from '../../src/auth/audit/AuthAuditRecorder.js';
 import { FeideClient } from '../../src/auth/feide/FeideClient.js';
 import { feideLoginRoutes } from '../../src/auth/feide/feideLoginRoutes.js';
 import type { FeideRolePolicy } from '../../src/auth/feide/FeideRoleMapper.js';
+import { feideLoginRequestCeiling } from '../../src/auth/feide/loginRequestCeiling.js';
 import { LoginTransactions } from '../../src/auth/feide/loginTransactions.js';
 import { AccountResolver } from '../../src/auth/identity/AccountResolver.js';
 import { portalSessionMiddleware } from '../../src/auth/session/portalSessionMiddleware.js';
@@ -41,12 +42,24 @@ export interface FeideTestbed {
   close(): Promise<void>;
 }
 
+/** The request ceiling of a test bed: a lower number, or another Redis client for its counter. */
+export interface TestbedCeiling {
+  /** Requests one address may send in a minute (default: the product's number). */
+  readonly limit?: number;
+  /** The Redis client the ceiling counts in (default: the test Redis). */
+  readonly redis?: Redis;
+}
+
 /**
- * Starts the mock Feide and the login routes.
+ * Starts the mock Feide and the login routes, behind one proxy as in production (`X-Forwarded-For` is the address).
  * @param policy - Overrides of the role policy (defaults: hvl.no, admin `author@hvl.no`, the PPU101 course).
+ * @param ceiling - Overrides of the request ceiling (defaults: the product's number, the test Redis).
  * @returns The test bed.
  */
-export async function openFeideTestbed(policy: Partial<FeideRolePolicy> = {}): Promise<FeideTestbed> {
+export async function openFeideTestbed(
+  policy: Partial<FeideRolePolicy> = {},
+  ceiling: TestbedCeiling = {},
+): Promise<FeideTestbed> {
   const env = serviceEnv();
   const feide = await startMockFeide({ host: '127.0.0.1' });
   const db = createPrismaClient(env.DATABASE_URL);
@@ -67,6 +80,12 @@ export async function openFeideTestbed(policy: Partial<FeideRolePolicy> = {}): P
     transactions: new LoginTransactions(redis),
     sessions,
     audit,
+    ceiling: feideLoginRequestCeiling({
+      redis: ceiling.redis ?? redis,
+      hasher,
+      logger,
+      limit: ceiling.limit,
+    }),
     publicBaseUrl: TOOL_URL,
     logger,
     login: {
@@ -82,7 +101,7 @@ export async function openFeideTestbed(policy: Partial<FeideRolePolicy> = {}): P
       audit,
     },
   });
-  const app = express().use(portalSessionMiddleware(sessions)).use(routes);
+  const app = express().set('trust proxy', 1).use(portalSessionMiddleware(sessions)).use(routes);
   return {
     app,
     feide,
