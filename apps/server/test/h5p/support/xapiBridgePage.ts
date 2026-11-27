@@ -13,7 +13,7 @@
 import { XAPI_BRIDGE_CONFIG_ID } from '../../../src/h5p/render/xapiBridgeConfig.js';
 import { integrationFromPage } from '../../support/playerIntegration.js';
 
-const BRIDGE_SCRIPT = /\/h5p\/theme\/xapi(Statements|Batching|Bridge)\.js\?version=/;
+const BRIDGE_SCRIPT = /\/h5p\/theme\/xapi(SingleChoiceSet|Statements|Batching|Bridge)\.js\?version=/;
 const CONFIG_BLOCK = new RegExp(
   `<script type="application/json" id="${XAPI_BRIDGE_CONFIG_ID}">(.*?)</script>`,
   's',
@@ -23,7 +23,7 @@ const CONFIG_BLOCK = new RegExp(
 export interface BridgeOnPage {
   /** The parsed configuration block, or null when the page has none. */
   readonly config: Record<string, unknown> | null;
-  /** The bridge's script tags on the page, in order (`xapiStatements`, `xapiBatching`, `xapiBridge`). */
+  /** The bridge's script tags on the page, in order (`xapiSingleChoiceSet`, `xapiStatements`, `xapiBatching`, `xapiBridge`). */
   readonly scripts: string[];
   /** The bridge's URLs in `H5PIntegration.core.scripts`. */
   readonly coreScripts: string[];

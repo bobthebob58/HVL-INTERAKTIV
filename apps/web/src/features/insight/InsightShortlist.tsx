@@ -15,10 +15,12 @@
  *   - A11Y: a section named by its `h3`; the list is an ordered list; «Ta ut av lista» names its question; after a
  *     removal focus moves to the section's heading, never to `body` (WCAG 2.4.3). The dialog returns focus on close.
  *   - Print and project are offered only when the list has questions.
- *   - A question's own text carries the activity's language, in the list and in the projection (UD-010).
- * Collaborators: ./shortlistContext.tsx, ./printShortlist.ts, ./insightPrint.css, ../../components/Dialog.tsx,
- *   ./InsightPanel.tsx.
- * Tests: apps/web/test/features/insight/InsightShortlist.test.tsx
+ *   - A question's own text carries the activity's language, in the list and in the projection (UD-010); so do
+ *     the quoted part of each line and the activity's title in the list's title (./quotedText.tsx).
+ * Collaborators: ./shortlistContext.tsx, ./quotedText.tsx, ./printShortlist.ts, ./insightPrint.css,
+ *   ../../components/Dialog.tsx, ./InsightPanel.tsx.
+ * Tests: apps/web/test/features/insight/InsightShortlist.test.tsx,
+ *   apps/web/test/features/insight/InsightQuotedLanguage.test.tsx
  */
 'use client';
 
@@ -31,6 +33,7 @@ import './insightPrint.css';
 import { printShortlist } from './printShortlist';
 import { shortlistCount, useShortlist } from './shortlistContext';
 import type { ShortlistEntry } from './shortlistEntries';
+import { Quoted, quotedSentence } from './quotedText';
 
 /** The questions as an ordered list, in normal or large type. */
 function ShortlistItems({
@@ -53,8 +56,8 @@ function ShortlistItems({
           </p>
           <p className="m-0">{entry.view}</p>
           {entry.lines.map((line) => (
-            <p key={line} className="m-0">
-              {line}
+            <p key={line.text} className="m-0">
+              <Quoted value={line} />
             </p>
           ))}
           {onRemove ? (
@@ -83,7 +86,8 @@ export function InsightShortlist({ title }: { readonly title: string }) {
   const heading = useRef<HTMLHeadingElement>(null);
   const shortlist = useShortlist();
   const [projecting, setProjecting] = useState(false);
-  const listTitle = t('insight.shortlist.title', locale, { title });
+  const titleSentence = quotedSentence('insight.shortlist.title', locale, { title }, 'title');
+  const listTitle = <Quoted value={titleSentence} />;
   const { entries } = shortlist;
 
   const remove = (entry: ShortlistEntry) => {

@@ -25,8 +25,8 @@
     "pdf:check": "tsx --env-file-if-exists=.env src/learningDesign/mappe/pdf/pdfCheckCli.ts"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "3.1175.0",
-    "@aws-sdk/lib-storage": "3.1175.0",
+    "@aws-sdk/client-s3": "3.1176.0",
+    "@aws-sdk/lib-storage": "3.1176.0",
     "@fastify/busboy": "3.2.6",
     "@hvl-interaktiv/api-contract": "0.1.0",
     "@hvl-interaktiv/design-tokens": "0.1.0",
@@ -60,7 +60,7 @@
     "zod": "4.6.7"
   },
   "devDependencies": {
-    "@axe-core/playwright": "4.13.0",
+    "@axe-core/playwright": "4.14.0",
     "@types/cache-manager": "4.0.6",
     "@types/clamscan": "2.4.1",
     "@types/express": "5.0.6",

@@ -9,9 +9,12 @@
  * Spec: INS-002, INS-003, INS-005
  * Invariants:
  *   - A question is a node of a library that sends `answered` (`ANSWERABLE_LIBRARIES`; an H5P.Summary only with at
- *     least one statement set) with a non-empty string `subContentId`; the first node with an ID wins, so a duplicated ID is one question. When the main library is
- *     itself answerable (MultiChoice, Blanks, DragText), the activity is the question with item null, matching the
- *     stored root `answered` (no `subContentId`, D-115).
+ *     least one statement set) with a non-empty string `subContentId`; the first node with an ID wins, so a
+ *     duplicated ID is one question. When the main library is itself answerable (MultiChoice, Blanks, DragText),
+ *     the activity is the question with item null, matching the stored root `answered` (no `subContentId`, D-115).
+ *   - An H5P.SingleChoiceSet is the exception: its statements name its questions, never the set, so each of its
+ *     questions with an ID is a question and the set itself is none (./questionShapes.ts `singleChoiceQuestions`,
+ *     D-151). A row for the set would never get a learner.
  *   - Document order is kept: it is the order of the activity, and the tie-break when items sort equal.
  *   - The parameters are author data: the walk never throws, follows at most 100 levels, and never changes them.
  * Collaborators: ./questionShapes.ts, ../../learningDesign/safeEditing/subContentNodes.ts, ../InsightService.ts,
@@ -26,7 +29,7 @@ import {
   machineNameOf,
   objectOf,
 } from '../../learningDesign/safeEditing/subContentNodes.js';
-import { questionShape, questionText, type QuestionShape } from './questionShapes.js';
+import { questionShape, questionText, singleChoiceQuestions, type QuestionShape } from './questionShapes.js';
 
 /** The libraries reachable inside the ten types that send `answered` (H5P's question types). */
 export const ANSWERABLE_LIBRARIES: ReadonlySet<string> = new Set([
@@ -84,7 +87,29 @@ export const catalogueQuestion = (
 export const isQuestion = (library: string, params: Record<string, unknown>): boolean =>
   ANSWERABLE_LIBRARIES.has(library) && (library !== 'H5P.Summary' || listOf(params.summaries).length > 0);
 
-function collect(value: unknown, depth: number, found: Map<string, CatalogueQuestion>): void {
+/**
+ * The questions one node is.
+ * @param library - Its machine name.
+ * @param id - Its `subContentId`; null for the activity itself; undefined for a node without one.
+ * @param params - Its parameters.
+ * @returns The node itself for a question type with an ID; each question of an H5P.SingleChoiceSet; else none.
+ */
+function questionsOf(
+  library: string,
+  id: string | null | undefined,
+  params: Record<string, unknown>,
+): CatalogueQuestion[] {
+  if (library === 'H5P.SingleChoiceSet')
+    return singleChoiceQuestions(params).map((question) => ({ ...question, library }));
+  return id !== undefined && isQuestion(library, params) ? [catalogueQuestion(id, library, params)] : [];
+}
+
+/** Adds the questions that are not known yet, so the first one with an ID wins. */
+function add(found: Map<string | null, CatalogueQuestion>, questions: readonly CatalogueQuestion[]): void {
+  for (const question of questions) if (!found.has(question.item)) found.set(question.item, question);
+}
+
+function collect(value: unknown, depth: number, found: Map<string | null, CatalogueQuestion>): void {
   if (depth > MAX_DEPTH) return;
   if (Array.isArray(value)) {
     for (const entry of value) collect(entry, depth + 1, found);
@@ -92,12 +117,9 @@ function collect(value: unknown, depth: number, found: Map<string, CatalogueQues
   }
   if (!isObject(value)) return;
   if (isSubContentNode(value)) {
-    const library = machineNameOf(libraryKey(value.library));
     const id = value.subContentId;
-    const params = objectOf(value.params);
-    if (isQuestion(library, params) && typeof id === 'string' && id !== '' && !found.has(id)) {
-      found.set(id, catalogueQuestion(id, library, params));
-    }
+    const own = typeof id === 'string' && id !== '' ? id : undefined;
+    add(found, questionsOf(machineNameOf(libraryKey(value.library)), own, objectOf(value.params)));
   }
   for (const child of Object.values(value)) collect(child, depth + 1, found);
 }
@@ -111,8 +133,8 @@ function collect(value: unknown, depth: number, found: Map<string, CatalogueQues
  */
 export function questionCatalogue(mainLibrary: string, params: unknown): CatalogueQuestion[] {
   const root = objectOf(params);
-  const found = new Map<string, CatalogueQuestion>();
+  const found = new Map<string | null, CatalogueQuestion>();
+  add(found, questionsOf(mainLibrary, null, root));
   collect(root, 0, found);
-  const own = isQuestion(mainLibrary, root) ? [catalogueQuestion(null, mainLibrary, root)] : [];
-  return [...own, ...found.values()];
+  return [...found.values()];
 }

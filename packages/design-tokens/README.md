@@ -11,8 +11,8 @@ written anywhere else (Stylelint and ESLint enforce it).
 ## How to run
 
 ```bash
-npm run tokens:build          # rewrite dist/ after editing tokens.json
-npm run tokens:check          # CI: fails when dist/ differs from what tokens.json gives
+npm run tokens:build          # rewrite dist/ and the web app's site icon after editing tokens.json
+npm run tokens:check          # CI: fails when dist/ or the site icon differs from what tokens.json gives
 npx vitest run packages/design-tokens   # contrast, generator, Tailwind and lint-rule tests
 npm run lint:css              # Stylelint over the repository (stylelint.config.mjs)
 ```
@@ -33,6 +33,7 @@ Plain CSS can import `@hvl-interaktiv/design-tokens/tokens.css` alone. Inside H5
 |---|---|
 | `tokens.json` | Every token, the forced-colours overrides, the Daylight mapping and the declared pairings with their measured ratios |
 | `scripts/buildTokens.mjs` | The command line: build, or `--check` for drift |
+| `scripts/siteIcon.mjs`, `scripts/buildSiteIcon.mjs` | The web app's browser-tab icon, drawn from `primary-dark` and `surface`: writes `apps/web/src/app/icon.svg` and `favicon.ico`, or `--check` for drift (D-151) |
 | `scripts/tokenModel.mjs` | Reads and validates tokens.json; flattens it into `--hvl-*` custom properties |
 | `scripts/tokenCss.mjs` | Writes the text of the three generated files |
 | `scripts/contrast.mjs` | WCAG 2.x relative luminance and contrast ratio |

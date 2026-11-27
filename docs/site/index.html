@@ -281,7 +281,7 @@ asynchronous and synchronous teaching, it is out of scope.</p>
 <tr>
 <td>S6</td><td>xAPI → AGS grade bridge, insight, privacy jobs, Docker, conformance report</td><td>02 §4–§8; 05; 00 §3 (journeys J1–J5), §6; 01 <a class="req-ref" href="#r-H5P-009"><code>H5P-009</code></a>, <a class="req-ref" href="#r-H5P-010"><code>H5P-010</code></a>, <a class="req-ref" href="#r-SEC-004"><code>SEC-004</code></a>, <a class="req-ref" href="#r-SEC-006"><code>SEC-006</code></a>; 03 <a class="req-ref" href="#r-UD-003"><code>UD-003</code></a>, §6 (<a class="req-ref" href="#r-UD-040"><code>UD-040</code></a>); 04 <a class="req-ref" href="#r-MAPPE-003"><code>MAPPE-003</code></a>, <a class="req-ref" href="#r-MAPPE-004"><code>MAPPE-004</code></a> (D-101)</td><td>✅ Done (gate passed 2026-11-06; started 2026-10-30; D-101…D-116)</td></tr>
 <tr>
-<td>SR</td><td>Security repairs after the S6 gate: 34 steps, each with tests, a gate run and a decision entry</td><td>The spec a step names</td><td>✅ Done (2026-11-20 to 2026-11-27; D-117…D-150; session log, steps 1–34); open: HVL IT&#39;s and the owner&#39;s questions Q32, Q33 and Q34, with the earlier ones</td></tr>
+<td>SR</td><td>Security repairs after the S6 gate: 35 steps, each with tests, a gate run and a decision entry</td><td>The spec a step names</td><td>✅ Done (2026-11-20 to 2026-11-27; D-117…D-151; session log, steps 1–35); open: HVL IT&#39;s and the owner&#39;s questions Q32, Q33 and Q34, with the earlier ones</td></tr>
 </tbody></table></div>
 
 <p class="more"><a href="#progress">Open the build tracker</a> · <a href="#evaluator-guide--5-session-gates">See each session's pass/fail gate</a></p>
@@ -6462,7 +6462,7 @@ whose results HVL records (D-079); <a class="req-ref" href="#r-UD-031"><code>UD-
 <tr>
 <td><code>npm start</code> <em>(from S3)</em></td><td>The server starts: tsx runs <code>apps/server/src/server/main.ts</code> (no build step), which syncs <code>LTI_PLATFORMS</code>, re-encrypts platform keys, starts the cleanup jobs and listens on <code>PORT</code>. With <code>npm run mock:platform</code> running, <code>curl http://localhost:3000/healthz</code> answers <code>{&quot;status&quot;:&quot;ok&quot;}</code> and <code>/lti/keys</code> the tool&#39;s public keys. Needs the setup of <code>npm test</code> plus <code>npm run h5p:fetch-core</code>; a bad configuration exits with code 1 and names the variables, never their values (<a class="req-ref" href="#r-NFR-002"><code>NFR-002</code></a>)</td></tr>
 <tr>
-<td><code>npm run test:e2e</code> <em>(from S3)</em></td><td>Chromium flows against the whole server and the mock platform (D-065), in CI too: from S3, launch → play → answer → reopen in the cross-site Canvas iframe with third-party cookies blocked (checked by a canary), once with stock Chrome&#39;s partitioned frame storage and once with frame storage blocked (LTI Platform Storage), plus our error page when neither is available (<code>ltiIframe.e2e.test.ts</code>); the same launch as a browser that sends no fetch metadata makes it, taken with the <code>Origin</code> the browser sets on the last step and refused with a <code>null</code> one (<code>ltiLaunchOwnPage.e2e.test.ts</code>, D-141); the Deep Linking round trip, whose signed answer the mock Canvas accepts with a line item (<code>deepLinking.e2e.test.ts</code>); portal Feide login, sharing with the CSRF token, and logout through Feide (<code>portalSharing.e2e.test.ts</code>). These play a synthetic content type (limitation 3). From S4: the owner edits and saves in the H5P editor inside the cookie-less Canvas iframe with the Bearer ltik (<code>ltiEditor.e2e.test.ts</code>); on the built web app with the real content types, a Feide author is refused without a reason and then publishes despite a validator error with one, which stores one ValidationAcknowledgement and leaves no reason in the audit or the log (<code>publishWithReason.e2e.test.ts</code>, PROD-003, UD-022); and the teacher&#39;s Canvas page <code>/app/play</code> with Spel and Rediger, where frame storage is blocked (LTI Platform Storage), saves from the editor inside its chrome with the teacher&#39;s ltik as Bearer, with no Set-Cookie from the tool and no ltik in any frame address (<code>appPlayEditor.e2e.test.ts</code>, LTI-006, LTI-003). A failed step names itself, what failed before it (ltik redacted) and whether another process removed its rows (<code>flowRecord.e2e.test.ts</code> tests this); a closed test bed removes what it created and keeps an account an earlier run left (<code>testbedCleanup.e2e.test.ts</code>). From S5, on the built web app: J1&#39;s portal part from the filtered catalogue through a pattern, a filled placeholder and the learning design to publishing with reasons (<code>patternToPublish.e2e.test.ts</code>); a colleague&#39;s copy from the content bank (<code>bankDuplicate.e2e.test.ts</code>); both mappe downloads with nothing stored (<code>mappeDownloads.e2e.test.ts</code>); and a confirmed reset of a Canvas student&#39;s saved progress (<code>safeEditReset.e2e.test.ts</code>). From S6: a Canvas student&#39;s right answer through the xAPI bridge, the grade queue and the worker to the mock Canvas&#39;s gradebook, and a portal preview that stores nothing (<code>xapiToCanvas.e2e.test.ts</code>, <code>xapiPortal.e2e.test.ts</code>); and the teacher&#39;s <strong>Innsikt</strong> tab in <code>/app/play</code> showing six learners of one course, two of another course as «&lt; 5», a learner refused and another course&#39;s teacher kept to their own course (<code>insightInCanvas.e2e.test.ts</code>); the player&#39;s files from the files origin with no cookie, ltik or Referer, and a crafted SVG that never runs (<code>filesOrigin.e2e.test.ts</code>); a learner&#39;s export and erasure and the yearly purge through the operations CLIs, on what a real launch stored (<code>learnerDataRights.e2e.test.ts</code>); and the journeys of spec 00 §3, in part (D-101&#39;s amendment of 2026-11-05, S6 step 8): J1&#39;s Canvas half, a portal activity placed as an assignment and its score in the gradebook, without «new from a pattern», which passes to the students (limitation 20; the portal half is <code>patternToPublish</code> and <code>publishWithReason</code>) (<code>journeyPlaceInCanvas.e2e.test.ts</code>); J2&#39;s steps 1–3 on a phone 320 px wide, resumed the next evening (<code>journeyPhoneResume.e2e.test.ts</code>; step 4 is the manual protocol&#39;s); J3, where the tab writes an option&#39;s count, not step 2&#39;s share (<code>journeySeminarInsight.e2e.test.ts</code>); J4&#39;s Markdown export (<code>journeyPortfolio.e2e.test.ts</code>); and J5&#39;s step 1 only, ALU&#39;s edit of the content files (<code>journeyGovernance.e2e.test.ts</code>), its step 2 being HTTP tests (<code>packageImport.int.test.ts</code>, <code>ajax.int.test.ts</code>) and a runbook procedure (<a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/ops/runbook.md" rel="noopener" class="ext">ops/runbook.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> §2). From the security repairs: the Deep Linking picker as the page of Canvas&#39;s frame shows the header with Hjelp, and the player frame inside <code>/app/play</code> no second one (<code>pickerHelpLink.e2e.test.ts</code>, UD-013, D-146). Needs the setup of <code>npm test</code>; the web app flows also need <code>npm run build</code> and <code>npm run h5p:fetch-libraries</code> (skipped without them locally, failing in CI). Run it without other test processes on the same database</td></tr>
+<td><code>npm run test:e2e</code> <em>(from S3)</em></td><td>Chromium flows against the whole server and the mock platform (D-065), in CI too: from S3, launch → play → answer → reopen in the cross-site Canvas iframe with third-party cookies blocked (checked by a canary), once with stock Chrome&#39;s partitioned frame storage and once with frame storage blocked (LTI Platform Storage), plus our error page when neither is available (<code>ltiIframe.e2e.test.ts</code>); the same launch as a browser that sends no fetch metadata makes it, taken with the <code>Origin</code> the browser sets on the last step and refused with a <code>null</code> one (<code>ltiLaunchOwnPage.e2e.test.ts</code>, D-141); the Deep Linking round trip, whose signed answer the mock Canvas accepts with a line item (<code>deepLinking.e2e.test.ts</code>); portal Feide login, sharing with the CSRF token, and logout through Feide (<code>portalSharing.e2e.test.ts</code>). These play a synthetic content type (limitation 3). From S4: the owner edits and saves in the H5P editor inside the cookie-less Canvas iframe with the Bearer ltik (<code>ltiEditor.e2e.test.ts</code>); on the built web app with the real content types, a Feide author is refused without a reason and then publishes despite a validator error with one, which stores one ValidationAcknowledgement and leaves no reason in the audit or the log (<code>publishWithReason.e2e.test.ts</code>, PROD-003, UD-022); and the teacher&#39;s Canvas page <code>/app/play</code> with Spel and Rediger, where frame storage is blocked (LTI Platform Storage), saves from the editor inside its chrome with the teacher&#39;s ltik as Bearer, with no Set-Cookie from the tool and no ltik in any frame address (<code>appPlayEditor.e2e.test.ts</code>, LTI-006, LTI-003). A failed step names itself, what failed before it (ltik redacted) and whether another process removed its rows (<code>flowRecord.e2e.test.ts</code> tests this); a closed test bed removes what it created and keeps an account an earlier run left (<code>testbedCleanup.e2e.test.ts</code>). From S5, on the built web app: J1&#39;s portal part from the filtered catalogue through a pattern, a filled placeholder and the learning design to publishing with reasons (<code>patternToPublish.e2e.test.ts</code>); a colleague&#39;s copy from the content bank (<code>bankDuplicate.e2e.test.ts</code>); both mappe downloads with nothing stored (<code>mappeDownloads.e2e.test.ts</code>); and a confirmed reset of a Canvas student&#39;s saved progress (<code>safeEditReset.e2e.test.ts</code>). From S6: a Canvas student&#39;s right answer through the xAPI bridge, the grade queue and the worker to the mock Canvas&#39;s gradebook, and a portal preview that stores nothing (<code>xapiToCanvas.e2e.test.ts</code>, <code>xapiPortal.e2e.test.ts</code>); and the teacher&#39;s <strong>Innsikt</strong> tab in <code>/app/play</code> showing six learners of one course, two of another course as «&lt; 5», a learner refused and another course&#39;s teacher kept to their own course (<code>insightInCanvas.e2e.test.ts</code>); the player&#39;s files from the files origin with no cookie, ltik or Referer, and a crafted SVG that never runs (<code>filesOrigin.e2e.test.ts</code>); a learner&#39;s export and erasure and the yearly purge through the operations CLIs, on what a real launch stored (<code>learnerDataRights.e2e.test.ts</code>); and the journeys of spec 00 §3, in part (D-101&#39;s amendment of 2026-11-05, S6 step 8): J1&#39;s Canvas half, a portal activity placed as an assignment and its score in the gradebook, without «new from a pattern», which passes to the students (limitation 20; the portal half is <code>patternToPublish</code> and <code>publishWithReason</code>) (<code>journeyPlaceInCanvas.e2e.test.ts</code>); J2&#39;s steps 1–3 on a phone 320 px wide, resumed the next evening (<code>journeyPhoneResume.e2e.test.ts</code>; step 4 is the manual protocol&#39;s); J3, where the tab writes an option&#39;s count, not step 2&#39;s share (<code>journeySeminarInsight.e2e.test.ts</code>); J4&#39;s Markdown export (<code>journeyPortfolio.e2e.test.ts</code>); and J5&#39;s step 1 only, ALU&#39;s edit of the content files (<code>journeyGovernance.e2e.test.ts</code>), its step 2 being HTTP tests (<code>packageImport.int.test.ts</code>, <code>ajax.int.test.ts</code>) and a runbook procedure (<a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/ops/runbook.md" rel="noopener" class="ext">ops/runbook.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> §2). From the security repairs: the Deep Linking picker as the page of Canvas&#39;s frame shows the header with Hjelp, and the player frame inside <code>/app/play</code> no second one (<code>pickerHelpLink.e2e.test.ts</code>, UD-013, D-146). From S6 step 35 (D-151): J1&#39;s steps 2 to 5 with the video pattern in the portal, where the editor opens with the Interactive Video skeleton, a pasted Panopto link is saved and the check then reports V-VID-CAPTIONS, with every request off the machine refused (<code>journeyVideoPattern.e2e.test.ts</code>); and five Canvas learners who answer a Single Choice Set in the real player, after which the teacher&#39;s view has a row and a distribution for each question of the set (<code>singleChoiceSetInsight.e2e.test.ts</code>, INS-002, INS-003). Needs the setup of <code>npm test</code>; the web app flows also need <code>npm run build</code> and <code>npm run h5p:fetch-libraries</code> (skipped without them locally, failing in CI). Run it without other test processes on the same database</td></tr>
 <tr>
 <td><code>npm run test:a11y</code> <em>(from S4)</em></td><td>axe-core (WCAG 2.2 AA tags) on every web route, the server pages and the player and editor of all ten real types, in the light theme and with forced colours, plus reflow at 320 px, reduced motion, text spacing and 200 % zoom, keyboard walks (focus visible and not covered), target size, <code>lang</code> and first-party requests (<a class="req-ref" href="#r-UD-030"><code>UD-030</code></a>, D-079). H5P&#39;s own findings are repaired at run time or listed in <code>apps/server/a11y/support/upstreamRegister.ts</code> (D-080). From S5 every check also walks the studio&#39;s pages, signed in with seeded data (a pattern page, the planner with gaps, the bank, <code>/mappe</code> with a word count, the <strong>Læringsdesign</strong> and <strong>Deling</strong> tabs, a copy&#39;s page), plus keyboard scripts of the studio&#39;s journeys and the editor&#39;s save choice dialog with the page around it inert (<code>axeStudioViews</code>, <code>keyboardStudioJourneys</code>, <code>axeSaveChoice</code>). From S6 also the <strong>Innsikt</strong> tab (with «&lt; 5» cells, the projection dialog and print) and the <strong>Poeng til Canvas</strong> tab (scores in every state, a keyboard retry), in the portal and in <code>/app/play</code> (<code>axeInsight</code>, <code>axeGradeSync</code>, and every view walk through <code>support/dataTabViews.ts</code>); the Deep Linking picker&#39;s no-score note on a graded placement (<code>axeServerPages</code>, <code>support/noScoreActivity.ts</code>); and a MultiChoice and a QuestionSet made in Nynorsk with HVL&#39;s language overlay, in the player and the editor (<code>support/nynorskActivities.ts</code>). Needs <code>npm run build</code>, the real packages and Chromium; about 15 minutes; run it on its own</td></tr>
 <tr>
@@ -6656,7 +6656,7 @@ the gate output lists them so (limitation 23).</p>
 <tr>
 <td><a class="req-ref" href="#r-NFR-006"><code>NFR-006</code></a> Request log</td><td><code>-t &quot;\[NFR-006\]&quot;</code>: one line per request with the route pattern, status and duration, an <code>X-Request-Id</code> that a client cannot fill with text of its choice, and no ltik, learner key or activity ID in any line through a whole launch, play and xAPI batch (<code>test/http/requestLog*.test.ts</code>); the LTI error pages log their route pattern and a fixed code, never the path or a client&#39;s text (<code>test/lti/http/ltiErrorLog.test.ts</code>)</td><td>The reverse proxy&#39;s access log leaves out the query string (deployment checklist)</td></tr>
 <tr>
-<td><a class="req-ref" href="#r-NFR-001"><code>NFR-001</code></a> Performance</td><td><code>npm run load:smoke</code> (20 learners for 30 s, here: page ready p95 1.1–1.5 s against 3 s, API p95 22–27 ms against 300 ms, no failed request) and <code>-t &quot;\[NFR-001\]&quot;</code> (the k6 profiles, batches and summary in <code>tools/load/test/</code>)</td><td>HVL runs <code>npm run load:full</code> (200 learners) on a node like production (<a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/ops/runbook.md" rel="noopener" class="ext">ops/runbook.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> §8); Lighthouse on Fast 4G is not added (D-114)</td></tr>
+<td><a class="req-ref" href="#r-NFR-001"><code>NFR-001</code></a> Performance</td><td><code>npm run load:smoke</code> (20 learners for 30 s, here: page ready p95 1.1–1.5 s against 3 s, API p95 22–27 ms against 300 ms, no failed request) and <code>-t &quot;\[NFR-001\]&quot;</code> (the k6 profiles, batches and summary in <code>tools/load/test/</code>); the phone journey times one learner&#39;s open from Canvas to a started activity, under 3 s on the test machine with no network profile (<code>e2e/journeyPhoneResume.e2e.test.ts</code>, D-151)</td><td>HVL runs <code>npm run load:full</code> (200 learners) on a node like production (<a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/ops/runbook.md" rel="noopener" class="ext">ops/runbook.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> §8); Lighthouse on Fast 4G is not added (D-114)</td></tr>
 <tr>
 <td><a class="req-ref" href="#r-NFR-002"><code>NFR-002</code></a> Availability, backups</td><td><code>-t &quot;\[NFR-002\]&quot;</code>: the backup round trip and the restore&#39;s refusals (<code>tools/ops/test/</code>), the health check and clean start and stop (<code>test/server/</code>); document review of <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/ops/runbook.md" rel="noopener" class="ext">ops/runbook.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> §6</td><td>HVL schedules the daily backup with its encrypted off-server copy and logs the restore drill each semester</td></tr>
 <tr>
@@ -14158,6 +14158,120 @@ table lists the new files under <a class="req-ref" href="#r-AUTH-001"><code>AUTH
 No line reference moved: the edits keep each file&#39;s line count, and this entry and step 34 stand at the end
 of their files. The status overview counts 34 steps.</li>
 </ul>
+<h3 id="decisions--d-151--step-35-a-single-choice-sets-questions-in-insight-two-label-in-name-repairs-with-the-newer-accessibility-scanner-a-site-icon-the-language-of-quoted-texts-three-journey-details-and-four-package-updates" tabindex="-1">D-151 · Step 35: a Single Choice Set&#39;s questions in insight, two label-in-name repairs with the newer accessibility scanner, a site icon, the language of quoted texts, three journey details and four package updates</h3>
+<ul>
+<li><strong>Context:</strong> S6&#39;s log left five small things open (a Single Choice Set&#39;s answers in insight, the language of a
+text quoted inside a sentence of the Innsikt tab, three details of the journeys without an end-to-end test, no
+site icon, the server&#39;s README), D-148 held the accessibility scanner back at 4.13.0, and Dependabot&#39;s monthly
+run proposed four npm updates in one pull request, the scanner among them.</li>
+<li><strong>Decision — each question of a Single Choice Set is a question of its own (INS-002, INS-003, INS-005).</strong>
+H5P.SingleChoiceSet 1.11 sends one <code>answered</code> per question, under that question&#39;s own <code>subContentId</code> (each is
+an <code>isSubContent</code> group), and none for the set. The catalogue listed the set as one question under the set&#39;s
+ID, so its row never got a learner, and the answers showed only as rows without a name once <em>k</em> learners had
+answered. The catalogue now lists each question of a set that has an ID, with its text and its alternatives
+(the first stored alternative is the right one; the library has no feedback text per alternative), and the set
+itself is no question (<code>src/insight/content/questionShapes.ts</code> <code>singleChoiceQuestions</code>,
+<code>questionCatalogue.ts</code>). In an InteractiveVideo the set stays one interaction, answered by a learner who
+answered any of its questions, counted once (<code>activityCapabilities.ts</code> <code>answeredBy</code>,
+<code>aggregate/videoEngagement.ts</code>); a set whose questions have no ID is not listed, since the server stores no
+answer without one. A question of a set now has an answer key like any choice question, so a save that changes
+the number of its alternatives is a change of the answer key (PROD-013, D-137).</li>
+<li><strong>Decision — the bridge sends a set&#39;s answer as the set recorded it (LTI-010, DATA-012; amends D-115).</strong> The
+library shuffles a question&#39;s alternatives and keeps two records of an answer: the chosen alternative&#39;s place
+on screen (<code>userResponses</code>) and its stored index (<code>userAnswerIndex</code>). Its statement is written from the first:
+<code>result.response</code> is the place on screen, and <code>success</code> and <code>score</code> say &quot;right&quot; when the alternative shown
+first was chosen (<code>scripts/single-choice-set.js</code> lines 202, 203 and 234 at commit d570a968; the default branch
+read on 2026-11-27 is the same). Five learners who all chose the right alternative of one question and a wrong
+one of another gave 3 of 5 &quot;right&quot; for both in one run; the number follows the shuffle. H5P Core calls a
+listener of its outside dispatcher with the instance that raised the event as <code>this</code>, also for events of its
+own iframes (<code>h5p-event-dispatcher.js</code>, <code>h5p.js</code>), so the bridge reads the set&#39;s own record and sends the
+stored index as the response, with <code>success</code> and <code>score</code> to match
+(<code>packages/hvl-h5p-theme/src/xapiSingleChoiceSet.js</code>, a fourth player-only script, first of the four). When it
+cannot read the record (another version of the library) it sends the statement without an answer: a question
+then shows its learners and no share right, never a false one. Nothing new leaves the page: an index replaces
+an index in the same fields. The correction goes when a pinned SingleChoiceSet writes the stored index itself
+(<code>docs/upstream/h5p-single-choice-set-xapi-response.md</code>); <code>e2e/singleChoiceSetInsight.e2e.test.ts</code> then still
+passes without it.</li>
+<li><strong>Decision — two more repairs of H5P&#39;s markup, for WCAG 2.5.3 Label in Name (UD-030; amends D-080 and
+D-148).</strong> <code>@axe-core/playwright</code> 4.14.0 (axe-core 4.14.1) runs <code>label-content-name-mismatch</code> by default, and
+the suite reports two controls. <strong>(l)</strong> CoursePresentation 1.28&#39;s footer button for the slide menu shows the
+current slide&#39;s title and is labelled «Vis sidemeny». H5P.Tooltip shows that label and <code>cp.js</code> rewrites it
+when the menu opens, so the label stays; the button gets <code>aria-labelledby</code> naming the title it shows and then
+itself, and a reference to itself reads its own <code>aria-label</code>: the name is «Tre fasar Vis sidemeny» and follows
+a new slide and the open menu without another write. <strong>(m)</strong> H5P.Question 1.5 gives a button the content&#39;s
+text for assistive technology (<code>a11yCheck</code> and its like) as <code>aria-label</code> and the content&#39;s button word as its
+text. Content with the two in different languages (an English label on a button that says «Sjekk», as in a
+package made from the libraries&#39; own Nynorsk files, where those texts are still English) has a name without
+the word it shows; the shown word is then put first in the name («Sjekk. Check the answers. …»). A label that
+already holds the word is left alone, which is every activity made in our editor (D-111&#39;s overlay). Both are
+attribute-only like the other repairs (<code>packages/hvl-h5p-theme/src/a11yRepairs.js</code>): (l) adds two <code>id</code>s and
+one <code>aria-labelledby</code>; (m) remembers the library&#39;s label in <code>data-hvl-*</code> attributes so a later label or word
+of H5P&#39;s is followed. (l) goes when a pinned CoursePresentation names the button by what it shows; (m) when a
+pinned H5P.Question keeps the shown word in the name. No register entry is needed.</li>
+<li><strong>Decision — a site icon generated from the tokens (UD-001, DATA-011).</strong> A browser asks every site for
+<code>/favicon.ico</code>; without one a visitor&#39;s first page logged a 404. HVL has not supplied its logo files, so the
+icon is a plain mark in HVL&#39;s colours, not the logo: a rounded square in <code>primary-dark</code> with a play triangle
+in <code>surface</code> (10.82 : 1). <code>packages/design-tokens/scripts/siteIcon.mjs</code> draws it once and <code>buildSiteIcon.mjs</code>
+writes <code>apps/web/src/app/icon.svg</code> and <code>favicon.ico</code> (one 32 × 32 picture, stored without compression so no
+zlib version decides a byte); <code>npm run tokens:build</code> and <code>tokens:check</code> cover both, so CI holds them like the
+token CSS. Next.js serves them and links them from every page; <code>/favicon.ico</code> also answers for a page of
+Express&#39;s own that names no icon.</li>
+<li><strong>Decision — the quoted part of a sentence carries the activity&#39;s language (UD-010).</strong> A text of the activity
+that stands in an element of its own already had <code>lang</code>. A text quoted inside a translated sentence (a chart
+summary, a table caption, a shortlist line, an announcement, the list&#39;s title in the printout and the
+projection, and a chart&#39;s label) now has it too: the sentence is built with its quoted range, found by the
+placeholder&#39;s place and never by searching for the value, and written with only that range in <code>&lt;span lang&gt;</code>
+(<code>apps/web/src/features/insight/quotedText.tsx</code>). A fallback name («Spørsmål 3 (utan tekst)», «Oppgåve utan
+tittel») is never marked. No text changed.</li>
+<li><strong>Decision — three details of the journeys have an end-to-end test (PROD-001, PROD-003, UD-021, NFR-001,
+INS-003).</strong> <code>e2e/journeyVideoPattern.e2e.test.ts</code> plays J1&#39;s steps 2 to 5 with the video pattern: the editor
+opens with the Interactive Video skeleton (three check questions at 150, 300 and 450 s and a summary task),
+<strong>Sjekk og publiser</strong> reports the missing video, the author pastes a Panopto link in H5P&#39;s own dialog and
+saves, and the check then reports V-VID-CAPTIONS in place of the missing video; every request off the machine
+is refused and recorded, and none was made. <code>journeyPhoneResume</code> times J2&#39;s step 1, from the click in Canvas
+to a started activity: under 3 s for the quicker of the journey&#39;s two opens, since a busy machine only adds
+time (about 0.6 s on the development machine). It is one learner with no network profile; NFR-001&#39;s 200
+learners and its Fast 4G profile stay the load test&#39;s and Lighthouse&#39;s (D-114). <code>journeySeminarInsight</code> prints
+J3&#39;s list: the page&#39;s print call is held back, Chromium prints the document to a PDF, and the paper holds the
+list&#39;s title, the question, its share and the feedback, and no tab, heading or button of the page. The
+governance journey no longer excuses every failed resource, only the two answers that say a visitor is not
+signed in.</li>
+<li><strong>Decision — four package updates taken by hand (SEC-007).</strong> <code>@aws-sdk/client-s3</code> and <code>@aws-sdk/lib-storage</code>
+3.1176.0, <code>typescript-eslint</code> 8.74.0 and <code>@axe-core/playwright</code> 4.14.0, by exact pin. The lock file&#39;s changed
+entries are the same versions and checksums as Dependabot&#39;s proposal; one nested package that npm would also
+have moved stays where it was. The SBOM lists 478 npm packages, as before.</li>
+<li><strong>Residual:</strong> the correction of a set&#39;s answer reads two fields of the library&#39;s instance, which no interface
+promises; the end-to-end test on the real library fails if they move, and the fallback is an answer that is
+not sent. An answer a set sent before this step keeps the place on screen; there is none outside test data. A
+question removed from a set after <em>k</em> learners answered it is listed without a name, like any removed question
+(D-121). The union of a set&#39;s learners in a video list is one more count about the same learners; it is
+suppressed below <em>k</em> like every count, and nothing is added to what a statement stores. Repair (m) puts a
+Nynorsk word before an English sentence in one name; a screen reader reads both with the page&#39;s voice, as it
+read the English sentence before.</li>
+<li><strong>Verified:</strong> tests written first. <code>e2e/singleChoiceSetInsight.e2e.test.ts</code> plays a Column with a set of two
+questions as five Canvas learners in the real player: on the old code the view held two rows without a name,
+each 60 % right in that run, though every learner chose the right alternative of one and a wrong one of the
+other; now each question has its name, 5 learners, 100 % and 0 %, and its alternatives with their counts.
+<code>test/insight/singleChoiceSetQuestions.test.ts</code> (6: the catalogue, a set as main library and malformed sets, a
+view&#39;s numbers, the answer key, the video interaction and its count) failed on the old catalogue;
+<code>packages/hvl-h5p-theme/test/xapiSingleChoiceSet.test.ts</code> (5: the stored index, a statement of another library
+left alone, no answer without the record, nothing changed, the bridge with the raising instance) failed before
+the correction existed. <code>a11yRepairsLabelInName.test.ts</code> (6; five failed before their repair), and the
+accessibility suite with the newer scanner: 14 of 563 tests failed for the one rule before the repairs, none
+after. <code>packages/design-tokens/test/siteIcon.test.ts</code> (6) and the browser test of the icon in
+<code>test/web/webPages.browser.int.test.ts</code>, which found no icon link on the old build. The language marks:
+<code>apps/web/test/features/insight/InsightQuotedLanguage.test.tsx</code> (5) and <code>quotedText.test.tsx</code> (6); of the
+five, three failed before, and the two that passed guard what must stay unmarked. The three journey tests
+above. The full gate and the Docker smoke test ran; step 35 in <code>PROGRESS.md</code> has the output.</li>
+<li><strong>Consequences:</strong> <code>CLAUDE.md</code> §2 names the bridge&#39;s four scripts, and the theme&#39;s README and the tests that
+list them follow. Three report drafts are added to <code>docs/upstream/</code> (the set&#39;s statement; the slide-menu
+button&#39;s name; a question button&#39;s name and MultiChoice&#39;s untranslated labels). The READMEs of the design
+tokens and the web app name the generated icon; the server&#39;s README describes the server as it is today, not
+as of Session 4. The conformance report is rewritten from a run recorded with axe-core 4.14.1: criterion 2.5.3
+now has a rule that runs. The evaluator guide&#39;s <a class="req-ref" href="#r-NFR-001"><code>NFR-001</code></a> row names the timed open. No line reference moved:
+this entry and step 35 stand at the end of their files, and the one in-line edit keeps its file&#39;s line count.
+The status overview counts 35 steps.</li>
+</ul>
 
 </section>
 <section class="view doc" id="progress" aria-labelledby="progress-h">
@@ -14185,7 +14299,7 @@ what is done, what is verified, and what is blocked.</p>
 <tr>
 <td>S6</td><td>xAPI → AGS grade bridge, insight, privacy jobs, Docker, conformance report</td><td>02 §4–§8; 05; 00 §3 (journeys J1–J5), §6; 01 <a class="req-ref" href="#r-H5P-009"><code>H5P-009</code></a>, <a class="req-ref" href="#r-H5P-010"><code>H5P-010</code></a>, <a class="req-ref" href="#r-SEC-004"><code>SEC-004</code></a>, <a class="req-ref" href="#r-SEC-006"><code>SEC-006</code></a>; 03 <a class="req-ref" href="#r-UD-003"><code>UD-003</code></a>, §6 (<a class="req-ref" href="#r-UD-040"><code>UD-040</code></a>); 04 <a class="req-ref" href="#r-MAPPE-003"><code>MAPPE-003</code></a>, <a class="req-ref" href="#r-MAPPE-004"><code>MAPPE-004</code></a> (D-101)</td><td>✅ Done (gate passed 2026-11-06; started 2026-10-30; D-101…D-116)</td></tr>
 <tr>
-<td>SR</td><td>Security repairs after the S6 gate: 34 steps, each with tests, a gate run and a decision entry</td><td>The spec a step names</td><td>✅ Done (2026-11-20 to 2026-11-27; D-117…D-150; session log, steps 1–34); open: HVL IT&#39;s and the owner&#39;s questions Q32, Q33 and Q34, with the earlier ones</td></tr>
+<td>SR</td><td>Security repairs after the S6 gate: 35 steps, each with tests, a gate run and a decision entry</td><td>The spec a step names</td><td>✅ Done (2026-11-20 to 2026-11-27; D-117…D-151; session log, steps 1–35); open: HVL IT&#39;s and the owner&#39;s questions Q32, Q33 and Q34, with the earlier ones</td></tr>
 </tbody></table></div>
 <p>Legend: ⬜ not started · 🟨 in progress · ✅ done (gate passed, output pasted below) · ⛔ blocked</p>
 <hr>
@@ -17795,6 +17909,98 @@ $ npx vitest run --project server                    27164 passed, 31 skipped; 1
     privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
     MAPPE-004). After the second read's corrections, the Feide and launch-ceiling tests ran again: 159 passed
     (14 files)</code></pre>
+</li>
+<li><p><strong>2026-11-27 · Security repairs, step 35 (D-151)</strong> — the small things S6&#39;s log left open, the newer
+accessibility scanner with two repairs, and four package updates.</p>
+<ul>
+<li>A Single Choice Set in insight (INS-002, INS-003, INS-005, LTI-010): the library sends one answer per
+question of a set, under the question&#39;s own ID, and none for the set, so the view listed the set with no
+learner and the answers as rows without a name. Each question of a set is now a question of its own, with
+its text and its alternatives; in a video the set is one interaction, answered through its questions. The
+browser test found more: the library writes the chosen alternative&#39;s place on screen as the answer and
+judges by it, and it shuffles the alternatives, so five learners who all answered one question right and
+another wrong gave 60 % right for both in one run. The xAPI bridge now sends the stored index the set itself recorded,
+read from the instance that raised the event, or no answer when it cannot read it; a fourth player-only
+script, <code>xapiSingleChoiceSet.js</code>. A report for H5P is drafted.</li>
+<li>The newer scanner (UD-030, SEC-007): <code>@axe-core/playwright</code> 4.14.0 runs the rule for WCAG 2.5.3 Label in
+Name. Two of H5P&#39;s controls had a name without the words they show: CoursePresentation&#39;s slide-menu button
+and a question button whose label is in another language than its word. Both are repaired in
+<code>a11yRepairs.js</code>, attributes only; the conformance report is rewritten from a run recorded with the newer
+scanner. With it: <code>@aws-sdk/client-s3</code> and <code>@aws-sdk/lib-storage</code> 3.1176.0 and <code>typescript-eslint</code> 8.74.0,
+by exact pin, the lock file&#39;s changed entries equal to Dependabot&#39;s proposal. The SBOM lists 478 npm
+packages, as before.</li>
+<li>A site icon (UD-001): a plain mark in HVL&#39;s colours, generated from the tokens as <code>icon.svg</code> and
+<code>favicon.ico</code> and held by <code>tokens:check</code>; a visitor&#39;s first page no longer logs a 404.</li>
+<li>The language of quoted texts (UD-010): a text of the activity quoted inside a sentence of the Innsikt tab
+(a chart summary, a caption, a shortlist line, an announcement, the list&#39;s title, a chart label) carries the
+activity&#39;s language, as the texts in elements of their own already did.</li>
+<li>Three details of the journeys have an end-to-end test (PROD-001, PROD-003, UD-021, NFR-001, INS-003): the
+video pattern with a pasted Panopto link and the captions error; the open on a phone, timed under 3 s; the
+printed shortlist. The server&#39;s README describes the server as it is today.</li>
+<li>Noted and not changed: in H5P&#39;s video dialog the texts are partly Bokmål (the editor&#39;s own texts fall back
+from Nynorsk), and its heading invites a YouTube link while HVL&#39;s field text says such links cannot be played
+here; a wording question for the language advisers.</li>
+<li>The gate&#39;s run found two things this step&#39;s own changes had left behind; both were corrected after it. A
+browser test of the answer prefixes pressed a question button by the old start of its name, where the word
+the button shows now stands first; it passes on its own since. And the Evaluator Guide&#39;s row for
+<code>npm run test:e2e</code> did not name the two new browser tests, which DOC-004&#39;s test holds it to. The
+accessibility run is recorded in the conformance report as it ran, on commit <code>dd77f6512636</code> with axe-core
+4.14.1: 563 tests and 179 scans, none of them with a finding of the rule for 2.5.3. The elements axe leaves
+for a contrast review by hand are 1 450 in 125 scans (791 in 120 at the run of 2026-11-05, with 4.13.0 and
+fewer views); the suite fails on none of them, now as then. Gate output:</li>
+</ul>
+<pre class="code" tabindex="0" role="region" aria-label="Code 56, Session log"><code>$ npm run build                                      exit 0
+$ HVLI_DOCKER_SANDBOX=1 bash deploy/smoke/dockerSmoke.sh   passed in 250 s (the PDF printed as uid 10001 with
+    the sandbox seen in /proc)
+$ npm run typecheck                                  exit 0
+$ npm run lint &amp;&amp; npm run format:check               exit 0
+$ npm run lint:css                                   exit 0
+$ npm run doc:lint &amp;&amp; npm run check:filesize         11 checks passed; file-size passed
+$ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+$ npm run privacy:dpia-check                         13 sections, the developer key and the residuals agree
+$ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+$ npm run check:pins &amp;&amp; npm run check:licences       every version pinned; 489 production packages compatible
+$ npm run check:lockfile                             949 packages from the registry with sha512; 4 install scripts reviewed
+$ npm run check:workflows                            3 workflows: actions by commit, images by digest
+$ npm run check:audit                                2 high/critical advisories, both covered by reviewed exceptions
+$ npm run sbom -- --check                            current: 478 npm packages, 12 H5P components, 3 images
+$ npm run content:check &amp;&amp; npm run tokens:check      exit 0 (the site icon included)
+$ node tools/spec-site/buildSpecSite.mjs --check     up to date
+$ node tools/deploy-check/checkDeployFiles.mjs       exit 0
+$ npm run docs:api                                   exit 0
+$ npm run a11y:report -- --check                     exit 0
+$ npx vitest run --project web                       655 passed (102 files)
+$ npx vitest run --project api-contract              123 passed (15 files)
+$ npx vitest run --project tools                     604 passed (81 files); 603 and 1 failed in the gate's own
+    run, before the guide's row named the two new browser tests
+$ npx vitest run --project design-tokens             162 passed
+$ npx vitest run --project hvl-h5p-theme             217 passed
+$ LIVE_TARGET=mock npm run test:live                 36 passed
+$ npm run test:a11y                                  563 passed (18 files), with axe-core 4.14.1
+$ npm run test:e2e                                   38 passed, 1 skipped; 1 file failed: learnerDataRights
+    (needs the privileged database, like DATA-010's tests)
+$ npx vitest run --project server                    27171 passed, 31 skipped; 2 failed in 5 files: a
+    privileged database (three files) and the seccomp PDF sandbox, limits of this container (DATA-010,
+    MAPPE-004), and the answer-prefix test above, which passed on its own after its correction (3 of 3 in
+    its file)</code></pre>
+<ul>
+<li>GitHub&#39;s run on the pull request failed in one accessibility test, the one that failed once in step 34&#39;s
+gate: the footer controls of H5P.CoursePresentation at 640 × 320 in full screen. The cause is found and can
+be shown at will. H5P sets its full-screen class before the frame has the screen&#39;s size and before the footer
+is laid out for it; a measurement taken in that moment finds the controls cut off, in the words of GitHub&#39;s
+log («Vis sidemeny» pressed in 13 rows only), and a second later nothing is cut off. A person never meets
+that state; the test did, when the machine was slow at the wrong moment. The test now waits until the frame
+has the screen&#39;s size and the footer&#39;s boxes have stood still for a second
+(<code>a11y/support/pointerReach.ts</code> <code>waitForSteadyBoxes</code>). After the change the six footer cases passed four
+times, twice of them with every processor kept busy twice over, and the whole file passed (124 tests).</li>
+<li>GitHub&#39;s next run failed in another place, with every test passed (851 files, 28 963 tests): the helper that
+starts Chromium for the cookie tests removed its temporary profile folder when the browser disconnected, and
+Chromium, still closing, wrote a file into the folder while it was being emptied («ENOTEMPTY»). The error was
+thrown in the close handler, which fails a whole run. The helper (from step 33) now lets Node try such a
+removal again, a little later each time, and reports a removal that still fails instead of throwing
+(<code>test/support/thirdPartyCookies.ts</code> <code>removeBrowserProfile</code>, with a test). Its test file passed four times
+after the change and left no folder behind; the Canvas iframe flow that uses the helper passed.</li>
+</ul>
 </li>
 </ul>
 

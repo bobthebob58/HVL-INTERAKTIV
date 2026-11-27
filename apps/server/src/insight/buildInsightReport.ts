@@ -80,7 +80,6 @@ export function buildInsightReport(input: InsightReportInput): InsightReport {
   const capabilities = activityCapabilities(mainLibrary, params);
   const questions = questionCatalogue(mainLibrary, params);
   const answers = answersByItem(statements);
-  const texts = new Map(questions.map(({ item, text }) => [item, text]));
   const started = learnersOf(statements).size;
   // PRIVACY: a hidden group of starters hides every cell about them (INS-006).
   const within = <T>(part: T): T => (isShowableCount(size, started) ? part : suppressEveryCell(part));
@@ -102,7 +101,7 @@ export function buildInsightReport(input: InsightReportInput): InsightReport {
     misconceptions: current ? within(misconceptionsOf(size, questions, answers)) : [],
     videoEngagement:
       mainLibrary === 'H5P.InteractiveVideo'
-        ? videoEngagement(size, videoInteractions(params), answers, started, texts)
+        ? videoEngagement(size, videoInteractions(params), answers, started)
         : null,
   };
 }

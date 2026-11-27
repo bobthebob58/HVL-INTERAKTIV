@@ -7,8 +7,9 @@
  *      The interactions come from the parameters, so one that nobody reached is listed too.
  * Spec: INS-005, INS-006
  * Invariants:
- *   - A learner answered an interaction when they have at least one stored `answered` for its `subContentId`; the
- *     share's base is the learners who started the activity in the view (INS-001's started).
+ *   - A learner answered an interaction when they have at least one stored `answered` for its `subContentId`, or,
+ *     for an H5P.SingleChoiceSet, for any of its questions (`answeredBy`); a learner is counted once. The share's
+ *     base is the learners who started the activity in the view (INS-001's started).
  *   - PRIVACY: a count of 1 to k − 1 is suppressed, and so is its share, which would reveal it; when the learners who
  *     started are suppressed, everything is (INS-006).
  * Collaborators: ./learnerAnswers.ts, ../content/activityCapabilities.ts, ../suppression/insightCells.ts,
@@ -33,7 +34,6 @@ import type { AnswersByItem } from './learnerAnswers.js';
  * @param interactions - The video's answerable interactions in playing order.
  * @param answers - Each question's learners with their answers.
  * @param started - The learners who started the activity in the view.
- * @param questionTexts - The question text per interaction, from the catalogue.
  * @returns One entry per interaction.
  * @spec INS-005
  */
@@ -42,20 +42,22 @@ export function videoEngagement(
   interactions: readonly VideoInteraction[],
   answers: AnswersByItem,
   started: number,
-  questionTexts: ReadonlyMap<string | null, string>,
 ): VideoInteractionInsight[] {
   const startedShown = isShowableCount(size, started);
   return interactions.map((interaction) => {
-    const answered = answers.get(interaction.item)?.size ?? 0;
+    const learners = new Set<number>();
+    for (const item of interaction.answeredBy) {
+      for (const learner of answers.get(item)?.keys() ?? []) learners.add(learner);
+    }
+    const answered = learners.size;
     const count = withinShownGroup(countCell(size, answered), startedShown);
     // PRIVACY: the share times the learners who started gives the count, so it is hidden whenever the count is.
     const share = count.suppressed ? SUPPRESSED_CELL : rateCell(size, answered / started, started);
-    const text = questionTexts.get(interaction.item);
     return {
       item: interaction.item,
       library: interaction.library,
       label: interaction.label,
-      questionText: text === undefined || text === '' ? null : text,
+      questionText: interaction.questionText === '' ? null : interaction.questionText,
       atSeconds: interaction.atSeconds,
       answered: count,
       share,

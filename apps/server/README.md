@@ -5,33 +5,54 @@
 The back end of HVL Interaktiv. It runs the H5P engine (Core API 1.28) for authoring and playing the ten
 content types, stores activities and learner progress, signs people in through Feide (the portal) and LTI 1.3
 launches from Canvas, runs the pre-publish validator and the publish flow, serves the web app (`apps/web`) in its
-own process, and (from S6) teacher insight. It holds no learner names or e-mail addresses: learners are yearly
+own process, and teacher insight. It holds no learner names or e-mail addresses: learners are yearly
 pseudonyms (`DATA-002`).
 
-**Status after Session 4 (in its gate).** On top of the Session 1 foundations (configuration, privacy-safe
-logging, pseudonyms, messages in nn/nb/en, schema, storage adapters, archive guard) and the Session 2 H5P engine
-(the ten content types only, HVL's permission system, learner state under the pseudonym, upload sniffing and SVG
-sanitising, offline seeding, our own Express 5 routes), the server listens: `npm start` runs
-`src/server/main.ts`. It has:
+**What the server has today.** Sessions 1 to 6 built it, and the repair steps after the S6 gate (D-117…D-151)
+changed it in place. `npm start` runs `src/server/main.ts`. It has:
 
 - **Feide login** for the portal: OpenID Connect code flow with PKCE, roles from the Feide Groups API, Redis
   sessions with a CSRF token, logout through Feide's end-session endpoint.
 - **LTI 1.3 for Canvas** on ltijs 7: resource-link launches that land on the web app's Canvas page `/app/play`
   (on the H5P player `/lti/play` with `WEB_APP=off`), the editor inside Canvas (`/lti/edit`), the Deep Linking
   picker (`/lti/deeplink`), deployment checks, and ltijs storage on PostgreSQL. The ltik never sits in a cookie or
-  in storage.
+  in storage, and it reaches only what its launch's own pages ask for (D-130).
 - **One `Principal`** for both entry points. The H5P routes and the `/api` routes (me and notices, the content
-  list, findings, publish and unpublish, sharing, and `/api/docs` outside production) authenticate with it, and
-  content files and editor uploads load through signed URLs in a cookie-less iframe.
+  list, findings, publish and unpublish, sharing, the studio's areas, the xAPI ingestion, grade sync, insight, and
+  `/api/docs` outside production) authenticate with it, and content files and editor uploads load through signed
+  URLs in a cookie-less iframe.
 - **The H5P player and editor pages** (`/h5p/play/:id`, `/h5p/edit/:id`, `/h5p/new`, and in Canvas `/lti/play`,
   `/lti/edit`) under a strict script policy (D-070), with HVL's H5P theme, the answer prefixes and the markup
-  repairs in every document H5P renders (D-072, D-080). The real content types come from GitHub (D-078).
+  repairs in every document H5P renders (D-072, D-080), and HVL's language overlay (D-111). The real content types
+  come from GitHub (D-078). The player's files come from a separate files origin (`SEC-004`), and uploads are
+  scanned by ClamAV when `CLAMAV_HOST` is set (`SEC-006`).
 - **The pre-publish validator and the publish flow** with acknowledgements, a save gate for published activities
   and a Redis write lock (D-073, D-074).
-- **The web app** (`apps/web`, Next.js) in the same process when `WEB_APP` is `dev` or `prod` (D-068): Express hands
-  it every GET and HEAD request it does not answer itself, without cookies, tokens or the ltik, with a nonce policy.
-- **Account linking** of an author's Canvas and Feide identities, an authentication audit, and a health check
-  (`/healthz`).
+- **The web app** (`apps/web`, Next.js) in the same process when `WEB_APP` is `dev` or `prod` (D-068; production
+  accepts only `prod`): Express hands it every GET and HEAD request it does not answer itself, without cookies,
+  tokens or the ltik, with a nonce policy.
+- **The læringsdesign studio's services** (S5, `src/learningDesign/`, built in `src/server/studioServices.ts`): the
+  studio content from `content/` (phases, guide, patterns), creating an activity from a pattern, learning-design
+  metadata and the planner, co-authors, the content bank and duplicating, safe editing (`PROD-013`), and the
+  **pedagogisk mappe** as Markdown and as a PDF printed by the server's Chromium.
+- **The xAPI ingestion and the grade sync worker** (S6): `POST /api/h5p/xapi` stores a learner's statements under
+  the pseudonym (`src/xapi/`), and a background worker sends the scores of graded placements to Canvas with our own
+  AGS client, with a status and retry API for authors (`src/grades/`, D-104).
+- **Insight** (S6, `src/insight/`): participation against the NRPS learner count, item difficulty, misconceptions
+  and video engagement for one activity, version, context and period; a value about 1 to *k* − 1 learners is
+  suppressed (`MIN_GROUP_SIZE`, `INS-006`), and every view and CSV download is audited.
+- **Privacy operations** (S6, `src/privacy/`): the yearly purge, as a job from `PURGE_RUN_DATE` and as
+  `npm run privacy:purge`; data-subject export and erasure (`npm run privacy:dsr`); the database roles
+  (`npm run db:roles`).
+- **Limits** on requests and stored data: per person, in Redis windows shared by every node (saved states, uploads,
+  new activities, copies, people search, planner, mappe, xAPI statements, insight views, grade-sync retries); per
+  network address on ltijs's routes and the Feide login (D-141, D-150); on what one learner's saved state, one
+  activity's parameters and files and one insight view may hold; and on how much memory-heavy work runs at once
+  (insight views, saved states, PDF exports, malware scans).
+- **Account linking** of an author's Canvas and Feide identities, an authentication audit, a health check
+  (`/healthz`), and start-up lines that give the mode and where the data lives, the memory limits (with a warning
+  when they do not fit, D-134) and whether the PDF export works; a standstill of a second or more is a warning line
+  (D-144), and a fault nothing handled ends the process through the logger (D-133).
 
 The Deep Linking picker and the friendly error pages stay server-rendered by Express, styled with the design tokens
 and, when the web app runs, with the **Hjelp** header (D-067). With `WEB_APP=off`, as in the integration tests, `/`
@@ -74,7 +95,12 @@ npm run test:live                            # the live-contract seam (live/): s
                                              # LIVE_TARGET=mock runs it against the mocks, as CI does (D-101)
 NODE_USE_ENV_PROXY=1 npm run hub:check       # spike step 3: Hub registration and versions (needs the Hub)
 
-# operations (S6, runbooks in docs/ops/; each prints counts, years and dates only)
+# deployment checks (runbooks in docs/ops/)
+npm run libraries:check                      # the installed library folder holds no build secrets (D-110's amendment)
+npm run clamd:check                          # clamd's settings, proved with the same probe as before scans
+npm run pdf:check --workspace apps/server    # the PDF export's start-up probe and a sample PDF
+
+# operations (S6, from apps/server, runbooks in docs/ops/; each prints counts, years and dates only)
 npm run --silent privacy:purge -- --dry-run  # the yearly purge's plan (DATA-003, D-107); --execute from PURGE_RUN_DATE
 npm run --silent --logs-max=0 privacy:dsr -- export --operator <your-feide-id>  # a learner's data (DATA-008, D-108);
                                              # the data subject on standard input, the export only to a file or pipe
@@ -126,7 +152,9 @@ test database one file at a time.
 
 | Path | Responsibility |
 |---|---|
-| `src/server/main.ts` | `npm start`: configuration, clients, H5P engine, app, LTI platform sync and key re-encryption, cleanup jobs, then listen on `PORT`, then one line on whether the PDF export works with its sandbox (`pdfAvailability.ts`); SIGTERM/SIGINT stop it with exit code 0, after that probe |
+| `src/server/main.ts` | `npm start`: configuration and studio content, the start-up lines (mode and where the data lives, a warning outside production, the memory limits), stale upload folders removed, the SVG cleaning worker started, clients, H5P engine, app, LTI platform sync and key re-encryption, the background jobs (cleanup jobs, grade worker, `sub` cleanup, yearly purge, event-loop watch), then listen on `PORT`, then one line on whether the PDF export works with its sandbox (`pdfAvailability.ts`); `stop` waits for that probe |
+| `src/server/serverProcess.ts`, `processFaults.ts` | The process around `startServer` (D-133): bad configuration or content prints its list of problems and exits with code 1; any other failed start is one `fatal` line and exit code 1; SIGTERM/SIGINT stop the server once, with exit code 0 (1 when a part did not stop); an uncaught fault or unhandled rejection is one `fatal` line through the logger, then exit code 1 |
+| `src/server/memoryBudget.ts` | The `memory limits` start-up line (`NFR-002`, D-134): Node's heap limit, what the server may use beside it (the SVG worker, Chromium for `PDF_MAX_CONCURRENCY` exports, a temporary folder kept in memory) and the container's limit, with a warning when the container has no limit in production or a limit below the need; numbers only |
 | `src/server/createApp.ts` | Builds the Express app in the mount order the security rules need (see Key flows) |
 | `src/server/studioServices.ts` | The læringsdesign studio's services (S5), built once from the start-up content, the editor and createApp's shared instances: the content, the `ContentDuplicator` and the other studio services (pattern creation, learning-design metadata, people search, the mappe's Markdown and PDF); `closeStudioServices` releases those that hold a resource at shutdown |
 | `src/server/gradeBridgeApi.ts` | The services behind the grade bridge's `/api` routes (the xAPI ingestion with its store, limit and stored-rows listener, and the grade-sync retry limit), built alike for the app and the test beds, since the contract's registry lists the routes (DOC-012) |
@@ -134,17 +162,18 @@ test database one file at a time.
 | `src/server/healthRoutes.ts` | `GET /healthz`: 200 when PostgreSQL and Redis answer within 2 s, else 503 with the names of the failing dependencies only |
 | `src/server/eventLoopWatch.ts` | One warning line when the server stood still for a second or more: the event loop's longest delay, read every 10 s, as two numbers and nothing else (`NFR-002`, D-144) |
 | `src/config/env.ts`, `envParsers.ts` | The zod schema of every environment variable (lists, origins, key rings, `LTI_PLATFORMS` JSON); startup fails with the variable's name |
-| `src/config/productionChecks.ts` | Extra startup rules for `NODE_ENV=production`: a current-year pseudonym secret exists; no pseudonym secret or ring key is readable text, low in distinct bytes or used twice; every public, Feide, Canvas and LTI platform URL is https; `WEB_APP` is not `dev`; `PDF_ALLOW_NO_SANDBOX` is not `true` (D-096); encrypted database, Redis and S3 connections, storage on the EEA list, and neither `AWS_ENDPOINT_URL_S3` nor `AWS_ENDPOINT_URL` (D-109 and its amendments) |
+| `src/config/productionChecks.ts` | Extra startup rules for `NODE_ENV=production`: a current-year pseudonym secret exists; no pseudonym secret or ring key is readable text, low in distinct bytes or used twice; every public, Feide, Canvas and LTI platform URL is https; `WEB_APP` is `prod` (D-123); `PDF_ALLOW_NO_SANDBOX` is not `true` (D-096); no `DEBUG` or `NODE_DEBUG` (D-133); encrypted database, Redis and S3 connections, storage on the EEA list, neither `AWS_ENDPOINT_URL_S3` nor `AWS_ENDPOINT_URL`, and plain bucket names, not ARNs (D-109 and its amendments) |
+| `src/config/publicAddressRules.ts`, `keyStrengthRules.ts`, `httpsRules.ts`, `debugOutput.ts` | The key rules and the https rules, which production applies and which every other mode applies too when `PUBLIC_BASE_URL` is not a local address (`localhost`, a `.localhost` name, 127.0.0.0/8, `[::1]`; D-133); the debug switches production refuses |
 | `src/config/connectionEncryption.ts`, `storageResidency.ts` | The production checks of D-109 (`DATA-004`): `DATABASE_URL` with `sslmode=verify-full` (or `require`, `verify-ca`), `rediss://`, an https `S3_ENDPOINT`; an AWS region or endpoint host on the EEA list in code, `hvl.no` or `sikt.no` *(verify, Q5)*; `deploymentLocations` (hosts and region only) for main.ts's start-up line |
 | `src/config/filesOrigin.ts` | The files origin (`SEC-004`, D-110's amendment): `FILES_BASE_URL`, or `files.<host>` of `PUBLIC_BASE_URL` with its scheme and port; refused when it is the app's own host, when the app host is an IP address and `FILES_BASE_URL` is unset, and when a set `FILES_BASE_URL` is not https in production |
 | `src/config/malwareScanConfig.ts` | The ClamAV rules at start-up (`SEC-006`, D-110's amendment): `CLAMAV_HOST` required in production unless `CLAMAV_ALLOW_UNSCANNED_UPLOADS`, never both; `CLAMAV_TLS` off the loopback in production (`DATA-004`); `CLAMSCAN_*` and `CLAMDSCAN_*` refused by name everywhere; `clamdSettings` for the scanner |
 | `src/security/malware/` | Upload scanning (`SEC-006`): `createMalwareScanners.ts` (none without `CLAMAV_HOST`), `clamdClient.ts` (clamscan's client from our checked settings only: TCP or TLS, no local binary, no start-up test; a missing verdict is an error), `FailClosedMalwareScanner.ts` (Lumi's scanner wrapped so only `Clean` passes: `upload.file.malwareFound` or `upload.file.scanUnavailable`, both 400 and translated; a time limit for the whole scan), `ScanTurns.ts` (at most 4 scans at once per process, the free turns handed out author by author, D-143), `scanOwner.ts` (tells the scanner whose upload it scans, from the request's async context), `scanFailureReason.ts` (reason codes for the one `warn` line, never a file name or clamd's text), `ClamdSettingsProbe.ts` (proves clamd's `AlertEncrypted` and `AlertExceedsMax` before scans and keeps the result 60 s on a monotonic clock; uploads refused while not proven, D-110's amendment of 2026-11-06), `clamdProbeStreams.ts` and `clamdProbeZip.ts` (the three probe streams, built in code around a fresh nonce), `clamdCheckCli.ts` (`npm run clamd:check`, the same probe once at deployment) |
 | `src/security/keys/` | Key rings with HKDF purpose keys (D-055, D-056, D-058): stable identity hashes with rotation, AES-256-GCM encryption of secrets at rest |
 | `src/auth/Principal.ts`, `principalLocals.ts` | The one `Principal` of a portal or LTI request (D-053); `sealPrincipal` refuses an LTI admin; routes read the principal from `res.locals` only |
-| `src/auth/requestPrincipal.ts` | The authentication middleware of `/api` and `/h5p`: an ltik (Bearer, or the query only on the paths of `LTIK_QUERY_PATHS`: `/h5p/ajax`, `/h5p/contentUserData/…` and the pages `/lti/play`, `/lti/edit`, `/lti/deeplink`, D-058, D-069) or the portal session with its CSRF token |
+| `src/auth/requestPrincipal.ts` | The authentication middleware of `/api` and `/h5p`: an ltik (Bearer, or the query only on the paths of `LTIK_QUERY_PATHS`: `/h5p/ajax` and `/h5p/contentUserData/…`, D-058, D-069; the pages a launch lands on read it from the query themselves), held to what its launch's pages ask for (`src/lti/ltikScope.ts`, else 403 `hvl:not-from-canvas`, D-130), or the portal session with its CSRF token |
 | `src/auth/principalToH5pActor.ts` | The one mapping from a `Principal` to the H5P actor: highest role, learnerKey, Canvas course, launched activity, URL token |
 | `src/auth/returnTo.ts` | Reduces an untrusted "after login" target to a local path or `/`, so login is never an open redirect |
-| `src/auth/feide/` | The Feide relying party (openid-client 6, PKCE S256, `client_secret_post`), login transactions, Groups API call, role mapping, Feide ID and author profile from the claims, login completion, and the `/auth/*` routes |
+| `src/auth/feide/` | The Feide relying party (openid-client 6, PKCE S256, `client_secret_post`), login transactions, Groups API call, role mapping, Feide ID and author profile from the claims, login completion, and the `/auth/*` routes; only a page the person opened starts a login (`loginNavigation.ts`, D-131), and the login and callback run behind a ceiling per network address (`loginRequestCeiling.ts`, D-150) |
 | `src/auth/session/` | Portal sessions in Redis behind `__Host-hvli_sid` (idle 2 h, absolute 12 h), the two cookies, opaque IDs, the synchronizer CSRF token (D-057); a dead session cookie is cleared only by an answer no cache keeps (`staleCookieClearing.ts`, D-142) |
 | `src/auth/identity/` | Accounts found by keyed identity hash with key rotation (D-055), the one subject text for hashes and learnerKey, the one Feide ID rule with ASCII-only folding (`feideId.ts`, `asciiText.ts`, D-142), Canvas–Feide account linking for platforms with `feideLinking` (AUTH-005, D-063) |
 | `src/auth/audit/` | `AuthAuditRecorder`: login, logout, author-launch and link events from fixed lists; logins, logouts and failed launches carry a keyed IP hash (D-064); `failureAuditBudget.ts` bounds the rows that failed logins and launches add (D-141) |
@@ -159,18 +188,19 @@ test database one file at a time.
 | `src/web/` | The web app (`apps/web`, Next.js) in the server's process: loader, nonce policy, and the request contract that removes cookies, tokens and the `ltik` query before Next.js sees a request or a development-server WebSocket upgrade (D-068, D-070) |
 | `src/lti/pages/` | The picker HTML; `ltiStaticScripts.ts` (where the page scripts are served). `client/`: the static page scripts `ltikLanding.js` (removes the ltik from the address bar), `deepLinkPicker.js`, `ltijsStorageGuard.js` and `h5pStorageGuard.js` (D-050); ESLint forbids storage APIs and cookies there |
 | `src/lti/ltikPrincipal.ts` | ltik → `Principal`, with the platform-active, deployment and account checks ltijs does not make (D-050, D-051) |
+| `src/lti/ltikScope.ts`, `landingLtik.ts` | What a request with an ltik may reach, by its launch's kind: its own activity or the picker, and no listing, creating, deleting, downloading, copying, publishing or sharing (D-130); the ltik in a landing page's address counts only when the browser came from our own pages or just after the launch |
 | `src/lti/LtiRoleMapper.ts`, `launchFacts.ts`, `ltiLocale.ts`, `ltijsLogger.ts` | LTI roles → `learner` or `author`, never `admin` (D-059); `isLtiTestUser`: Canvas's Student View test student (the `TestUser` role) is a learner whose launch facts and principal say `testUser`, so its statements are stored flagged (D-102's amendment); the launch facts (course = `launch.context.id`); UI language; ltijs's log calls through pino |
 | `src/logging/` | pino logger with key-based redaction (sensitive keys, endings and Feide attributes) and pattern-based redaction of credentials and e-mail addresses in free text; Prisma errors are logged by name and code only, in `err` and in `msg`. Names in free text cannot be detected, so callers never put them in messages |
 | `src/privacy/` | Academic-year boundary, pseudonym secrets, `deriveLearnerKey` (HMAC-SHA256), `minimumGroupSize` (*k* and the mappe's two-sided suppression of aggregates, D-095; insight's own cell rules are in `src/insight/suppression/`, D-106) |
 | `src/privacy/purge/` | The yearly purge (`DATA-003`, `DATA-007`, D-107 and its amendments): `RetentionPurgeJob` (hourly, on one node, lease `hvli:privacy:retention-purge`, from midnight in Oslo on `PURGE_RUN_DATE`), `purgeCalendar.ts`, `retentionPurge.ts` (plan, snapshots, deletes), `yearSnapshots.ts` with `yearSnapshotInputs.ts` (the mappe's *k*-suppressed figures per ended year, activity, course and version, written once under an advisory lock), `purgeTables.ts` (batches of 1 000 by stored `academicYear`, each delete repeating its page's filter), `purgeAudit.ts` (`purge.run`: a real run's `started` before its first change, then `completed` or `failed`; counts and years only, D-144), `purgeCli.ts` (`npm run privacy:purge -- --dry-run|--execute`); runbook `docs/ops/yearly-purge.md` |
 | `src/privacy/dsr/` | Data-subject requests (`DATA-008`, D-108 and its amendments), run by HVL operations: `dsrCli.ts` (`npm run privacy:dsr -- export|erase …`, the data subject on standard input, signals held until the audit is written), `dataSubjectRequest.ts` (one request: the operator check, the keys, then the export, the dry run's counts or the erasure, and the audit), `dataSubject.ts`, `subjectInput.ts`, `subjectKeys.ts` (every year's key and identity hash), `subjectRows.ts`, `subjectExport.ts`, `subjectErasure.ts` (learner state through our storage, not Lumi's manager), `dsrOperator.ts`, `dsrAudit.ts` (`dataSubject.export`, `dataSubject.erase`, a random request ID), `dsrFailure.ts`, `holdSignals.ts`; runbook `docs/ops/data-subject-requests.md` |
 | `src/i18n/` | Server messages in `nn` (default), `nb`, `en`, and the typed `t()` lookup |
-| `src/infra/` | Clients: Prisma (PostgreSQL), Redis (a command sent while the connection is down is refused at once and none is kept to send later, D-144), S3 (the endpoint only from `S3_ENDPOINT` or `S3_REGION`; the SDK's own endpoint settings are ignored, D-109); `databaseRolesCli.ts`, the runner of `prisma/roles/` (`npm run db:roles -- roles|views-down|grants`, `DATA-010`), which refuses a database off the local host without `sslmode` `require`, `verify-ca` or `verify-full` (`DATA-004`) |
+| `src/infra/` | Clients: Prisma (PostgreSQL), Redis (a command sent while the connection is down is refused at once and none is kept to send later, D-144), S3 (the endpoint only from `S3_ENDPOINT` or `S3_REGION`; the SDK's own endpoint settings are ignored, D-109); `databaseRolesCli.ts`, the runner of `prisma/roles/` (`npm run db:roles -- roles|views-down|grants`, `DATA-010`), which refuses a database off the local host without `sslmode` `require`, `verify-ca` or `verify-full` (`DATA-004`); `BoundedGate.ts`, a few pieces of work at once per process with a short line behind them and a refusal past it (insight views, saved states; D-134) |
 | `src/jobs/LeasedIntervalJob.ts`, `jobClock.ts` | A timer that does its work on one node per interval under a Redis lease (H5P temporary files, ltijs records, the grade worker and its `sub` cleanup); each tick reads the injectable clock once, and `runOnce(now)` runs one tick at a moment a test names (D-104, D-107) |
-| `src/xapi/` | The xAPI ingestion (S6, `LTI-011`, `DATA-012`, D-102, D-115): `xapiRoutes.ts` (`POST /api/h5p/xapi`: nobody signed in is 401 before the body is read, 64 KiB, 202), `XapiIngest` (the activity, version and launch checks of `xapiTarget.ts`, the per-minute limit of `XapiRateLimit.ts`, learners only, then the stored-rows listener), `xapiBatchPlan.ts` with `xapiStatementRow.ts`, `xapiRootTests.ts` (the root and gradable-result tests, also `isGradableResult` for the grade queue), `xapiReplayRule.ts`, `xapiDuration.ts`; `XapiStatementStore` (insert that skips stored IDs, the replay history); `platformContextKey.ts`, the one module that builds and parses D-103's `<platformId>:<contextId>` |
+| `src/xapi/` | The xAPI ingestion (S6, `LTI-011`, `DATA-012`, D-102, D-115): `xapiRoutes.ts` (`POST /api/h5p/xapi`: nobody signed in is 401 before the body is read, 64 KiB, 202), `XapiIngest` (the activity, version and launch checks of `xapiTarget.ts`, the limits of `XapiRateLimit.ts`, 120 statements a minute and 3 000 a day per person and activity (D-121), the learners `learningDataScope.ts` names (D-138), then the stored-rows listener), `xapiBatchPlan.ts` with `xapiStatementRow.ts`, `xapiRootTests.ts` (the root and gradable-result tests, also `isGradableResult` for the grade queue), `xapiReplayRule.ts`, `xapiDuration.ts`; `XapiStatementStore` (insert that skips stored IDs, the replay history); `platformContextKey.ts`, the one module that builds and parses D-103's `<platformId>:<contextId>` |
 | `src/grades/` | The grade bridge to Canvas (S6, `LTI-012`, D-104, SPEC-DEVIATION from `submitScore`): `GradeJobEnqueuer` (one `GradeSyncJob` per placement and learner for a stored gradable result in a graded Canvas placement, reopened by each new result; the `sub` only encrypted; D-104's amendment of 2026-11-04) with `gradeJobUpsert.ts`; `storedResultScores.ts` (the policy's score read at send time from the learner's stored gradable results) and `attemptPolicyScore.ts` (`best`, `latest`, `mastery` in D-115's result order); `gradeJobSend.ts` (one learner's send); `gradeJobReconcile.ts` (each run reopens a stopped job whose learner stored a newer result 15 to 1 minutes earlier); `lineItemUrlPolicy.ts` (a line item URL only on `CANVAS_ORIGINS` or the platform's own origins, https in production, no credentials; checked by the placement recorder and the worker); our AGS client (`agsClientAssertion.ts`, `AgsAccessTokens`, `AgsScoreClient`, `agsSendOutcome.ts`, `agsVocabulary.ts`); `GradeSyncWorker` with `gradeJobClaims.ts` (`FOR UPDATE SKIP LOCKED`, a 30-minute claim, one place per learner a run; a job changed during its send is due again) and `gradeSyncRun.ts`, `gradeRetrySchedule.ts` (8 attempts in 24 hours); `GradeSubjectCleanupJob` (the encrypted `sub` cleared 30 days after a job stopped, `DATA-002`) |
 | `src/grades/status/` | The grade-sync status and retry API for authors (`LTI-012`, D-106): `gradeSyncRoutes.ts` (`GET /api/content/:contentId/grade-sync`, `POST …/grade-sync/retry`), `gradeSyncAccess.ts` and `gradeSyncScope.ts` (owner or co-author sees every placement, a Canvas author only the launch's course), `gradeSyncStatus.ts` (counts only, never a learner), `gradeSyncRetry.ts`, `GradeSyncRetryRateLimit.ts` |
-| `src/insight/` | Teacher insight (S6, `INS-001`…`INS-003`, `INS-005`, `INS-006`, `PROD-010`, `PROD-013`, D-106, D-115; `INS-004` is not built): `InsightService` (one activity, version, context and fixed period: `forActivity`, and `contexts` for the picker), `buildInsightReport.ts` (the pure builder), `insightReport.ts` (the report's shape); `scope/` (`insightScope.ts`, `insightPeriod.ts`: 7, 14, 30 days or the semester from Oslo midnight, `SPEC-DEVIATION: D-106`; `activityContexts.ts`); `data/insightStatements.ts` (one ordered read of `XapiStatement`; learner keys become numbers and never leave it); `content/` (read from the stored parameters: `questionCatalogue.ts`, every question at any depth by `subContentId`; `questionShapes.ts`, a question's text, options with the teacher's feedback, or gaps; `gapSolutions.ts`, a Blanks or DragText task's accepted answers per gap; `activityCapabilities.ts`, what the type can send at all); `aggregate/` (`learnerAnswers.ts`, each learner's first and latest answer per question, from which `participation.ts`, `itemDifficulty.ts`, `choiceDistribution.ts`, `gapMisconceptions.ts` and `videoEngagement.ts` count); `suppression/` (`insightCells.ts`: a value about 1 to *k* − 1 learners is `{ suppressed: true }`, a 0 is shown; `additiveGroupCells.ts`: complements in groups with a shown total, D-106's amendment of 2026-11-04); `export/insightCsvRows.ts` (the CSV's rows from the suppressed report) |
+| `src/insight/` | Teacher insight (S6, `INS-001`…`INS-003`, `INS-005`, `INS-006`, `PROD-010`, `PROD-013`, D-106, D-115; `INS-004` is not built): `InsightService` (one activity, version, context and fixed period: `forActivity`, and `contexts` for the picker), `buildInsightReport.ts` (the pure builder), `insightReport.ts` (the report's shape); `scope/` (`insightScope.ts`, `insightPeriod.ts`: 7, 14, 30 days or the semester from Oslo midnight, `SPEC-DEVIATION: D-106`; `activityContexts.ts`); `InsightViewGate.ts` (two views at once per process, twenty waiting, then 503 `insight.busy`, D-134); `data/insightStatements.ts` (one ordered read of `XapiStatement`; learner keys become numbers and never leave it) with `data/readInsightStatements.ts` (pages, and at most 200 000 stored statements a view, D-122); `content/` (read from the stored parameters: `questionCatalogue.ts`, every question at any depth by `subContentId`; `questionShapes.ts`, a question's text, options with the teacher's feedback, or gaps; `gapSolutions.ts`, a Blanks or DragText task's accepted answers per gap; `activityCapabilities.ts`, what the type can send at all); `aggregate/` (`learnerAnswers.ts`, each learner's first and latest answer per question, from which `participation.ts`, `itemDifficulty.ts`, `choiceDistribution.ts`, `gapMisconceptions.ts` and `videoEngagement.ts` count); `suppression/` (`insightCells.ts`: a value about 1 to *k* − 1 learners is `{ suppressed: true }`, a 0 is shown; `additiveGroupCells.ts`: complements in groups with a shown total, D-106's amendment of 2026-11-04); `export/insightCsvRows.ts` (the CSV's rows from the suppressed report) |
 | `src/insight/http/` | The insight API (`INS-007`, `INS-009`, `INS-010`, `DATA-007`): `insightRoutes.ts` (`GET /api/content/:contentId/insight`, `…/contexts`, `…/export` as CSV, `…/findings`; sign-in, View, the reader, then a limit of 60 a minute per person in `InsightRateLimit.ts`), `insightAccess.ts` (owner and co-authors every context; a Canvas author the launch's course only, where the activity is placed; learners and admins none), `insightView.ts` (the strict query), `insightAudit.ts` (`insight.view`, `insight.export`, before the answer), `insightCsvText.ts` (RFC 4180, a formula guard, the formative notice), `insightFindingsAnswer.ts`; `insightApi.ts` builds the services, which createApp passes to `apiRouter` |
 | `src/lti/nrps/` | The NRPS learner count (`LTI-008`, `INS-001`): `NrpsLearnerCounter` (after a launch's redirect, in the background, at most once per course and hour; only the number is kept), `nrpsRosterRead.ts` (the full Learner role URI, pages of 50, one new token after a 401), `activeLearners.ts`, `NrpsLearnerCountStore.ts` (the count under D-103's key, the fresh mark), `nrpsTokenCache.ts`, `nrpsServiceUrl.ts` (the roster URL must pass D-104's origin rule: `CANVAS_ORIGINS` or the platform's own, https in production; a refused URL asks for no token, D-106's amendment), and `nrpsServices.ts`, which main.ts wires to the launch with those rules |
 | `src/h5p/H5pConfigFactory.ts` | H5P config: Core 1.28, hub-api.h5p.org, 50 MB / 200 MB limits, allowlist, finished data off, 5 s state saves; only harmless stored settings survive loading |
@@ -187,6 +217,7 @@ test database one file at a time.
 | `src/h5p/hubCheck.ts` | `hub:check`: registration and Hub versions, on demand only (D-041) |
 | `src/http/` | `createH5pRouter`: public client files, then the grant-checked content files and editor uploads, then `h5pAuthenticate`, the AJAX, file, state, content, player and editor-page routes (`/h5p/edit/:id`, `/h5p/new`), and the translated error handler; `editorView.ts` (the Edit check, then the editor page with grants, shared by portal and Canvas); `securityHeaders.ts` (headers of every response), `h5pPageCsp.ts` (the strict policy of the pages that run H5P, D-070), `authErrors.ts` (one status and message per refusal code) |
 | `src/http/filesOriginRouter.ts` | The files origin's own router (`SEC-004`): mounted by `createApp` right after the request log and the base headers, before the session, LTI, Feide, `/api` and `/h5p`; for the files host it serves only `GET`/`HEAD /h5p/files/<grant>/<contentId>/<file>` (and the CORS preflight for the app origin, no credentials), every answer with the sandbox policy and `nosniff`, no cookie read or set, everything else 404; the app origin answers `/h5p/files/…` with 404 |
+| `src/http/h5pRouteLimits.ts`, `addressRequestCeiling.ts`, `requestBodies.ts`, `routes/stateSaveGate.ts` | The request limits of the H5P routes: per person in Redis (state saves per activity, uploads and packages, new activities, refused SVG files; D-120, D-128), 429 `hvl:rate-limited` with `Retry-After` before the body is read; the shared ceiling per network address that the LTI and Feide login groups use, keyed by the address's keyed fingerprint (D-141, D-150); the body parsers' sizes; eight state saves at once per process, two hundred waiting (D-134) |
 | `src/http/requestLog.ts` | The request log (`NFR-006`, D-109's amendment): mounted first, an `X-Request-Id` on every response (a UUID or 32 hex digits from the proxy, else a new UUID) and one `request` line per response with the route pattern, never the URL, query, headers, user or IP |
 | `src/http/pages/` | Server-rendered pages with an escaping `markup` template, the friendly message page, the S3 start page `/` and the HTML 404 page (D-048, D-066), all with a first-party policy (`portalPageCsp`, DATA-011); `helpLink.ts` gives them the header with **Hjelp** when the web app runs (UD-013, D-067) |
 | `src/http/api/` | The `/api` router (`apiRouter.ts`): `GET /api/me`, `PUT /api/me/notices/:noticeId`, the content list and detail, findings, publish and unpublish, sharing, the studio's areas (`studioRouter.ts`), and `/api/docs` outside production; bodies are checked with `@hvl-interaktiv/api-contract` (DOC-012, D-074, D-075, D-077) |
@@ -210,19 +241,22 @@ test database one file at a time.
 | `src/h5p/jobs/` | `TemporaryFileCleanupJob`: every 5 minutes, once per interval across all nodes |
 | `src/security/zipEntryGuard.ts` | Rejects zip-slip, absolute paths, symlinks and oversize packages before extraction |
 | `src/security/FileTypeSniffer.ts`, `sniff/` | Refuses files whose bytes do not match their extension (`SEC-002`); a `.json` file is checked in portions by `sniff/jsonFileCheck.ts` and `sniff/jsonSyntax.ts`, with the answer of `JSON.parse` and nothing parsed into memory (D-143) |
-| `src/security/SvgSanitizer.ts`, `svg/` | Pre-check, Lumi's sanitiser, DOMPurify pass and final XML check for SVGs (`SEC-001`, D-044) |
+| `src/security/SvgSanitizer.ts`, `svg/` | Pre-check, Lumi's sanitiser, DOMPurify pass and final XML check for SVGs (`SEC-001`, D-044), run in one worker thread with time and memory limits (`svg/svgCleaningWorker.ts`, `svg/svgCleaningLimits.ts`, D-119) |
 | `src/security/ContentFileHeaders.ts` | Content-Type, `nosniff`, sandbox CSP and disposition for every user file (`SEC-004`, D-045) |
 | `prisma/schema/*.prisma` | Database schema, one file per domain; described field by field in `docs/privacy/DATA-INVENTORY.md` |
 | `prisma/migrations/` | Generated SQL migrations (plus one hand-written CHECK constraint, marked in the file); `20261030194004_s6_grade_bridge_insight` adds the grade bridge's and insight's columns (`orphaned`, `nextAttemptAt`, `attemptId`, `resultAt`, `terminalAt`, `academicYear`, `InsightSnapshot.contentVersion`) and the platform-scoped context checks (D-103, D-107), proved by `test/db/s6Schema.int.test.ts`; `20261104220000_s6_test_user_statements` adds `XapiStatement.testUser` (D-102's amendment) |
 | `prisma/roles/` | D-109's database roles as plain SQL (`DATA-010`): `01-roles.sql` (the administrator, once per database), `00-views-down.sql` and `02-grants.sql` (`hvli_migrator`, around every `prisma migrate deploy`): the app reads and writes rows and only appends to the audit tables; analytics reads the view `analytics.insight_snapshot` only; runbook `docs/ops/database-roles.md`. For migration authors: the view reads `InsightSnapshot.*` and `H5PContent.mainLibrary`, so a migration that retypes or drops one of them runs in a deployment only after the migrate step's `views-down`, and `grants` builds the view again |
 | `h5p/core`, `h5p/editor` | H5P client files, fetched and verified; not in git |
 | `src/generated/` | Generated Prisma client; not in git |
-| `test/` | Vitest tests; titles start with the requirement ID, e.g. `[DATA-002] …` |
+| `test/` | Vitest tests (`vitest.config.ts`, the root run's `server` project, one file at a time); titles start with the requirement ID, e.g. `[DATA-002] …` |
+| `test/fixtures/` | Files tests read as input, some malicious on purpose (SVGs, tiny H5P libraries, validator content, studio content, recorded xAPI statements); see [test/fixtures/README.md](test/fixtures/README.md) |
+| `test/load/` | The load bench of `NFR-001` (`loadBench.ts`, in a database of its own from `loadDatabase.ts`), which `tools/load` drives with k6 |
+| `test/lint/` | The proof of the lint rule against slow patterns (`slowPatterns.test.ts`, D-127) |
 | `live/` | The live-contract seam (D-101's amendments): the facts the mock Canvas and mock Feide assume, as checks that run against ALU's test Canvas and real Feide, or with `LIVE_TARGET=mock` against the mocks (CI); outside the root Vitest projects, run with `npm run test:live`; see [live/README.md](live/README.md) and the students' [hand-off index](../../docs/handoff/README.md) |
 | `test/support/appTestbed.ts`, `ltiLaunchDriver.ts`, `gradeBridgeInputs.ts` | The whole app on a real port with the mock platform pointed at it (with the grade enqueuer as main.ts wires it, and the NRPS counter when asked), and an LTI launch through the real ltijs routes without a browser |
 | `test/support/roleDatabase.ts`, `freshDeployment.ts`, `serverCli.ts` | A throwaway database with D-109's roles (local PostgreSQL only); one deployed through the runbook's own commands; and the operations CLIs run as `npm run` scripts in a child process (`test/privacy/operationsClis.int.test.ts`) |
 | `test/support/statementsToYesterday.ts` | Moves a test's stored statements to yesterday, with their academic year, because a view holds the data up to and including yesterday (D-106's amendment) |
-| `vitest.e2e.config.ts`, `e2e/` | The Chromium flows of `npm run test:e2e` (D-065): from S3 the Canvas iframe launch, Deep Linking and portal sharing; from S4 the editor in the Canvas iframe, publishing with a reason and the Canvas page `/app/play` (the last two on the built web app with the real types), the check of what a failed flow reports (`flowRecord.e2e.test.ts`), and the check that a closed test bed removes what it created and keeps an account an earlier run left (`testbedCleanup.e2e.test.ts`). The Canvas flows run in full Chromium with third-party cookies blocked. From S5, on the built web app: J1's portal part from the filtered catalogue through a pattern, a filled placeholder, the learning design and publishing with reasons (`patternToPublish.e2e.test.ts`), a colleague's copy from the content bank (`bankDuplicate.e2e.test.ts`, a second staff author from `e2e/support/runColleague.ts`), the mappe's Markdown and PDF downloads with nothing stored (`mappeDownloads.e2e.test.ts`) and a confirmed reset of a student's saved progress (`safeEditReset.e2e.test.ts`); from S6, the grade bridge from a Canvas student's right answer through the xAPI bridge, storage, the grade queue and the worker to the mock Canvas's gradebook and the teacher's «Poeng til Canvas», and a portal author's preview that stores nothing (`xapiToCanvas.e2e.test.ts`, `e2e/support/gradeBridgeFlow.ts`), and insight in Canvas: six learners of one course (two in the real player, four through the ingestion route, `test/support/insightLearners.ts`) shown on the teacher's **Innsikt** tab, two of another course shown as «< 5», a learner refused and another course's teacher kept to their own course (`insightInCanvas.e2e.test.ts`, `e2e/support/insightFlow.ts`); the player's files from the files origin with no cookie or ltik, and a crafted SVG that never runs (`filesOrigin.e2e.test.ts`); and the five user journeys of spec 00 §3 (S6 step 8): J1's Canvas half, a portal activity placed as a graded assignment through Deep Linking, a student's right answer in the gradebook and the teacher's **Rediger**, **Innsikt** and **Poeng til Canvas** (`journeyPlaceInCanvas.e2e.test.ts`; «new from a pattern» in Canvas passes to the students, `SPEC-DEVIATION: D-101`), J2 on a phone 320 px wide, resumed in a new browser (`journeyPhoneResume.e2e.test.ts`), J3 a course of 13 on the portal's **Innsikt** tab and «Ta opp i samlinga» (`journeySeminarInsight.e2e.test.ts`, `e2e/support/seminarCohort.ts`), J4 the mappe with the results of that course only (`journeyPortfolio.e2e.test.ts`), J5 a pattern's text changed through `content:check` (`journeyGovernance.e2e.test.ts`), and a learner's data rights and the yearly purge through the operations CLIs on a database of the test's own (`learnerDataRights.e2e.test.ts`, `e2e/support/learnerRightsSeed.ts`); `e2e/support/` holds their frame and save helpers, and `test/support/webAppTexts.ts` the web app's locale texts, which they and the accessibility suite read the same way |
+| `vitest.e2e.config.ts`, `e2e/` | The Chromium flows of `npm run test:e2e` (D-065): from S3 the Canvas iframe launch, Deep Linking and portal sharing; from S4 the editor in the Canvas iframe, publishing with a reason and the Canvas page `/app/play` (the last two on the built web app with the real types), the check of what a failed flow reports (`flowRecord.e2e.test.ts`), and the check that a closed test bed removes what it created and keeps an account an earlier run left (`testbedCleanup.e2e.test.ts`). The Canvas flows run in full Chromium with third-party cookies blocked. From S5, on the built web app: J1's portal part from the filtered catalogue through a pattern, a filled placeholder, the learning design and publishing with reasons (`patternToPublish.e2e.test.ts`), a colleague's copy from the content bank (`bankDuplicate.e2e.test.ts`, a second staff author from `e2e/support/runColleague.ts`), the mappe's Markdown and PDF downloads with nothing stored (`mappeDownloads.e2e.test.ts`) and a confirmed reset of a student's saved progress (`safeEditReset.e2e.test.ts`); from S6, the grade bridge from a Canvas student's right answer through the xAPI bridge, storage, the grade queue and the worker to the mock Canvas's gradebook and the teacher's «Poeng til Canvas», and a portal author's preview that stores nothing (`xapiToCanvas.e2e.test.ts`, `e2e/support/gradeBridgeFlow.ts`), and insight in Canvas: six learners of one course (two in the real player, four through the ingestion route, `test/support/insightLearners.ts`) shown on the teacher's **Innsikt** tab, two of another course shown as «< 5», a learner refused and another course's teacher kept to their own course (`insightInCanvas.e2e.test.ts`, `e2e/support/insightFlow.ts`); the player's files from the files origin with no cookie or ltik, and a crafted SVG that never runs (`filesOrigin.e2e.test.ts`); and the five user journeys of spec 00 §3 (S6 step 8): J1's Canvas half, a portal activity placed as a graded assignment through Deep Linking, a student's right answer in the gradebook and the teacher's **Rediger**, **Innsikt** and **Poeng til Canvas** (`journeyPlaceInCanvas.e2e.test.ts`; «new from a pattern» in Canvas passes to the students, `SPEC-DEVIATION: D-101`), J1's video pattern in the portal, with a pasted Panopto link and the captions error (`journeyVideoPattern.e2e.test.ts`, D-151), J2 on a phone 320 px wide, opened in under 3 s and resumed in a new browser (`journeyPhoneResume.e2e.test.ts`), J3 a course of 13 on the portal's **Innsikt** tab, «Ta opp i samlinga» and the printed list (`journeySeminarInsight.e2e.test.ts`, `e2e/support/seminarCohort.ts`), J4 the mappe with the results of that course only (`journeyPortfolio.e2e.test.ts`), J5 a pattern's text changed through `content:check` (`journeyGovernance.e2e.test.ts`), and a learner's data rights and the yearly purge through the operations CLIs on a database of the test's own (`learnerDataRights.e2e.test.ts`, `e2e/support/learnerRightsSeed.ts`); from the repair steps, a launch's last step from our own page in a browser that sends no fetch metadata (`ltiLaunchOwnPage.e2e.test.ts`, D-141), the Hjelp header in Canvas's picker frame (`pickerHelpLink.e2e.test.ts`, D-146) and each question of a Single Choice Set on the teacher's **Innsikt** tab (`singleChoiceSetInsight.e2e.test.ts`, D-151); `e2e/support/` holds their frame and save helpers, and `test/support/webAppTexts.ts` the web app's locale texts, which they and the accessibility suite read the same way |
 | `vitest.a11y.config.ts`, `a11y/` | The accessibility suite of `npm run test:a11y` (UD-030); `a11y/support/upstreamRegister.ts` lists the H5P upstream violations it reports but cannot repair; `a11y/support/catalogue.ts` lists every view every check walks, the studio's (S5) among them, which `a11y/support/studioSeed.ts` fills (learning design with gaps, colleagues, bank listings, a copy) and `studioViews.ts` opens; `a11y/support/staffActivities.ts` writes findable colleagues and their activities, also one with the run author as co-author for «Fjern meg»; `axeStudioViews`, `keyboardStudioJourneys` and the save choice's inert-page check (`axeSaveChoice`) cover the studio's own states; from S6 `axeGradeSync` and `axeInsight` cover the **Poeng til Canvas** and **Innsikt** tabs in the portal and on a teacher's Canvas page (`a11y/support/gradeSyncViews.ts` writes jobs in every state; `insightViews.ts` answers the insight API by routing with the fixed, already suppressed view of `insightFixture.ts`; `dataTabViews.ts` opens both tabs for the suites that walk every web view), `noScoreActivity.ts` gives the Deep Linking picker its no-score note, and `nynorskActivities.ts` adds a MultiChoice and a QuestionSet made in Nynorsk with HVL's language overlay for the player and editor scans |
 | `test/support/realWebApp.ts` | The whole server with the built web app, the ten real H5P types, a signed-in Feide author and LTI launches, for the browser suites |
 | [`../../tools/mock-platform/`](../../tools/mock-platform/README.md) | The mock Feide and mock Canvas that the tests and `npm run mock:platform` use (D-049) |
@@ -263,12 +297,15 @@ sequenceDiagram
     Main->>Env: process.env (tsx reads apps/server/.env when it exists)
     Env-->>Main: Env, or the list of problems on stderr (names, never values) and exit code 1
     Main->>Main: hint thresholds, then loadStudioContent(content/): a bad file prints every problem (file, line, key), exit code 1
+    Main->>Main: log the mode and where the data lives (a warning outside production), the memory limits, then remove stale upload folders and start the SVG cleaning worker
     Main->>Clients: createPrismaClient, connectRedis, createS3Client
     Main->>App: H5P engine (core 1.28 check, permission guard), then the Express app with the ltijs provider
     Main->>LTI: syncLtiPlatforms(LTI_PLATFORMS): register, update, deactivate removed, replace deployments
     Main->>LTI: reencryptPlatformKeys: private keys on an older DATA_ENCRYPTION_KEYS key get the current key
-    Main->>Main: start TemporaryFileCleanupJob and LtiRecordCleanupJob, then listen on PORT
-    Note over Main: SIGTERM or SIGINT: stop the jobs, close idle connections and the server, close the studio's services, quit Redis, disconnect Prisma, exit code 0
+    Main->>Main: start TemporaryFileCleanupJob, LtiRecordCleanupJob, GradeSyncWorker, GradeSubjectCleanupJob, RetentionPurgeJob and the event-loop watch, then listen on PORT
+    Main->>Main: log whether the PDF export works with its sandbox
+    Note over Main: SIGTERM or SIGINT (serverProcess.ts): stop the jobs, close idle connections and the server, wait for the PDF probe, close the studio's services, quit Redis, disconnect Prisma, close the web app, exit code 0
+    Note over Main: Any other failed start, or a fault nothing handled: one fatal line through the logger, exit code 1
 ```
 
 **Mount order (`createApp`).** Each stage either answers or passes the request on, so the order decides which
@@ -277,19 +314,21 @@ checks a request meets:
 ```mermaid
 flowchart TD
     In([request]) --> TP["trust proxy: TRUST_PROXY hops"]
-    TP --> BH["base headers: nosniff, no-referrer, HSTS when PUBLIC_BASE_URL is https"]
-    BH --> HZ["GET /healthz"]
+    TP --> RL["request log: X-Request-Id, one line per response with the route pattern"]
+    RL --> BH["base headers: nosniff, no-referrer, the default policy, HSTS when PUBLIC_BASE_URL is https"]
+    BH --> FO["files origin: on its host only GET and HEAD /h5p/files/…, everything else 404"]
+    FO --> HZ["GET /healthz"]
     HZ --> PA["page assets: /static/pages (the server pages' token CSS)"]
     PA --> CR["web app only: the Hjelp marker (offerHelpLink), then chromeRedirect (a top-level navigation to an H5P page → 303 to its chrome page)"]
     CR --> PS["portal session: __Host-hvli_sid → session in res.locals, or none"]
     PS --> LTI["LTI router: ltijs /lti/login, /lti/launch, /lti/keys → /static/lti, /lti/play → /app/play (web app only) → /lti/edit → /lti/deeplink, /lti/deeplink/response → LTI error pages"]
     LTI --> FE["Feide routes: /auth/feide/login, /auth/feide/callback, /auth/logout, /auth/session, /auth/logged-out"]
     FE --> HOME["GET / (the server's start page, only with WEB_APP=off)"]
-    HOME --> API["/api: requestPrincipal → me and notices, content list, findings, publish and unpublish, sharing, the studio's areas, /api/docs outside production → JSON 404 and errors"]
+    HOME --> API["/api: requestPrincipal → me and notices, content list, findings, publish and unpublish, sharing, the studio's areas, xAPI, grade sync, insight, /api/docs outside production → JSON 404 and errors"]
     API --> H5P["/h5p: requestPrincipal → createH5pRouter (client files, signed files and uploads, h5pAuthenticate, H5P routes, player and editor pages)"]
     H5P --> WEB["web app only: Next.js for GET and HEAD, with a nonce policy, without cookies, tokens or the ltik"]
     WEB --> NF["HTML 404 page"]
-    NF --> ERR["last-resort error page"]
+    NF --> ERR["last-resort error handler: ends every fault itself (D-133)"]
 ```
 
 **Who is making the request (`requestPrincipal`, on `/api` and `/h5p`).** An ltik wins over a session cookie,
@@ -302,7 +341,7 @@ sequenceDiagram
     participant LT as resolveLtik
     participant PS as portal session
     Req->>RP: ?ltik=, Authorization header, __Host-hvli_sid cookie
-    alt ?ltik= is not one string, or is on a path other than /h5p/ajax, /h5p/contentUserData/…, /lti/play, /lti/edit, /lti/deeplink
+    alt ?ltik= is not one string, or is on a path other than /h5p/ajax, /h5p/contentUserData/…
         RP-->>Req: 401 hvl:ltik-invalid
     else a Bearer ltik and ?ltik= that differ
         RP-->>Req: 401 hvl:ltik-invalid
@@ -310,7 +349,8 @@ sequenceDiagram
         RP->>LT: ltik
         LT->>LT: ltijs getLaunchContext (signature, 24 h), platform active, deployment in LtiDeployment, account exists (no write)
         LT-->>RP: LTI principal: learner or author from the LTI roles (never admin), course, launched activity
-        Note over RP: urlToken = the ltik. Any failure is the same 401 hvl:ltik-invalid.
+        RP->>RP: ltikScope: a method and path its launch's pages do not ask for → 403 hvl:not-from-canvas (D-130)
+        Note over RP: urlToken = the ltik. Any failure to resolve it is the same 401 hvl:ltik-invalid.
     else an Authorization header that is not a Bearer ltik
         RP-->>Req: 401 hvl:ltik-invalid
     else a live portal session
@@ -336,13 +376,15 @@ sequenceDiagram
     participant AR as AccountResolver
     participant S as SessionStore (Redis)
     B->>R: GET /auth/feide/login?returnTo=/h5p/play/{id}
+    Note over B,R: Login and callback: past the ceiling per network address, 429 (D-150). Only a page the person opened starts a login: a background request is refused, and a page another site opened without a click gets the sign-in page with its button (D-131).
     R->>TX: begin(safeReturnTo(returnTo))
     TX-->>R: txId + new state, nonce, PKCE verifier (32 random bytes each), kept 10 min under SHA-256(txId)
     R-->>B: 302 to Feide (FEIDE_SCOPE, state, nonce, S256 challenge) + Set-Cookie __Host-hvli_login=txId, Max-Age=600
     B->>F: log in
     F-->>B: 302 /auth/feide/callback?code=…&state=…
     B->>R: GET /auth/feide/callback with the login cookie
-    R->>TX: consume(txId): GETDEL, single use (the login cookie is cleared in every case)
+    R->>TX: peek(txId): not a page navigation, or a state that is not the pending login's → 400 page, the login left in place (D-131)
+    R->>TX: consume(txId): GETDEL, single use (the login cookie is cleared)
     alt no transaction (another browser, a replay, older than 10 min)
         R-->>B: 400 page (reason state-invalid)
     else
@@ -376,6 +418,7 @@ sequenceDiagram
     participant P as /lti/play
     participant H as /h5p routes
     B->>LJ: POST /lti/login (iss, client_id, login_hint, lti_message_hint, target_link_uri, lti_storage_target)
+    Note over B,LJ: Every ltijs route: past the ceiling per network address, 429 as an LTI error page (D-141)
     LJ->>DB: platform by iss + client_id (unknown or inactive → our error page)
     LJ-->>B: login page (ltijsStorageGuard.js first, CSP with script hashes): signed state + recovery token
     alt frame localStorage works (stock Chrome partitions it)
@@ -388,7 +431,7 @@ sequenceDiagram
     B->>LJ: POST /lti/launch (id_token, state)
     LJ-->>B: launch page: reads the recovery token back (localStorage, else lti.get_data)
     B->>LJ: POST /lti/launch (id_token, state, ltijs_recovered_state)
-    Note over LJ: Sec-Fetch-Site same-origin (when sent), recovered state matches, ID token signed by the platform JWKS (cached in Redis), aud, nonce used once, iat at most LTI_TOKEN_MAX_AGE_SECONDS old
+    Note over LJ: Sec-Fetch-Site same-origin, or without it an Origin that is exactly ours (D-141), recovered state matches, ID token signed by the platform JWKS (cached in Redis), aud, nonce used once, iat at most LTI_TOKEN_MAX_AGE_SECONDS old
     LJ->>DB: saveIdToken(claims)
     DB->>DB: deployment in LtiDeployment, else 403 page and no record (so no ltik), then store the claim allowlist for 24 h
     LJ->>RL: launch context + ltik (RS256, 24 h, names the record)
@@ -456,7 +499,7 @@ sequenceDiagram
     R-->>B: 200, nosniff, cached for a year (no actor needed)
     B->>R: GET https://files.<host>/h5p/files/:grant/:contentId/*file (filesOriginRouter: no cookie, no token)
     R-->>B: grant valid → the file with the SEC-004 headers and CORS for the app origin, else 403 hvl:file-grant-invalid
-    Note over B,R: the same path on the app's own origin is 404; the editor's files use /h5p/editor-files/:grant/…
+    Note over B,R: the same path on the app's own origin is 404, and the editor's files use /h5p/editor-files/:grant/…
     B->>RP: POST /h5p/contentUserData/:id/state/0?ltik=… (Canvas) or ?csrf=… (portal), &contentVersion=…
     RP->>R: res.locals.principal (from the ltik, or the session after the CSRF check)
     R->>A: who is this?
@@ -522,12 +565,12 @@ sequenceDiagram
     participant W as GradeSyncWorker (one node, every 15 s)
     participant C as Canvas (token, AGS scores)
     B->>I: batch every 2 s: Bearer ltik or X-CSRF-Token, ≤ 50 items, statementId and attemptId each
-    I->>I: 401 before the body · 403 activity or launch · 400 version · 429 over 120 a minute
+    I->>I: 401 before the body · 403 activity or launch · 400 version · 429 over 120 a minute or 3 000 a day
     I->>DB: XapiStatement rows (learnerKey, <platformId>:<contextId>, no name, IDs already stored skipped)
-    I-->>B: 202, the same for anyone; only a learner's rows are stored
+    I-->>B: 202, the same for anyone, and only a learner's rows are stored
     I->>Q: the new rows, the principal and (Canvas only) the launch's sub
     Q->>DB: one GradeSyncJob per placement, learner and attempt (scaled × 100, sub encrypted)
-    W->>DB: claim due jobs (FOR UPDATE SKIP LOCKED); score by the placement's attempt policy
+    W->>DB: claim due jobs (FOR UPDATE SKIP LOCKED), score by the placement's attempt policy
     W->>C: client-credentials token (assertion signed with the tool key), then POST <lineitem>/scores
     alt 2xx
         W->>DB: succeeded
@@ -547,47 +590,60 @@ fails if the two disagree. Summary:
 
 | Variable | Secret | Purpose |
 |---|---|---|
-| `DATABASE_URL` | yes | PostgreSQL connection |
-| `REDIS_URL` | yes* | Shared cache, locks, job leases, portal sessions, login transactions, ltijs key cache |
-| `S3_ENDPOINT`, `S3_REGION`, `S3_FORCE_PATH_STYLE` | no | S3-compatible storage location |
-| `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | yes | S3 credentials |
-| `S3_CONTENT_BUCKET`, `S3_TEMPORARY_BUCKET` | no | Buckets for activity files and editor uploads |
-| `H5P_CORE_DIR`, `H5P_EDITOR_DIR`, `H5P_LIBRARY_DIR` | no | H5P client files and installed libraries |
-| `H5P_SITE_UUID` | no | Pre-registered Hub site (workaround F2) |
-| `PSEUDONYM_SECRETS` | yes | One HMAC secret per academic year |
-| `NODE_ENV`, `LOG_LEVEL` | no | Runtime mode and log level |
-| `PUBLIC_BASE_URL` | no | The public origin (no path): Feide redirect URI `<origin>/auth/feide/callback`, logout return `<origin>/auth/logged-out`, Deep Linking item URLs, HSTS when https |
+| `DATABASE_URL` | yes | PostgreSQL connection (required; in production the `hvli_app` role's) |
+| `REDIS_URL` | yes* | Shared cache, locks, job leases, rate-limit windows, portal sessions, login transactions, ltijs key cache (required) |
+| `S3_ENDPOINT`, `S3_REGION`, `S3_FORCE_PATH_STYLE` | no | S3-compatible storage location (defaults: empty, the AWS endpoint of the region; `eu-north-1`; `true`) |
+| `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | yes | S3 credentials (required) |
+| `S3_CONTENT_BUCKET`, `S3_TEMPORARY_BUCKET` | no | Buckets for activity files and editor uploads (defaults `hvli-content`, `hvli-temporary`) |
+| `H5P_CORE_DIR`, `H5P_EDITOR_DIR`, `H5P_LIBRARY_DIR` | no | H5P client files and installed libraries (defaults `h5p/core`, `h5p/editor`, `var/h5p/libraries`, relative to `apps/server`) |
+| `H5P_SITE_UUID` | no | Pre-registered Hub site (workaround F2); empty: registered at the first Hub contact |
+| `PSEUDONYM_SECRETS` | yes | One HMAC secret per academic year (required) |
+| `NODE_ENV` | no | `development`, `test` or `production`, with no default: a missing or empty mode stops the start (D-133) |
+| `LOG_LEVEL` | no | The log level (default `info`) |
+| `PUBLIC_BASE_URL` | no | The public origin (no path; default `http://localhost:3000`): Feide redirect URI `<origin>/auth/feide/callback`, logout return `<origin>/auth/logged-out`, Deep Linking item URLs, HSTS when https |
+| `FILES_BASE_URL` | no | The separate origin the player's files are served from (`SEC-004`, D-110's amendment); empty: `files.<host>` of `PUBLIC_BASE_URL` with its scheme and port. Its host must differ from the app's, and it must be set when the app's host is an IP address |
 | `PORT` | no | The port the server listens on (default 3000) |
 | `TRUST_PROXY` | no | How many reverse proxies' `X-Forwarded-*` headers are trusted (0–5, default 0); never more than really run. The LTI and Feide login request ceilings and the audit's address hash count by the client address this gives (D-141, D-150) |
-| `CANVAS_ORIGINS` | no | Origins that may frame the LTI pages (`frame-ancestors`, comma-separated); empty: no framing |
+| `HSTS_INCLUDE_SUBDOMAINS` | no | Whether HSTS also covers every name under the server's host (`includeSubDomains`; default `false`, D-133) |
+| `CANVAS_ORIGINS` | no | Origins that may frame the LTI pages (`frame-ancestors`, comma-separated); empty: no framing. Line item and roster URLs must be on one of them or on the platform's own origins (D-104, D-106) |
 | `EXTERNAL_MEDIA_ORIGINS` | no | Origins H5P content may load outside media from (e.g. Panopto); never YouTube. A Panopto site (`*.panopto.com`, `*.panopto.eu`) also allows Panopto's embed API script (that one file on `developers.panopto.com`), which H5P.Video needs (D-070) |
 | `CAPTIONED_MEDIA_ORIGINS` | no | Origins whose videos are captioned by policy (e.g. HVL's Panopto); V-VID-CAPTIONS accepts their videos without a text track of their own (D-073) |
-| `WEB_APP` | no | `off` (default), `dev` or `prod`: whether the server also serves `apps/web` in its own process (D-068); production refuses `dev` |
-| `LTI_PLATFORMS` | no | The Canvas platforms and their deployment IDs as JSON, synced at start-up (D-051); a launch from an unlisted deployment gets no ltik. `"feideLinking": true` on a platform turns on Canvas–Feide account linking for it (default off, D-063) |
+| `WEB_APP` | no | `off` (default), `dev` or `prod`: whether the server also serves `apps/web` in its own process (D-068); production accepts only `prod` (D-123) |
+| `LTI_PLATFORMS` | no | The Canvas platforms and their deployment IDs as JSON, synced at start-up (D-051; default `[]`); a launch from an unlisted deployment gets no ltik. `"feideLinking": true` on a platform turns on Canvas–Feide account linking for it (default off, D-063) |
 | `LTI_TOKEN_MAX_AGE_SECONDS` | no | Oldest accepted LTI ID token by its `iat` (1–60 s, default 10) |
-| `FEIDE_ISSUER`, `FEIDE_CLIENT_ID` | no | Feide OpenID Connect issuer (discovery) and this server's client ID |
-| `FEIDE_CLIENT_SECRET` | yes | The client secret, sent as `client_secret_post`; never logged |
-| `FEIDE_GROUPS_API_URL` | no | Base URL of the Feide Groups API (`/groups/me/groups`) |
+| `AGS_LABEL_MODE` | no | How a graded placement says its points are formative: `suffix` (default, «Tittel (formativ)») or `preserve` (the teacher's own name, the notice in the description); new placements only (`LTI-013`, D-105, Q8) |
+| `NRPS_MAX_PAGES` | no | The most pages of 50 learners read from Canvas's Names and Roles service for a course's learner count (1–1000, default 100; `LTI-008`) |
+| `FEIDE_ISSUER`, `FEIDE_CLIENT_ID` | no | Feide OpenID Connect issuer (discovery; default `https://auth.dataporten.no`) and this server's client ID (required) |
+| `FEIDE_CLIENT_SECRET` | yes | The client secret, sent as `client_secret_post`; never logged (required) |
+| `FEIDE_GROUPS_API_URL` | no | Base URL of the Feide Groups API (`/groups/me/groups`; default `https://groups-api.dataporten.no`) |
 | `ALLOWED_FEIDE_ORGS` | no | Feide realms whose users are HVL members (default `hvl.no`); others are learners |
 | `ADMIN_FEIDE_IDS` | no | Feide IDs that get `admin` at portal login, if they are HVL members; an LTI launch never grants it |
 | `AUTHOR_COURSE_GROUPS` | no | Feide course groups whose students may author (exact or `prefix:` match, D-059) |
 | `IDENTITY_HASH_KEYS` | yes | Key ring for `Identity.subjectHash` and the audit IP hash, current key first (D-055) |
 | `DATA_ENCRYPTION_KEYS` | yes | Key ring for AES-256-GCM at rest: LTI private keys, LTI access tokens, the session's Feide ID token (D-056); rotate in three steps (new key second, then first, then drop the old one), see `.env.example` |
 | `URL_SIGNING_KEYS` | yes | Key ring that signs content-file grants and editor upload grants (separate HKDF purposes, D-058, D-069) |
-| `MIN_GROUP_SIZE` | no | The minimum group size *k* of aggregates in exports (integer ≥ 3, default 5; MAPPE-003, INS-006, D-095) |
+| `MIN_GROUP_SIZE` | no | The minimum group size *k* of aggregates in the mappe and in insight (integer ≥ 3, default 5; MAPPE-003, INS-006, D-095) |
+| `PURGE_RUN_DATE` | no | The day of the yearly purge, `MM-DD` from `08-31` to `12-31` (default `08-31`; DATA-003, D-107) |
 | `PDF_BROWSER_EXECUTABLE` | no | Absolute path of the Chromium that prints the mappe PDF; empty: playwright-core's own build (D-096) |
 | `PDF_MAX_CONCURRENCY` | no | PDF exports rendered at once per process (1–8, default 2; one per person, D-096) |
 | `PDF_ALLOW_NO_SANDBOX` | no | Development only: start Chromium without its sandbox when the server runs as root (default `false`); production refuses `true` (D-096) |
-| `PURGE_RUN_DATE` | no | The day of the yearly purge, `MM-DD` from `08-31` to `12-31` (default `08-31`; DATA-003, D-107) |
+| `CLAMAV_HOST` | no | Host name or IP address of clamd, which scans every upload before it is stored (`SEC-006`, D-110); empty (default): no scanning. Production requires it unless `CLAMAV_ALLOW_UNSCANNED_UPLOADS` is `true`, and never both |
+| `CLAMAV_PORT`, `CLAMAV_TIMEOUT_MS` | no | clamd's TCP port, or its TLS proxy's (default 3310), and the limit on one whole scan in milliseconds (1000–600000, default 30000) |
+| `CLAMAV_TLS` | no | Connect to clamd through a TLS proxy (default `false`); production requires `true` unless `CLAMAV_HOST` is the loopback (`DATA-004`) |
+| `CLAMAV_ALLOW_UNSCANNED_UPLOADS` | no | Production only: `true` starts without `CLAMAV_HOST`, so uploads are not scanned (default `false`); it never lets a file through when a configured clamd fails |
 
 \* when the URL contains a password.
 
 With `NODE_ENV=production`, `src/config/productionChecks.ts` also requires https for `PUBLIC_BASE_URL`, the Feide
 URLs, `CANVAS_ORIGINS` and the `LTI_PLATFORMS` endpoints, and refuses ring keys that are readable text (like the
-examples), low in distinct bytes or used twice, `WEB_APP=dev` and `PDF_ALLOW_NO_SANDBOX=true`; and, for `DATA-004`
-(D-109), a `DATABASE_URL` without `sslmode=verify-full` (`require` and `verify-ca` pass), a `redis://` URL, an http
-`S3_ENDPOINT`, storage outside the EEA list, and any `AWS_ENDPOINT_URL_S3` or `AWS_ENDPOINT_URL`. In production
-`DATABASE_URL` is the `hvli_app` role's; the migrate step uses its own URL (docs/ops/database-roles.md).
+examples), low in distinct bytes or used twice, a `WEB_APP` other than `prod`, `PDF_ALLOW_NO_SANDBOX=true`, and
+`DEBUG` or `NODE_DEBUG`; and, for `DATA-004` (D-109), a `DATABASE_URL` without `sslmode=verify-full` (`require` and
+`verify-ca` pass), a `redis://` URL, an http `S3_ENDPOINT`, storage outside the EEA list, any `AWS_ENDPOINT_URL_S3`
+or `AWS_ENDPOINT_URL`, and a bucket that is an ARN rather than a plain name. In any other mode the key rules and the
+https rules still apply when `PUBLIC_BASE_URL` is not a local address (`src/config/publicAddressRules.ts`, D-133).
+In every mode the files origin must name another host than the app (https in production), and
+`src/config/malwareScanConfig.ts` holds the ClamAV rules and refuses `CLAMSCAN_*` and `CLAMDSCAN_*` variables. In
+production `DATABASE_URL` is the `hvli_app` role's; the migrate step uses its own URL (docs/ops/database-roles.md).
 `.env.example` says how to rotate each key ring.
 
 ## Implements
@@ -628,7 +684,7 @@ examples), low in distinct bytes or used twice, `WEB_APP=dev` and `PDF_ALLOW_NO_
 | `H5P-007` Authenticated H5P AJAX in iframes | `src/auth/requestPrincipal.ts`, `src/auth/session/csrfToken.ts`, `src/http/h5pAuthenticate.ts`, `src/auth/principalToH5pActor.ts`, `src/h5p/HvlUrlGenerator.ts`, `contentFileGrants.ts`, `src/http/routes/signedFileRoutes.ts`, `src/h5p/render/editorIntegration.ts`, `src/http/routes/signedUploadRoutes.ts`, `src/h5p/render/client/editorStart.js` (the editor page saves only once H5P's editor can) | `test/http/h5pAuthenticate.int.test.ts`, `test/h5p/editorReadiness.browser.int.test.ts`, `test/h5p/render/editorStartScript.test.ts`, `test/http/signedUploads.int.test.ts`, `test/http/editorRoutes.int.test.ts`, `test/auth/requestPrincipal.test.ts`, `test/auth/session/csrfToken.test.ts`, `test/h5p/HvlUrlGenerator.test.ts`, `test/h5p/contentFileGrants.test.ts`, `test/h5p/HvlH5pUser.test.ts`, `test/http/signedFiles.int.test.ts` |
 | `PROD-004` Learners see only published activities | `src/http/authErrors.ts` (`hvl:activity-unavailable`), `src/http/routes/playerRoutes.ts`, `src/lti/launch/onResourceLink.ts`, `src/http/pages/messagePage.ts` | `test/http/player.int.test.ts`, `test/lti/ltiLaunch.int.test.ts`, `test/http/h5pAuthenticate.int.test.ts`, `test/http/pages/messagePage.test.ts`, `test/lti/http/ltiErrorPages.test.ts`, `test/server/createApp.int.test.ts` |
 | `PROD-006` Share outside Canvas with Feide | `src/http/api/contentSharing.ts`, `contentSharingRoutes.ts`, `src/h5p/permissions/contentRules.ts` | `test/http/api/contentSharing.test.ts`, `test/http/api/contentSharingRoutes.int.test.ts`, `test/h5p/permissions/HvlPermissionSystem.int.test.ts`, `e2e/portalSharing.e2e.test.ts` |
-| `NFR-002` Availability (S3 part: health check, clean start and stop; S6: backups and the restore drill are `tools/ops`, the runbook `docs/ops/runbook.md`) | `src/server/healthRoutes.ts`, `src/server/main.ts` | `test/server/healthRoutes.test.ts`, `test/server/main.smoke.test.ts`, `test/server/createApp.int.test.ts`, `tools/ops/test/*` |
+| `NFR-002` Availability (S3 part: health check, clean start and stop; S6: backups and the restore drill are `tools/ops`, the runbook `docs/ops/runbook.md`; from the repair steps the process's exit on a fault, the memory limits line, the standstill line and the bounded work at once, D-133, D-134, D-144) | `src/server/healthRoutes.ts`, `src/server/main.ts`, `serverProcess.ts`, `processFaults.ts`, `memoryBudget.ts`, `eventLoopWatch.ts`, `src/infra/BoundedGate.ts` | `test/server/healthRoutes.test.ts`, `test/server/main.smoke.test.ts`, `test/server/createApp.int.test.ts`, `test/server/serverProcess.test.ts`, `processFaults.test.ts`, `memoryBudget.test.ts`, `eventLoopWatch.test.ts`, `test/infra/boundedGate.test.ts`, `tools/ops/test/*` |
 | `NFR-001` Performance: the load bench, one node with the mock Canvas and the ten real types, which `tools/load` drives with k6 (D-114's amendment) | `test/load/loadBench.ts`, `test/load/loadDatabase.ts` | `tools/load/test/*` (`loadBench.test.mjs` runs one real visit), `npm run load:smoke` |
 | `NFR-007` The server in the Docker image: `node --import tsx src/server/main.ts` as uid 10001, `tsx` a runtime dependency (D-110 and its amendments) | `package.json` (`dependencies`), `src/server/main.ts`, `deploy/` | `deploy/smoke/dockerSmoke.sh` (here and in `.github/workflows/docker.yml`), `tools/deploy-check/test/*` |
 | `PROD-003`, `UD-022` Check and publish with acknowledgements | `src/content/*`, `src/http/api/publishRoutes.ts`, `src/http/routes/contentRoutes.ts` (save gate) | `test/http/api/publishRoutes.int.test.ts`, `test/http/api/publishGuards.int.test.ts`, `test/content/*` |
@@ -683,8 +739,30 @@ paths, editor content and upload grants), D-070 (the page policies, no YouTube, 
 (the pure validator), D-074 (publishing, the save gate and the write lock), D-075 (notice dismissals), D-076 (the
 web app's translations and the locale header), D-077 (API schemas and the OpenAPI document), D-078 (real H5P
 libraries from GitHub), D-079 (what is checked automatically and what HVL records by hand), D-080 (H5P markup
-repairs and the upstream register). Session 6: D-101 (scope), D-102 (xAPI capture, the test student), D-103
+repairs and the upstream register). Session 5: D-081 (one Node.js system with Lumi's H5P server half), D-082 (the
+studio's content pipeline), D-083 (the guide as CommonMark, not MDX), D-084 (pattern skeletons in `content/`),
+D-085 (creating from a pattern in one request), D-086 (guidance placeholders and V-PLACEHOLDER), D-087
+(learning-design metadata), D-088 (the alignment planner), D-089 (studio access, routes and tabs), D-090 (finding
+co-authors), D-091 (the content bank), D-092 (duplicating an activity), D-093 (safe editing), D-094 (rendering the
+pedagogisk mappe), D-095 (minimum group size in exports), D-096 (the PDF from the server's Chromium), D-097 (new
+dependencies), D-098 (the studio's Canvas side moved to S6), D-099 (binary responses and `DELETE` in the API
+contract), D-100 (the S5 gate, Q17 open). Session 6: D-101 (scope), D-102 (xAPI capture, the test student), D-103
 (platform-scoped contexts), D-104 (our AGS client), D-105 (the formative label), D-106 (insight and its amendments),
 D-107 (the yearly purge), D-108 (data-subject requests), D-109 (database roles, production checks, the request log),
 D-110 (deployment: the image, the files origin, ClamAV, backups; its step-6 amendments), D-111 (the language
-overlay), D-114 (the load test), D-115 (xAPI capture, statement identity, attempts and gradable results).
+overlay), D-112 (Lumi stays at 10.0.4), D-114 (the load test), D-115 (xAPI capture, statement identity, attempts and
+gradable results). The repair steps after the S6 gate: D-117 (repairs in small steps), D-118 (how packages and files
+are read), D-119 (SVG cleaning in a worker thread), D-120 (limits on saved state and on what an author sends), D-121
+(limits on stored xAPI statements), D-122 (200 000 statements a view), D-123 (a save keeps only what the semantics
+describe), D-124 (fitted content for the player and editor), D-125 (framing, and controls that ask first), D-126 (a
+size limit on an activity's parameters), D-127 (the validator within the limits, slow patterns a lint error), D-128
+(per-person limits on new activities, the planner and the mappe), D-129 (a Canvas user per platform registration),
+D-130 (what an ltik reaches), D-131 (the portal's login against other sites' requests), D-132 (backup row counts),
+D-133 (the mode stated, every fault through the logger), D-134 (memory limits, work that waits its turn), D-135
+(Next.js 16.4.6), D-136 (the insight CSV), D-137 (an answer-key change starts a new content version), D-138 (whose
+play is recorded), D-139 (a file limit per activity), D-140 (plain-text fields, no inline script), D-141 (a launch
+finished by the browser that began it, a bound before sign-in), D-142 (logout, one Feide ID rule, hidden
+characters), D-143 (`.json` files in portions, scan turns), D-144 (standstills, Redis failing at once), D-145 (the
+lock file and workflow pins), D-146 (the own-page header on insight routes), D-147 (sanitize-html 2.18.2), D-148
+(monthly updates by hand), D-149 (playwright-core 1.65.1), D-150 (code scanning, the Feide login ceiling), D-151
+(step 35: a Single Choice Set's questions in insight, a site icon, quoted texts' language).

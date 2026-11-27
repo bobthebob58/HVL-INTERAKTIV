@@ -1,6 +1,6 @@
 /**
  * bridgeDocument — opens a simulated player document (jsdom) with H5P's dispatcher, the bridge's configuration and a
- * recording stand-in for `fetch`, runs the three bridge scripts in it, and reads probe P1's recorded statements.
+ * recording stand-in for `fetch`, runs the bridge's scripts in it, and reads probe P1's recorded statements.
  *
  * Why: the bridge's tests (LTI-010) drive its 2-second timer, H5P's events and the server's answers by hand, so each
  *      test states behaviour rather than plumbing; P1's fixtures (apps/server/test/fixtures/xapi/) hold what the ten
@@ -9,7 +9,8 @@
  * Invariants:
  *   - Scripts run only through `window.eval` of the package's own files, in the player's order.
  *   - The timer never runs by itself: `tick()` is the bridge's 2-second interval; answers come only from `answer()`.
- * Collaborators: ../../src/xapiStatements.js, ../../src/xapiBatching.js, ../../src/xapiBridge.js.
+ * Collaborators: ../../src/xapiSingleChoiceSet.js, ../../src/xapiStatements.js, ../../src/xapiBatching.js,
+ *   ../../src/xapiBridge.js.
  * Tests: packages/hvl-h5p-theme/test/xapiBridge.test.ts, packages/hvl-h5p-theme/test/xapiBridgeSending.test.ts,
  *   packages/hvl-h5p-theme/test/xapiBridgeRecovery.test.ts, packages/hvl-h5p-theme/test/xapiStatements.test.ts,
  *   packages/hvl-h5p-theme/test/xapiBatching.test.ts
@@ -19,7 +20,12 @@ import { JSDOM, VirtualConsole } from 'jsdom';
 
 const source = (name: string) => readFileSync(new URL(`../../src/${name}`, import.meta.url), 'utf8');
 /** The bridge's scripts, in the player's order. */
-export const BRIDGE_SCRIPTS = ['xapiStatements.js', 'xapiBatching.js', 'xapiBridge.js'].map(source);
+export const BRIDGE_SCRIPTS = [
+  'xapiSingleChoiceSet.js',
+  'xapiStatements.js',
+  'xapiBatching.js',
+  'xapiBridge.js',
+].map(source);
 /** The activity of every simulated page. */
 export const CONTENT_ID = '0192f0c4-0000-7000-8000-0000000000aa';
 
@@ -139,8 +145,9 @@ export function openBridgeDocument(options: BridgeOptions = {}) {
     dom,
     h5p,
     requests,
-    /** Raises H5P's `xAPI` event with this statement in the document. */
-    dispatch: (statement: Statement) => listeners.forEach((fn) => fn({ data: { statement } })),
+    /** Raises H5P's `xAPI` event with this statement; `source` is the raising instance, Core's `this` for a listener. */
+    dispatch: (statement: Statement, source?: unknown) =>
+      listeners.forEach((fn) => fn.call(source, { data: { statement } })),
     /** Runs the bridge's 2-second interval once. */
     tick: () => ticks.forEach((fn) => fn()),
     /** Raises `pagehide`. */

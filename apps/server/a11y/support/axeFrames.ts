@@ -2,7 +2,7 @@
  * axeFrames — which of a page's frames an axe scan reached: every frame its results' targets lead into, compared
  * with the shown frames that hold H5P (the player or editor page, and the iframes H5P writes).
  *
- * Why: UD-030 and UD-011 ask for axe inside the iframe of every content type. @axe-core/playwright 4.13 injects axe
+ * Why: UD-030 and UD-011 ask for axe inside the iframe of every content type. @axe-core/playwright 4.14 injects axe
  *      into each child frame within 1 s and drops a frame that fails (or reloads) in an empty `catch`; axe reports
  *      that only through its `frame-tested` rule, which is not a WCAG rule. A scan of the chrome page alone would
  *      therefore pass a player scan, so ./axeScan.ts asks this module and fails instead.

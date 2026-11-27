@@ -7,18 +7,23 @@
  *      values the server showed: a hidden value is never named (INS-006). A hidden cell can still hold the hardest
  *      item or the most common answer, so each sentence says it chose among the values that can be shown
  *      («av dei som kan visast», D-106's amendment of 2026-11-04) and is never false.
- * Spec: INS-008, INS-002, INS-003, INS-005, INS-006
+ * Spec: INS-008, INS-002, INS-003, INS-005, INS-006, UD-010
  * Invariants:
  *   - Built only from shown cells, and the text says so; when no value qualifies, the summary says that none can be
  *     shown.
  *   - Items arrive hardest first (the server's order), so the hardest shown item is the first with a shown share.
  *   - PRIVACY: a wrong answer named here is one the server listed, so at least k learners gave it (INS-003).
  *   - A question without text, or no longer in the activity, is named by its place («Spørsmål 3 (utan tekst)»).
- * Collaborators: ./insightFormat.ts, ./insightReportShape.ts, the sections in this folder, ./shortlistEntries.ts.
- * Tests: apps/web/test/features/insight/insightSummaries.test.ts
+ *   - A11Y: a summary that quotes the activity's own text gives its range (./quotedText.tsx), so the section marks
+ *     only that part with the activity's language (UD-010); a fallback name is never marked.
+ * Collaborators: ./insightFormat.ts, ./insightReportShape.ts, ./quotedText.tsx, the sections in this folder,
+ *   ./shortlistEntries.ts.
+ * Tests: apps/web/test/features/insight/insightSummaries.test.ts,
+ *   apps/web/test/features/insight/InsightQuotedLanguage.test.tsx
  */
 import { t, type Locale } from '../../i18n/translate';
 import { cellText, formatValue, shownValue, videoTime } from './insightFormat';
+import { plainText, quotedSentence, type QuotedText } from './quotedText';
 import type {
   ChoiceMisconception,
   GapInsight,
@@ -44,18 +49,19 @@ export function questionLabel(text: string | null, number: number, locale: Local
  * @param items - Hardest first.
  * @param k - The minimum group size.
  * @param locale - The page locale.
- * @returns The summary.
+ * @returns The summary; the question's own text is its quoted part, the name of one without text is not.
  */
-export function itemsSummary(items: readonly ItemDifficultyInsight[], k: number, locale: Locale): string {
+export function itemsSummary(items: readonly ItemDifficultyInsight[], k: number, locale: Locale): QuotedText {
   const index = items.findIndex((item) => shownValue(item.firstCorrect) !== undefined);
   const item = items[index];
-  if (!item) return t('insight.items.summaryNone', locale);
-  return t('insight.items.summary', locale, {
+  if (!item) return plainText(t('insight.items.summaryNone', locale));
+  const params = {
     number: index + 1,
     question: questionLabel(item.questionText, index + 1, locale),
     first: cellText(item.firstCorrect, 'percent', k, locale),
     latest: cellText(item.latestCorrect, 'percent', k, locale),
-  });
+  };
+  return quotedSentence('insight.items.summary', locale, params, item.questionText ? 'question' : undefined);
 }
 
 /**
@@ -79,38 +85,33 @@ export function commonestWrongOption(
  * INS-003: the summary of a choice question.
  * @param question - The question's distribution.
  * @param locale - The page locale.
- * @returns The commonest wrong option, that no learner chose a wrong one, or that none can be shown.
+ * @returns The commonest wrong option (its quoted part), that no learner chose a wrong one, or that none can be shown.
  */
-export function choiceSummary(question: ChoiceMisconception, locale: Locale): string {
+export function choiceSummary(question: ChoiceMisconception, locale: Locale): QuotedText {
   const wrong = commonestWrongOption(question);
   if (wrong) {
-    return t('insight.choice.summary', locale, {
-      option: wrong.text,
-      count: formatValue(wrong.count, 'count', locale),
-    });
+    const count = formatValue(wrong.count, 'count', locale);
+    return quotedSentence('insight.choice.summary', locale, { option: wrong.text, count }, 'option');
   }
   const allShownZero = question.options.every(
     (option) => option.correct || shownValue(option.learners) === 0,
   );
-  return t(allShownZero ? 'insight.choice.summaryNoWrong' : 'insight.choice.summaryNone', locale);
+  return plainText(t(allShownZero ? 'insight.choice.summaryNoWrong' : 'insight.choice.summaryNone', locale));
 }
 
 /**
  * INS-003: the summary of one gap.
  * @param gap - The gap's first answers.
  * @param locale - The page locale.
- * @returns The commonest listed wrong answer, or that none can be shown.
+ * @returns The commonest listed wrong answer (its quoted part, typed in the activity), or that none can be shown.
  */
-export function gapSummary(gap: GapInsight, locale: Locale): string {
+export function gapSummary(gap: GapInsight, locale: Locale): QuotedText {
   const number = gap.index + 1;
   const wrong = gap.wrongAnswers.find((answer) => (shownValue(answer.learners) ?? 0) > 0);
   const count = wrong ? shownValue(wrong.learners) : undefined;
-  if (!wrong || count === undefined) return t('insight.gaps.summaryNone', locale, { number });
-  return t('insight.gaps.summary', locale, {
-    number,
-    answer: wrong.answer,
-    count: formatValue(count, 'count', locale),
-  });
+  if (!wrong || count === undefined) return plainText(t('insight.gaps.summaryNone', locale, { number }));
+  const params = { number, answer: wrong.answer, count: formatValue(count, 'count', locale) };
+  return quotedSentence('insight.gaps.summary', locale, params, 'answer');
 }
 
 /**
@@ -126,19 +127,21 @@ export const interactionName = (interaction: VideoInteractionInsight, locale: Lo
  * INS-005: the interaction the smallest shown share answered.
  * @param interactions - In the video's order.
  * @param locale - The page locale.
- * @returns The summary.
+ * @returns The summary; the task's label or question is its quoted part, «Oppgåve utan tittel» is not.
  */
-export function videoSummary(interactions: readonly VideoInteractionInsight[], locale: Locale): string {
+export function videoSummary(interactions: readonly VideoInteractionInsight[], locale: Locale): QuotedText {
   let lowest: VideoInteractionInsight | undefined;
   for (const interaction of interactions) {
     const share = shownValue(interaction.share);
     if (share === undefined) continue;
     if (!lowest || share < (shownValue(lowest.share) ?? Infinity)) lowest = interaction;
   }
-  if (!lowest) return t('insight.video.summaryNone', locale);
-  return t('insight.video.summary', locale, {
+  if (!lowest) return plainText(t('insight.video.summaryNone', locale));
+  const params = {
     task: interactionName(lowest, locale),
     time: videoTime(lowest.atSeconds, locale),
     share: formatValue(shownValue(lowest.share) ?? 0, 'percent', locale),
-  });
+  };
+  const named = (lowest.label ?? lowest.questionText) !== null;
+  return quotedSentence('insight.video.summary', locale, params, named ? 'task' : undefined);
 }

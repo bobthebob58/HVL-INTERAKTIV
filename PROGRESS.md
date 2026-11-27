@@ -16,7 +16,7 @@ what is done, what is verified, and what is blocked.
 | S4+ | Whole-code-base simplification pass (owner decision, 2026-10-24) | — | ✅ Done (2026-10-25): 59 changes, 569 lines shorter, every test kept, S4 gate green again; a second round is the owner's call |
 | S5 | Læringsdesign studio, patterns, planner, pedagogisk mappe export | 04; 00 S5 rows | ✅ Gate passed (2026-10-30); the ALU and pilot review (Q17), the bank consent text and the manual PDF check open; the Canvas side in S6 |
 | S6 | xAPI → AGS grade bridge, insight, privacy jobs, Docker, conformance report | 02 §4–§8; 05; 00 §3 (journeys J1–J5), §6; 01 `H5P-009`, `H5P-010`, `SEC-004`, `SEC-006`; 03 `UD-003`, §6 (`UD-040`); 04 `MAPPE-003`, `MAPPE-004` (D-101) | ✅ Done (gate passed 2026-11-06; started 2026-10-30; D-101…D-116) |
-| SR | Security repairs after the S6 gate: 34 steps, each with tests, a gate run and a decision entry | The spec a step names | ✅ Done (2026-11-20 to 2026-11-27; D-117…D-150; session log, steps 1–34); open: HVL IT's and the owner's questions Q32, Q33 and Q34, with the earlier ones |
+| SR | Security repairs after the S6 gate: 35 steps, each with tests, a gate run and a decision entry | The spec a step names | ✅ Done (2026-11-20 to 2026-11-27; D-117…D-151; session log, steps 1–35); open: HVL IT's and the owner's questions Q32, Q33 and Q34, with the earlier ones |
 
 Legend: ⬜ not started · 🟨 in progress · ✅ done (gate passed, output pasted below) · ⛔ blocked
 
@@ -3546,3 +3546,94 @@ Append one entry per session: date, session, what was done, gate output, and any
       MAPPE-004). After the second read's corrections, the Feide and launch-ceiling tests ran again: 159 passed
       (14 files)
   ```
+
+- **2026-11-27 · Security repairs, step 35 (D-151)** — the small things S6's log left open, the newer
+  accessibility scanner with two repairs, and four package updates.
+  - A Single Choice Set in insight (INS-002, INS-003, INS-005, LTI-010): the library sends one answer per
+    question of a set, under the question's own ID, and none for the set, so the view listed the set with no
+    learner and the answers as rows without a name. Each question of a set is now a question of its own, with
+    its text and its alternatives; in a video the set is one interaction, answered through its questions. The
+    browser test found more: the library writes the chosen alternative's place on screen as the answer and
+    judges by it, and it shuffles the alternatives, so five learners who all answered one question right and
+    another wrong gave 60 % right for both in one run. The xAPI bridge now sends the stored index the set itself recorded,
+    read from the instance that raised the event, or no answer when it cannot read it; a fourth player-only
+    script, `xapiSingleChoiceSet.js`. A report for H5P is drafted.
+  - The newer scanner (UD-030, SEC-007): `@axe-core/playwright` 4.14.0 runs the rule for WCAG 2.5.3 Label in
+    Name. Two of H5P's controls had a name without the words they show: CoursePresentation's slide-menu button
+    and a question button whose label is in another language than its word. Both are repaired in
+    `a11yRepairs.js`, attributes only; the conformance report is rewritten from a run recorded with the newer
+    scanner. With it: `@aws-sdk/client-s3` and `@aws-sdk/lib-storage` 3.1176.0 and `typescript-eslint` 8.74.0,
+    by exact pin, the lock file's changed entries equal to Dependabot's proposal. The SBOM lists 478 npm
+    packages, as before.
+  - A site icon (UD-001): a plain mark in HVL's colours, generated from the tokens as `icon.svg` and
+    `favicon.ico` and held by `tokens:check`; a visitor's first page no longer logs a 404.
+  - The language of quoted texts (UD-010): a text of the activity quoted inside a sentence of the Innsikt tab
+    (a chart summary, a caption, a shortlist line, an announcement, the list's title, a chart label) carries the
+    activity's language, as the texts in elements of their own already did.
+  - Three details of the journeys have an end-to-end test (PROD-001, PROD-003, UD-021, NFR-001, INS-003): the
+    video pattern with a pasted Panopto link and the captions error; the open on a phone, timed under 3 s; the
+    printed shortlist. The server's README describes the server as it is today.
+  - Noted and not changed: in H5P's video dialog the texts are partly Bokmål (the editor's own texts fall back
+    from Nynorsk), and its heading invites a YouTube link while HVL's field text says such links cannot be played
+    here; a wording question for the language advisers.
+  - The gate's run found two things this step's own changes had left behind; both were corrected after it. A
+    browser test of the answer prefixes pressed a question button by the old start of its name, where the word
+    the button shows now stands first; it passes on its own since. And the Evaluator Guide's row for
+    `npm run test:e2e` did not name the two new browser tests, which DOC-004's test holds it to. The
+    accessibility run is recorded in the conformance report as it ran, on commit `dd77f6512636` with axe-core
+    4.14.1: 563 tests and 179 scans, none of them with a finding of the rule for 2.5.3. The elements axe leaves
+    for a contrast review by hand are 1 450 in 125 scans (791 in 120 at the run of 2026-11-05, with 4.13.0 and
+    fewer views); the suite fails on none of them, now as then. Gate output:
+
+  ```
+  $ npm run build                                      exit 0
+  $ HVLI_DOCKER_SANDBOX=1 bash deploy/smoke/dockerSmoke.sh   passed in 250 s (the PDF printed as uid 10001 with
+      the sandbox seen in /proc)
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run lint:css                                   exit 0
+  $ npm run doc:lint && npm run check:filesize         11 checks passed; file-size passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run privacy:dpia-check                         13 sections, the developer key and the residuals agree
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins && npm run check:licences       every version pinned; 489 production packages compatible
+  $ npm run check:lockfile                             949 packages from the registry with sha512; 4 install scripts reviewed
+  $ npm run check:workflows                            3 workflows: actions by commit, images by digest
+  $ npm run check:audit                                2 high/critical advisories, both covered by reviewed exceptions
+  $ npm run sbom -- --check                            current: 478 npm packages, 12 H5P components, 3 images
+  $ npm run content:check && npm run tokens:check      exit 0 (the site icon included)
+  $ node tools/spec-site/buildSpecSite.mjs --check     up to date
+  $ node tools/deploy-check/checkDeployFiles.mjs       exit 0
+  $ npm run docs:api                                   exit 0
+  $ npm run a11y:report -- --check                     exit 0
+  $ npx vitest run --project web                       655 passed (102 files)
+  $ npx vitest run --project api-contract              123 passed (15 files)
+  $ npx vitest run --project tools                     604 passed (81 files); 603 and 1 failed in the gate's own
+      run, before the guide's row named the two new browser tests
+  $ npx vitest run --project design-tokens             162 passed
+  $ npx vitest run --project hvl-h5p-theme             217 passed
+  $ LIVE_TARGET=mock npm run test:live                 36 passed
+  $ npm run test:a11y                                  563 passed (18 files), with axe-core 4.14.1
+  $ npm run test:e2e                                   38 passed, 1 skipped; 1 file failed: learnerDataRights
+      (needs the privileged database, like DATA-010's tests)
+  $ npx vitest run --project server                    27171 passed, 31 skipped; 2 failed in 5 files: a
+      privileged database (three files) and the seccomp PDF sandbox, limits of this container (DATA-010,
+      MAPPE-004), and the answer-prefix test above, which passed on its own after its correction (3 of 3 in
+      its file)
+  ```
+  - GitHub's run on the pull request failed in one accessibility test, the one that failed once in step 34's
+    gate: the footer controls of H5P.CoursePresentation at 640 × 320 in full screen. The cause is found and can
+    be shown at will. H5P sets its full-screen class before the frame has the screen's size and before the footer
+    is laid out for it; a measurement taken in that moment finds the controls cut off, in the words of GitHub's
+    log («Vis sidemeny» pressed in 13 rows only), and a second later nothing is cut off. A person never meets
+    that state; the test did, when the machine was slow at the wrong moment. The test now waits until the frame
+    has the screen's size and the footer's boxes have stood still for a second
+    (`a11y/support/pointerReach.ts` `waitForSteadyBoxes`). After the change the six footer cases passed four
+    times, twice of them with every processor kept busy twice over, and the whole file passed (124 tests).
+  - GitHub's next run failed in another place, with every test passed (851 files, 28 963 tests): the helper that
+    starts Chromium for the cookie tests removed its temporary profile folder when the browser disconnected, and
+    Chromium, still closing, wrote a file into the folder while it was being emptied («ENOTEMPTY»). The error was
+    thrown in the close handler, which fails a whole run. The helper (from step 33) now lets Node try such a
+    removal again, a little later each time, and reports a removal that still fails instead of throwing
+    (`test/support/thirdPartyCookies.ts` `removeBrowserProfile`, with a test). Its test file passed four times
+    after the change and left no folder behind; the Canvas iframe flow that uses the helper passed.

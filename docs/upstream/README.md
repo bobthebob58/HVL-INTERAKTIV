@@ -58,8 +58,10 @@ the content as an exported `.h5p` file.
 | Draft | Library and version | Barrier (WCAG 2.2) | Status |
 |---|---|---|---|
 | [course-presentation.md](h5p-accessibility/course-presentation.md) | H5P.CoursePresentation 1.28.25 | Progress bar as a tab list of non-tabs, empty links; bar and footer under 24 px; answered-dot contrast (4.1.2, 1.3.1, 2.5.8, 1.4.11) | Ready |
+| [course-presentation-menu-button.md](h5p-accessibility/course-presentation-menu-button.md) | H5P.CoursePresentation 1.28.25 | The slide-menu button shows the slide title and is named by its action alone (2.5.3) | Ready |
 | [components.md](h5p-accessibility/components.md) | H5P.Components 1.0.99 | Drop zones named without a role; empty-zone border 1.38 : 1; navigation cuts its buttons (4.1.2, 1.4.11, 2.5.8) | Ready |
 | [question.md](h5p-accessibility/question.md) | H5P.Question 1.5.47 | Explanation title without `aria-level` (1.3.1, 4.1.2) | Ready |
+| [question-button-name.md](h5p-accessibility/question-button-name.md) | H5P.Question 1.5.47, H5P.MultiChoice 1.16 | A button's `aria-label` replaces its shown word; MultiChoice's Nynorsk and Bokmål files leave those labels in English (2.5.3) | Needs the owner's check: issue, language pull request, or both |
 | [branching-scenario.md](h5p-accessibility/branching-scenario.md) | H5P.BranchingScenario 1.10.1 | Default start and end pictures without `alt` (1.1.1) | Ready |
 | [editor-branching-scenario.md](h5p-accessibility/editor-branching-scenario.md) | H5PEditor.BranchingScenario 1.5.13 | Tour leaves faded controls reachable; "Paste" disabled by a class only (2.4.3, 2.4.7, 4.1.2, 1.4.3) | Ready |
 | [editor-mode-switch.md](h5p-accessibility/editor-mode-switch.md) | H5P editor, `h5p-editor-php-library` ab2daa18 | Mode switch: no keyboard, `tabindex="1"`, state by colour (2.1.1, 2.4.3, 4.1.2, 1.4.1) | Ready |
@@ -72,6 +74,7 @@ the content as an exported `.h5p` file.
 | [image-hotspots.md](h5p-accessibility/image-hotspots.md) | H5P.ImageHotspots 1.11.6 | "Missing required background image" not translatable (3.1.2) | Ready |
 | [interactive-video.md](h5p-accessibility/interactive-video.md) | H5P.InteractiveVideo 1.28.37 | End screen: a scored question's summary always English, a misnamed key (3.1.2) | Ready |
 | [h5p-questionset-retry-several-sets.md](h5p-questionset-retry-several-sets.md) | H5P.QuestionSet 1.21.13 | Not a barrier: "Retry" throws when a page holds several sets (D-115, Q20) | Ready |
+| [h5p-single-choice-set-xapi-response.md](h5p-single-choice-set-xapi-response.md) | H5P.SingleChoiceSet 1.11.89 | Not a barrier: a question's xAPI `answered` gives the alternative's place on screen as the response and judges by it (D-151) | Ready |
 
 These cover every entry of D-080's register (`apps/server/a11y/support/upstreamRegister.ts`: its two findings and
 three English texts; InteractiveVideo's was found by D-111's review and added at step 7's integration), every run-time repair of `a11yRepairs.js` and `a11yEditorRepairs.js`, the theme's upstream

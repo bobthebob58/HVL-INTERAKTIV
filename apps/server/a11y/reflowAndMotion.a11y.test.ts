@@ -5,7 +5,9 @@
  * can press every footer control of CoursePresentation over 24 × 24 px: nothing lies over it and nothing clips it
  * (./support/pointerReach.ts tries every pixel; the other players' controls, and CoursePresentation's next button,
  * are pressed with real pointer clicks by ./support/views.ts `startAndAnswer`, which Playwright refuses on a
- * control covered at its centre). With reduced motion emulated, no CSS animation, transition or script
+ * control covered at its centre). The footer is measured once its layout has stood still for a second: H5P marks
+ * full screen before the frame has the screen's size and before the footer is laid out for it, and a measurement
+ * in that moment finds controls cut off that nobody meets. With reduced motion emulated, no CSS animation, transition or script
  * animation moves in any view or player at any moment from loading to answering its first task (recorded in every
  * frame as it starts); a control run without the preference records H5P's feedback motion, so the check can fail.
  *
@@ -17,7 +19,7 @@ import { CONTENT_TYPES, PLAIN_ROUTES, viewName, WEB_VIEWS } from './support/cata
 import { horizontalOverflow, type Overflow } from './support/layoutChecks.js';
 import { recordedMotion, recordMotion } from './support/motionAndNetwork.js';
 import { playerFrame } from './support/pages.js';
-import { pointerReach } from './support/pointerReach.js';
+import { pointerReach, waitForSteadyBoxes } from './support/pointerReach.js';
 import { openView, startAndAnswer, waitForStillness } from './support/views.js';
 
 /** How long a check waits after the last action, for feedback motion that starts late (the score star's 800 ms). */
@@ -112,10 +114,14 @@ describeA11y('[UD-008] reflow and [UD-009] reduced motion', (env) => {
       if (where === 'in full screen') {
         await player.locator('.h5p-footer-toggle-full-screen').first().press('Enter');
         await expect.poll(() => player.locator('.h5p-course-presentation.h5p-fullscreen').count()).toBe(1);
+        // WHY: H5P sets the class before the frame has the screen's size and before the footer is laid out for it.
+        const frameSize = () => player.evaluate(() => [innerWidth, innerHeight]);
+        await expect.poll(frameSize, { timeout: 15_000 }).toEqual([viewport.width, viewport.height]);
       }
-      // Act: on the second slide, where both slide buttons are enabled
+      // Act: on the second slide, where both slide buttons are enabled, once the footer stands still
       await player.locator('.h5p-theme-next').first().press('Enter');
       await waitForStillness(player);
+      await waitForSteadyBoxes(player, CP_FOOTER_CONTROLS);
       const { controls, covered } = await pointerReach(player, CP_FOOTER_CONTROLS);
       // Assert
       expect(controls.length).toBeGreaterThanOrEqual(4);

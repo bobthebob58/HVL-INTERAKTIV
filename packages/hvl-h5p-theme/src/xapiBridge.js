@@ -116,7 +116,7 @@
       if (h5p.isFramed && h5p.externalEmbed === false) return;
       var statement = event && event.data && event.data.statement;
       if (!keep(statement)) return;
-      var item = rules.cut(statement);
+      var item = rules.cut(statement, this);
       item.statementId = crypto.randomUUID();
       item.attemptId = viewId + ':' + attempt;
       var entry = batching.sized(item);

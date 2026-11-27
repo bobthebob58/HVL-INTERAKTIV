@@ -7,8 +7,9 @@
  *      keyboard users can scroll it (WCAG 2.1.1), as the planner's table does (../planner/PlannerTable.tsx).
  * Spec: INS-008, UD-008, UD-006
  * Invariants:
- *   - A11Y: the region is named by the table's caption; header cells use `scope` (the callers' `HEAD_CELL` and
- *     `ROW_HEAD_CELL`), so each value is read with its row and column.
+ *   - A11Y: the region is named by the table's caption (`aria-labelledby`, so a `lang` span in it is kept);
+ *     header cells use `scope` (the callers' `HEAD_CELL` and `ROW_HEAD_CELL`), so each value is read with its row
+ *     and column.
  *   - Borders and the header band come from the tokens (D-017).
  * Collaborators: ./ItemDifficultySection.tsx, ./ChoiceQuestion.tsx, ./GapQuestion.tsx,
  *   ./VideoEngagementSection.tsx.
@@ -27,14 +28,15 @@ export const DATA_CELL = 'border border-hvl-ink-muted p-2 align-top';
 
 /**
  * A captioned table in a scrolling region.
- * @param props - The caption and the table's head and body.
+ * @param props - The caption (text, or a sentence whose quoted part carries the activity's language) and the table's
+ *   head and body.
  * @returns The region with the table.
  */
 export function ScrollTable({
   caption,
   children,
 }: {
-  readonly caption: string;
+  readonly caption: ReactNode;
   readonly children: ReactNode;
 }) {
   const captionId = useId();

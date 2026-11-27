@@ -11,10 +11,13 @@
  *     language or states none, so no attribute is written then.
  *   - Only the quoted text itself carries it; a UI fallback («Spørsmål 3 (utan tekst)», «Inga tilbakemelding») or a
  *     localised sentence around a text never does.
- *   - A11Y: a known limit: a sentence the tab builds around a quoted text (a chart summary, a table caption, a
- *     shortlist line, an announcement) is one string in the page's language, so its quoted part is not marked.
- * Collaborators: ../../i18n/partLanguage.ts, ./InsightPanel.tsx, the sections and the shortlist in this folder.
- * Tests: apps/web/test/features/insight/InsightLanguage.test.tsx
+ *   - A11Y: a sentence the tab builds around a quoted text (a chart summary, a table caption, a shortlist line, the
+ *     list's title, an announcement) stays in the page's language, and only its quoted part carries this value
+ *     (./quotedText.tsx); a chart label quoted from the activity carries it too (./BarChart.tsx `authored`).
+ * Collaborators: ../../i18n/partLanguage.ts, ./InsightPanel.tsx, ./quotedText.tsx, ./BarChart.tsx, the sections and
+ *   the shortlist in this folder.
+ * Tests: apps/web/test/features/insight/InsightLanguage.test.tsx,
+ *   apps/web/test/features/insight/InsightQuotedLanguage.test.tsx
  */
 'use client';
 
