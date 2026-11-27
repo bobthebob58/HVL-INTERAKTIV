@@ -1,4 +1,5 @@
-# Dependabot: one grouped pull request a month per ecosystem for minor and patch updates (SEC-007; owner, 2026-10-28).
+# Dependabot: grouped monthly pull requests per ecosystem for minor and patch updates (SEC-007; owner, 2026-10-28);
+# for npm two of them, playwright-core in a group of its own (D-148).
 # WHY: major versions change behaviour and are upgraded on purpose, with a decision and the full gate, not by a bot;
 # an advisory that only a major version fixes still fails `npm run check:audit` in CI, so it cannot go unnoticed.
 # Every update still goes through review, the exact-pin check and the audit check in CI.

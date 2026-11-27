@@ -100,15 +100,19 @@ describe('[AUTH-001] Feide relying party', () => {
     const client = new FeideClient(settings);
     const login = checks();
     let taken = false;
-    server.service.once(Events.BeforeResponse, (response: { body: Record<string, unknown> }) => {
+    const leaveOut = (response: { body: Record<string, unknown> }): void => {
       taken = 'id_token' in response.body;
       delete response.body.id_token;
-    });
+    };
+    server.service.once(Events.BeforeResponse, leaveOut);
     // Act
     const callback = await callbackFor(await client.authorizationUrl(login));
-    // Assert: no login without the signed statement of who logged in
-    await expect(client.completeLogin(callback, login)).rejects.toThrow();
+    const refusal = await client.completeLogin(callback, login).catch((error: unknown) => error);
+    server.service.off(Events.BeforeResponse, leaveOut);
+    // Assert: no login without the signed statement of who logged in, and refused for that reason
     expect(taken).toBe(true);
+    expect(refusal).toBeInstanceOf(Error);
+    expect(String((refusal as { cause?: unknown }).cause)).toMatch(/id_token/);
   });
 
   it('[AUTH-003] builds the end-session URL with id_token_hint and the registered logout redirect', async () => {

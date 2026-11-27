@@ -22,7 +22,8 @@
  *     function answers and the folder is removed at once, with no file left open (D-118).
  *   - Folder names start with `UPLOAD_FOLDER_PREFIX`, which ./staleUploadFolders.ts looks for at start-up.
  * Collaborators: ./routes/ajaxRoutes.ts, ../security/ContentFileHeaders.ts (MIME type by extension).
- * Tests: apps/server/test/http/multipartUpload.test.ts, multipartUploadFields.test.ts, multipartUploadCutOff.test.ts
+ * Tests: apps/server/test/http/multipartUpload.test.ts, apps/server/test/http/multipartUploadFields.test.ts,
+ *   apps/server/test/http/multipartUploadCutOff.test.ts
  */
 import { createWriteStream } from 'node:fs';
 import { mkdtemp, rm } from 'node:fs/promises';
