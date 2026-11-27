@@ -8,6 +8,7 @@
 import { join } from 'node:path';
 import { afterAll, beforeAll, expect, it } from 'vitest';
 import { describeWithBrowser } from '../support/browser.js';
+import { isPageError } from '../support/browserConsole.js';
 import { closeLoopbackServers, listenOnLoopback } from '../support/loopbackServers.js';
 import { openHttpTestbed, type HttpTestbed, type TestActor } from '../support/httpTestbed.js';
 import {
@@ -75,7 +76,7 @@ describeWithServices('real H5P content types', () => {
           const page = await browser().newPage();
           await page.setExtraHTTPHeaders({ [learner.header[0]]: learner.header[1] });
           const problems: string[] = [];
-          page.on('console', (m) => void (m.type() === 'error' && problems.push(`console: ${m.text()}`)));
+          page.on('console', (m) => void (isPageError(m) && problems.push(`console: ${m.text()}`)));
           page.on('pageerror', (e) => problems.push(`page: ${e.message}`));
           page.on('response', (r) => void (r.status() >= 400 && problems.push(`${r.status()} ${r.url()}`)));
           // Act

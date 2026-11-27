@@ -15,6 +15,7 @@ import { afterAll, afterEach, beforeAll, expect, it } from 'vitest';
 import { createH5pRouter } from '../../src/http/createH5pRouter.js';
 import { PANOPTO_EMBED_API_URL } from '../../src/http/h5pPageCsp.js';
 import { describeWithBrowser } from '../support/browser.js';
+import { refusedScript } from '../support/browserConsole.js';
 import { closeLoopbackServers, listenOnLoopback } from '../support/loopbackServers.js';
 import { openHttpTestbed, type HttpTestbed, type TestActor } from '../support/httpTestbed.js';
 import { describeWithRealPackages, packageExamples, REAL_PACKAGES_DIR } from '../support/realPackages.js';
@@ -114,7 +115,7 @@ describeWithServices('H5P page policy with a Panopto video', () => {
           return route.fulfill({ contentType: 'text/javascript', body: EMBED_API_STUB });
         });
         page.on('console', (m) => {
-          const refused = /^Refused to load the script '([^']+)'/.exec(m.text())?.[1];
+          const refused = refusedScript(m.text());
           if (refused) refusedScripts.push(refused);
         });
         await page.goto(`${base}/h5p/play/${contentId}`);

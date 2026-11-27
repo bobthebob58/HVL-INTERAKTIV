@@ -19,6 +19,7 @@ import type { Page } from 'playwright-core';
 import { afterAll, beforeAll, expect, it } from 'vitest';
 import { t } from '../../src/i18n/translate.js';
 import { describeWithBrowser } from '../support/browser.js';
+import { isPageError } from '../support/browserConsole.js';
 import { closeLoopbackServers, listenOnLoopback } from '../support/loopbackServers.js';
 import { openHttpTestbed, type HttpTestbed, type TestActor } from '../support/httpTestbed.js';
 import { describeWithRealPackages, REAL_PACKAGES_DIR } from '../support/realPackages.js';
@@ -91,7 +92,7 @@ describeWithServices('the editor page on a slow load', () => {
         const page = await browser().newPage();
         await page.setExtraHTTPHeaders({ [author.header[0]]: author.header[1] });
         const problems: string[] = [];
-        page.on('console', (m) => void (m.type() === 'error' && problems.push(`console: ${m.text()}`)));
+        page.on('console', (m) => void (isPageError(m) && problems.push(`console: ${m.text()}`)));
         page.on('pageerror', (e) => problems.push(`page: ${e.message}`));
         await page.addInitScript(clickTheMomentItIsEnabled);
         await slowDown(page);

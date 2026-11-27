@@ -16,6 +16,7 @@
  *   ./learnerStateAfterEditNavigation.browser.int.test.ts, ./learnerStateAfterEditPaths.browser.int.test.ts
  */
 import type { Browser, Page } from 'playwright-core';
+import { isPageError } from '../../support/browserConsole.js';
 import type { BenchActivity, StateBench, StateRowSnapshot } from './learnerStateAfterEditBench.js';
 import type { LearnerScript } from './learnerStateAfterEditLearners.js';
 
@@ -65,7 +66,7 @@ export async function openAsLearner(
   const page = await browser.newPage();
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
-  page.on('console', (m) => void (m.type() === 'error' && errors.push(`console: ${m.text()}`)));
+  page.on('console', (m) => void (isPageError(m) && errors.push(`console: ${m.text()}`)));
   await page.setExtraHTTPHeaders({ [bench.learner.header[0]]: bench.learner.header[1] });
   if (options.saves === false)
     await page.route('**/h5p/contentUserData/**', (route) =>

@@ -11,7 +11,7 @@
  *   - Never throws: a failed launch is reported as `{ launched: false, error }`.
  *   - Only this script's own descendants are inspected; the browser is closed before the report is printed.
  *   - Runs with Node's type stripping (no relative imports, no TypeScript-only syntax).
- * Collaborators: started by ./taggedPdfLaunchRunner.ts; playwright-core 1.56.1 finds the browser through
+ * Collaborators: started by ./taggedPdfLaunchRunner.ts; playwright-core 1.65.1 finds the browser through
  *   PLAYWRIGHT_BROWSERS_PATH.
  * Tests: apps/server/test/learningDesign/mappe/taggedPdf.browser.test.ts
  *

@@ -20,6 +20,7 @@
  */
 import type { Browser, Frame, Page } from 'playwright-core';
 import { t } from '../../../src/i18n/translate.js';
+import { isPageError } from '../../support/browserConsole.js';
 import type { TestActor } from '../../support/httpTestbed.js';
 import { ckeditorRuns, loadCkeditor } from './placeholderMarkerCkeditor.js';
 import { builtEditor, LATE_ERROR_WINDOW_MS } from './skeletonCreationSettling.js';
@@ -55,7 +56,7 @@ export async function openEditor(
   const page = await browser.newPage();
   await page.setExtraHTTPHeaders({ [author.header[0]]: author.header[1] });
   const problems: string[] = [];
-  page.on('console', (m) => void (m.type() === 'error' && problems.push(`console: ${m.text()}`)));
+  page.on('console', (m) => void (isPageError(m) && problems.push(`console: ${m.text()}`)));
   page.on('pageerror', (e) => problems.push(`page: ${e.message}`));
   page.on('response', (r) => void (r.status() >= 400 && problems.push(`${r.status()} ${r.url()}`)));
   await page.goto(`${base}/h5p/edit/${contentId}`);

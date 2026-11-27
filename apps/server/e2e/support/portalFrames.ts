@@ -11,7 +11,7 @@
  *   - A frame is found by the path of its address, never by its position; a detached frame never counts.
  *   - The form counts as built when H5P's editor has nothing loading and its document has stopped growing
  *     (../../test/learningDesign/patterns/skeletonCreationSettling.ts `settled`).
- * Collaborators: playwright-core 1.56.1, ../../test/learningDesign/patterns/skeletonCreationSettling.ts.
+ * Collaborators: playwright-core 1.65.1, ../../test/learningDesign/patterns/skeletonCreationSettling.ts.
  * Tests: apps/server/e2e/patternToPublish.e2e.test.ts, apps/server/e2e/safeEditReset.e2e.test.ts
  */
 import type { Frame, Page } from 'playwright-core';

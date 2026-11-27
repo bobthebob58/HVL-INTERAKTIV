@@ -1,5 +1,5 @@
 /**
- * browser — gives tests a headless Chromium (playwright-core 1.56.1) to see what a browser really renders.
+ * browser — gives tests a headless Chromium (playwright-core 1.65.1) to see what a browser really renders.
  *
  * Why: SEC-001 and D-044 require benign SVGs to look identical before and after sanitising, which only a real
  *      renderer can show. Locally the tests are skipped when no browser can start; in CI (`CI=true`) a missing

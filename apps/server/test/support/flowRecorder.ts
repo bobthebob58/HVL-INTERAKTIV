@@ -14,11 +14,12 @@
  *   - Nothing that leaves this module contains an ltik value, a JWT or a Bearer token (`redactTokens`).
  *   - `failed` and `requests` hold paths only, never query strings; `setCookies` holds cookie names, never values.
  *   - Only responses from the tool's origin count as failed requests or cookies.
- * Collaborators: playwright-core 1.56.1 (`Response.headerValue` reads the raw headers, Set-Cookie included).
+ * Collaborators: playwright-core 1.65.1 (`Response.headerValue` reads the raw headers, Set-Cookie included).
  * Tests: apps/server/e2e/flowRecord.e2e.test.ts; used by apps/server/e2e/appPlayEditor.e2e.test.ts,
  *   apps/server/e2e/publishWithReason.e2e.test.ts and the S5 flows in apps/server/e2e/
  */
 import type { ConsoleMessage, Page } from 'playwright-core';
+import { isPageError } from './browserConsole.js';
 
 /**
  * Replaces ltik values, JWTs and Bearer tokens in `text` with placeholders.
@@ -122,7 +123,7 @@ export async function recordFlow(
     pending.push(names.catch(() => undefined));
   });
   page.on('console', (m) => {
-    if (m.type() !== 'error' || options.ignoreConsole?.(m)) return;
+    if (!isPageError(m) || options.ignoreConsole?.(m)) return;
     problems.push(redactTokens(`${m.text()} (${m.location().url})`));
   });
   page.on('pageerror', (e) => problems.push(redactTokens(e.message)));
