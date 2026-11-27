@@ -15131,7 +15131,7 @@ log, «2026-11-06 · S6 gate»)</li>
 <tr>
 <td>Q33</td><td>Where is the production image built, and is it signed there? No workflow publishes, signs or attests an image: <code>docker.yml</code> builds it only to test it. Decide the place (HVL&#39;s own pipeline or registry), whether the image is signed and carries a statement of the commit it was built from, and who checks both at deployment (threat model T-92, ROS-21; D-145)</td><td>HVL IT</td><td>Nothing in the code; the production deployment</td></tr>
 <tr>
-<td>Q34</td><td>A secret scan of the repository. The repository is public, so GitHub&#39;s secret scanning and push protection are settings the owner can switch on (Settings → Code security); CI runs no scanner of its own (D-145). Switch them on, or name the scan HVL IT uses once the code lives with HVL</td><td>Owner, HVL IT</td><td>Nothing</td></tr>
+<td>Q34</td><td>A secret scan of the repository. The owner switched on GitHub&#39;s secret scanning and push protection on 2026-11-27, with private vulnerability reporting and Dependabot alerts (the repository&#39;s Advanced Security settings; no check holds them); CI runs no scanner of its own (D-145). Open: name the scan HVL IT uses once the code lives with HVL</td><td>HVL IT</td><td>Nothing</td></tr>
 </tbody></table></div>
 <h3 id="progress--risk-register" tabindex="-1">Risk register</h3>
 <div class="table-wrap" role="region" aria-label="Table 4, Risk register" tabindex="0"><table><thead><tr>
