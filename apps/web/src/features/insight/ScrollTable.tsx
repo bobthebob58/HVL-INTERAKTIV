@@ -7,8 +7,9 @@
  *      keyboard users can scroll it (WCAG 2.1.1), as the planner's table does (../planner/PlannerTable.tsx).
  * Spec: INS-008, UD-008, UD-006
  * Invariants:
- *   - A11Y: the region is named by the table's caption (`aria-labelledby`, so a `lang` span in it is kept); header cells use `scope` (the callers' `HEAD_CELL` and
- *     `ROW_HEAD_CELL`), so each value is read with its row and column.
+ *   - A11Y: the region is named by the table's caption (`aria-labelledby`, so a `lang` span in it is kept);
+ *     header cells use `scope` (the callers' `HEAD_CELL` and `ROW_HEAD_CELL`), so each value is read with its row
+ *     and column.
  *   - Borders and the header band come from the tokens (D-017).
  * Collaborators: ./ItemDifficultySection.tsx, ./ChoiceQuestion.tsx, ./GapQuestion.tsx,
  *   ./VideoEngagementSection.tsx.

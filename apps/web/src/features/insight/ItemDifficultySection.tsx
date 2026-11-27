@@ -15,7 +15,7 @@
  *     question's own text carries the activity's language (UD-010), also where the summary quotes it
  *     (./quotedText.tsx); the name of one without text does not.
  * Collaborators: ./BarChart.tsx, ./ScrollTable.tsx, ./CellValue.tsx, ./insightSummaries.ts, ./quotedText.tsx,
- *   ./ShortlistButton.tsx, *   ./InsightReportView.tsx.
+ *   ./ShortlistButton.tsx, ./InsightReportView.tsx.
  * Tests: apps/web/test/features/insight/InsightCharts.test.tsx
  */
 'use client';

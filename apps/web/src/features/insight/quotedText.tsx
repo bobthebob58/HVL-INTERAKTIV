@@ -78,7 +78,10 @@ export function quotedSentence(
 export function Quoted({ value }: { readonly value: QuotedText }) {
   const lang = useAuthoredLang();
   if (!value.quoted || !lang || value.quoted[0] === value.quoted[1]) return <>{value.text}</>;
-  const [start, end] = value.quoted;
+  const [start, quoteEnd] = value.quoted;
+  // WHY: white space alone after the quote (an announcement's repeat mark) stays in the quote's own text, so that a
+  // repeat changes that text and adds no node (./useQuotedAnnouncement.tsx).
+  const end = value.text.slice(quoteEnd).trim() === '' ? value.text.length : quoteEnd;
   // A11Y: WCAG 3.1.2: only the quoted text is read in the activity's language; the words around it stay the page's.
   return (
     <>

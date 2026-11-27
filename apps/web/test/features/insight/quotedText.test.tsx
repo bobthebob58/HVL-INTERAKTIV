@@ -78,4 +78,43 @@ describe('[UD-010] quotedSentence', () => {
     expect(region.textContent).toBe(`${message.text}${NO_BREAK_SPACE}`);
     expect([...region.querySelectorAll('[lang="en"]')].map((part) => part.textContent)).toEqual(['Why?']);
   });
+
+  it.each([
+    ['a sentence that quotes nothing', plainText('Oppdatert.')],
+    [
+      'a sentence with a quoted part',
+      quotedSentence('insight.shortlist.addedOne', 'nn', { question: 'Why?' }, 'question'),
+    ],
+    ['a sentence that ends with its quoted part', { text: 'Sjå: Why?', quoted: [5, 9] } as QuotedText],
+  ])(
+    '[UD-006] a third and a fourth repeat of %s change a text, never add or remove a node',
+    (_name, message) => {
+      // Arrange: a live region speaks for added nodes and changed text, not for a removed node (WCAG 4.1.3)
+      render(
+        <AuthoredLanguageContext.Provider value="en">
+          <Region message={message} />
+        </AuthoredLanguageContext.Provider>,
+      );
+      const region = screen.getByRole('status');
+      const nodes = () => document.createTreeWalker(region, NodeFilter.SHOW_ALL);
+      const count = () => {
+        let found = 0;
+        for (const walker = nodes(); walker.nextNode();) found += 1;
+        return found;
+      };
+      // Act
+      const said = [1, 2, 3, 4].map(() => {
+        fireEvent.click(screen.getByRole('button', { name: 'Say' }));
+        return { text: region.textContent, nodes: count() };
+      });
+      // Assert
+      expect(said.map(({ text }) => text)).toEqual([
+        message.text,
+        `${message.text}${NO_BREAK_SPACE}`,
+        message.text,
+        `${message.text}${NO_BREAK_SPACE}`,
+      ]);
+      expect(new Set(said.map(({ nodes: seen }) => seen)).size).toBe(1);
+    },
+  );
 });

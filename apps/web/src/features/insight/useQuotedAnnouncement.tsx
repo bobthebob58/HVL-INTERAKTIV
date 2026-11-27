@@ -10,6 +10,7 @@
  * Invariants:
  *   - The region's text is exactly `useAnnouncement`'s: the message, and on every second repeat a no-break space.
  *   - Only the quoted range carries `lang` (./quotedText.tsx); a plain message has none.
+ *   - A repeat changes a text and never adds or removes a node: a live region does not speak for a removed one.
  * Collaborators: ../../components/useAnnouncement.ts, ./quotedText.tsx, ./InsightPanel.tsx, ./shortlistContext.tsx.
  * Tests: apps/web/test/features/insight/quotedText.test.tsx,
  *   apps/web/test/features/insight/InsightQuotedLanguage.test.tsx
@@ -36,12 +37,9 @@ export function useQuotedAnnouncement(): readonly [ReactNode, (message: QuotedTe
     },
     [announceText],
   );
-  // WHY: `text` is `last.text` plus whatever useAnnouncement appended (the repeat's no-break space), kept as is.
-  const node = (
-    <>
-      <Quoted value={last} />
-      {text.slice(last.text.length)}
-    </>
-  );
+  // A11Y: WCAG 4.1.3: a live region speaks for added nodes and changed text, not for a removed node. `text` is
+  // `last.text` plus what useAnnouncement appended (the repeat's no-break space); it is written as part of the
+  // sentence's last text, so a repeat changes a text and never adds or removes a node.
+  const node = <Quoted value={{ ...last, text }} />;
   return [node, announce] as const;
 }
