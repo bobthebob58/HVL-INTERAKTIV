@@ -11,14 +11,17 @@
  * Spec: UD-030, UD-006, UD-011
  * Invariants:
  *   - Attribute-only: never adds or removes nodes, handlers, text, tabindex or classes, and changes no focus order.
+ *     An element a repair must point at gets an `id` when it has none; a label a repair extends is remembered in
+ *     `data-hvl-*` attributes, so what H5P writes later is told from what the repair wrote.
  *   - Idempotent and cheap: an attribute is written only when it differs, so the observer's next run finds nothing
  *     to do and the loop settles; a second copy of the script does nothing.
  *   - A static same-origin file with no inline code and no eval (D-070 strict policy); never throws into H5P.
  * Collaborators: apps/server/src/h5p/h5pAssets.ts (loads it after Core's scripts into player and editor documents),
  *   apps/server/a11y/support/upstreamRegister.ts (what remains), ./a11yEditorRepairs.js (the editor's repairs, the
  *   same loading pattern), ./feedbackPrefixes.js.
- * Tests: packages/hvl-h5p-theme/test/a11yRepairs.test.ts, apps/server/test/h5p/a11yRepairs.browser.int.test.ts,
- *   apps/server/a11y/axeContentTypes.a11y.test.ts, apps/server/a11y/axeWebRoutes.a11y.test.ts
+ * Tests: packages/hvl-h5p-theme/test/a11yRepairs.test.ts, packages/hvl-h5p-theme/test/a11yRepairsLabelInName.test.ts,
+ *   apps/server/test/h5p/a11yRepairs.browser.int.test.ts, apps/server/a11y/axeContentTypes.a11y.test.ts,
+ *   apps/server/a11y/axeWebRoutes.a11y.test.ts
  */
 (function hvlA11yRepairs() {
   'use strict';
@@ -92,12 +95,49 @@
     if (DEFAULT_PICTURE.test(image.getAttribute('src') || '')) set(image, 'alt', '');
   }
 
+  // UPSTREAM: https://github.com/h5p/h5p-course-presentation/blob/369d140c741fab528604237380c34ec1fe8f121a/src/scripts/navigation-line.js (no issue filed yet; SPEC-DEVIATION: D-151 (l) says when this repair goes)
+  // CoursePresentation 1.28's footer button for the slide menu shows the current slide's title and is labelled
+  // «Vis sidemeny», so its name holds none of the words it shows (WCAG 2.5.3: a person who speaks the words on the
+  // button does not reach it). H5P.Tooltip shows the button's aria-label (Core h5p-tooltip.js) and cp.js rewrites
+  // it when the menu opens, so the label stays. The button is named by the title it shows and then by itself; a
+  // reference to itself reads its own aria-label, so the name follows a new slide and the open menu by itself.
+  var menuButtons = 0;
+  function slideMenuButton(button) {
+    var title = button.querySelector('.current-slide-title');
+    if (!title) return;
+    if (!button.id || !title.id) menuButtons += 1;
+    if (!button.id) button.id = 'hvl-slide-menu-' + menuButtons;
+    if (!title.id) title.id = 'hvl-slide-menu-title-' + menuButtons;
+    set(button, 'aria-labelledby', title.id + ' ' + button.id);
+  }
+
+  // UPSTREAM: https://github.com/h5p/h5p-question/blob/fffb3c86f5289b1d24adfd7343559a4f03ba81d5/scripts/question.js (no issue filed yet; SPEC-DEVIATION: D-151 (m) says when this repair goes)
+  // H5P.Question 1.5 gives a button the content's text for assistive technology (`a11yCheck` and its like) as
+  // aria-label and the content's button word as its text. Content saved with the two in different languages (an
+  // English label on a button that says «Sjekk») has a name without the word it shows (WCAG 2.5.3). The shown word
+  // is then put first in the name. A label that already holds the word is the library's and stays untouched.
+  function shownWordInName(button) {
+    var shown = textOf(button).replace(/\s+/g, ' ');
+    var label = button.getAttribute('aria-label');
+    var named = button.getAttribute('data-hvl-named');
+    // WHY: a label other than the one written here is H5P's new one; else the remembered one is still H5P's.
+    var own = named !== null && label === named ? button.getAttribute('data-hvl-label') : label;
+    var holds = !shown || own.replace(/\s+/g, ' ').toLowerCase().indexOf(shown.toLowerCase()) !== -1;
+    var name = holds ? own : shown + '. ' + own;
+    if (name === own && named === null) return;
+    set(button, 'data-hvl-label', own);
+    set(button, 'data-hvl-named', name);
+    set(button, 'aria-label', name);
+  }
+
   var REPAIRS = [
     ['.h5p-course-presentation .h5p-progressbar', progressBar],
     ['.h5p-course-presentation .h5p-slide[role="tabpanel"]', asGroup],
     ['[aria-dropeffect][aria-label]:not([role])', asGroup],
     ['.h5p-question-explanation-title[role="heading"]:not([aria-level])', explanationTitle],
     ['img.h5p-background-image:not([alt]):not([aria-label])', defaultPicture],
+    ['.h5p-course-presentation .h5p-footer-toggle-keywords[aria-label]', slideMenuButton],
+    ['.h5p-question-buttons button[aria-label]', shownWordInName],
   ];
 
   function repairAll() {
