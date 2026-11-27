@@ -117,12 +117,18 @@ describeWithRealWebApp(
         await videoField.locator('.h5p-add-dialog.h5p-open .h5p-insert').click();
         const fileType = await videoField.locator('.file .h5p-type').textContent();
         const saved = await pressEditorSave(page, editor, contentId);
-        await page.getByRole('status').getByText(webText('activity.saved'), { exact: true }).waitFor();
+        await page
+          .getByRole('status')
+          .getByText(webText('activity.saved'), { exact: true })
+          .waitFor({ timeout: 30_000 });
         // Act: the check with the Panopto video
         flow.step = 'check with a video';
         await tab('activity.tabCheck').click();
+        // WHY: the check runs on the server after the save; the default wait of a second is too short for it.
         await expect
-          .poll(async () => (await errorItems()).some((item) => item.includes(NO_CAPTIONS)))
+          .poll(async () => (await errorItems()).some((item) => item.includes(NO_CAPTIONS)), {
+            timeout: 30_000,
+          })
           .toBe(true);
         const after = await errorItems();
         return { contentId, ivEditors, wizardSteps, created, before, fileType, saved, after };

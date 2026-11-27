@@ -14176,52 +14176,53 @@ answered any of its questions, counted once (<code>activityCapabilities.ts</code
 <code>aggregate/videoEngagement.ts</code>); a set whose questions have no ID is not listed, since the server stores no
 answer without one. A question of a set now has an answer key like any choice question, so a save that changes
 the number of its alternatives is a change of the answer key (PROD-013, D-137).</li>
-<li><strong>Decision — the bridge sends a set&#39;s answer as the set recorded it (LTI-010, DATA-012; amends D-115).</strong>
-The library shuffles a question&#39;s alternatives and keeps two records of an answer: the chosen alternative&#39;s
-place on screen (<code>userResponses</code>) and its stored index (<code>userAnswerIndex</code>). Its statement is written from the
-first: <code>result.response</code> is the place on screen, and <code>success</code> and <code>score</code> say &quot;right&quot; when the alternative
-shown first was chosen (<code>scripts/single-choice-set.js</code> lines 202, 203 and 234 at commit d570a968; the default
-branch read on 2026-11-27 is the same). Five learners who all chose the right alternative of one question and a
-wrong one of another gave 3 of 5 &quot;right&quot; for both. H5P Core calls a listener of its outside dispatcher with the
-instance that raised the event as <code>this</code>, also for events of its own iframes
-(<code>h5p-event-dispatcher.js</code>, <code>h5p.js</code>), so the bridge reads the set&#39;s own record and sends the stored index as
-the response, with <code>success</code> and <code>score</code> to match (<code>packages/hvl-h5p-theme/src/xapiSingleChoiceSet.js</code>, a
-fourth player-only script, first of the four). When it cannot read the record (another version of the library)
-it sends the statement without an answer: a question then shows its learners and no share right, never a false
-one. Nothing new leaves the page: an index replaces an index in the same fields. The correction goes when a
-pinned SingleChoiceSet writes the stored index itself (<code>docs/upstream/h5p-single-choice-set-xapi-response.md</code>);
-<code>e2e/singleChoiceSetInsight.e2e.test.ts</code> then still passes without it.</li>
-<li><strong>Decision — two more repairs of H5P&#39;s markup, for WCAG 2.5.3 Label in Name (UD-030; amends D-080 and D-148).</strong>
-<code>@axe-core/playwright</code> 4.14.0 (axe-core 4.14.1) runs <code>label-content-name-mismatch</code> by default, and the suite
-reports two controls. <strong>(l)</strong> CoursePresentation 1.28&#39;s footer button for the slide menu shows the current
-slide&#39;s title and is labelled «Vis sidemeny». H5P.Tooltip shows that label and <code>cp.js</code> rewrites it when the menu
-opens, so the label stays; the button gets <code>aria-labelledby</code> naming the title it shows and then itself, and a
-reference to itself reads its own <code>aria-label</code>: the name is «Tre fasar Vis sidemeny» and follows a new slide
-and the open menu without another write. <strong>(m)</strong> H5P.Question 1.5 gives a button the content&#39;s text for
-assistive technology (<code>a11yCheck</code> and its like) as <code>aria-label</code> and the content&#39;s button word as its text.
-Content with the two in different languages (an English label on a button that says «Sjekk», as in a package
-made from the libraries&#39; own Nynorsk files, where those texts are still English) has a name without the word it
-shows; the shown word is then put first in the name («Sjekk. Check the answers. …»). A label that already
-holds the word is left alone, which is every activity made in our editor (D-111&#39;s overlay). Both are
+<li><strong>Decision — the bridge sends a set&#39;s answer as the set recorded it (LTI-010, DATA-012; amends D-115).</strong> The
+library shuffles a question&#39;s alternatives and keeps two records of an answer: the chosen alternative&#39;s place
+on screen (<code>userResponses</code>) and its stored index (<code>userAnswerIndex</code>). Its statement is written from the first:
+<code>result.response</code> is the place on screen, and <code>success</code> and <code>score</code> say &quot;right&quot; when the alternative shown
+first was chosen (<code>scripts/single-choice-set.js</code> lines 202, 203 and 234 at commit d570a968; the default branch
+read on 2026-11-27 is the same). Five learners who all chose the right alternative of one question and a wrong
+one of another gave 3 of 5 &quot;right&quot; for both in one run; the number follows the shuffle. H5P Core calls a
+listener of its outside dispatcher with the instance that raised the event as <code>this</code>, also for events of its
+own iframes (<code>h5p-event-dispatcher.js</code>, <code>h5p.js</code>), so the bridge reads the set&#39;s own record and sends the
+stored index as the response, with <code>success</code> and <code>score</code> to match
+(<code>packages/hvl-h5p-theme/src/xapiSingleChoiceSet.js</code>, a fourth player-only script, first of the four). When it
+cannot read the record (another version of the library) it sends the statement without an answer: a question
+then shows its learners and no share right, never a false one. Nothing new leaves the page: an index replaces
+an index in the same fields. The correction goes when a pinned SingleChoiceSet writes the stored index itself
+(<code>docs/upstream/h5p-single-choice-set-xapi-response.md</code>); <code>e2e/singleChoiceSetInsight.e2e.test.ts</code> then still
+passes without it.</li>
+<li><strong>Decision — two more repairs of H5P&#39;s markup, for WCAG 2.5.3 Label in Name (UD-030; amends D-080 and
+D-148).</strong> <code>@axe-core/playwright</code> 4.14.0 (axe-core 4.14.1) runs <code>label-content-name-mismatch</code> by default, and
+the suite reports two controls. <strong>(l)</strong> CoursePresentation 1.28&#39;s footer button for the slide menu shows the
+current slide&#39;s title and is labelled «Vis sidemeny». H5P.Tooltip shows that label and <code>cp.js</code> rewrites it
+when the menu opens, so the label stays; the button gets <code>aria-labelledby</code> naming the title it shows and then
+itself, and a reference to itself reads its own <code>aria-label</code>: the name is «Tre fasar Vis sidemeny» and follows
+a new slide and the open menu without another write. <strong>(m)</strong> H5P.Question 1.5 gives a button the content&#39;s
+text for assistive technology (<code>a11yCheck</code> and its like) as <code>aria-label</code> and the content&#39;s button word as its
+text. Content with the two in different languages (an English label on a button that says «Sjekk», as in a
+package made from the libraries&#39; own Nynorsk files, where those texts are still English) has a name without
+the word it shows; the shown word is then put first in the name («Sjekk. Check the answers. …»). A label that
+already holds the word is left alone, which is every activity made in our editor (D-111&#39;s overlay). Both are
 attribute-only like the other repairs (<code>packages/hvl-h5p-theme/src/a11yRepairs.js</code>): (l) adds two <code>id</code>s and
 one <code>aria-labelledby</code>; (m) remembers the library&#39;s label in <code>data-hvl-*</code> attributes so a later label or word
 of H5P&#39;s is followed. (l) goes when a pinned CoursePresentation names the button by what it shows; (m) when a
 pinned H5P.Question keeps the shown word in the name. No register entry is needed.</li>
 <li><strong>Decision — a site icon generated from the tokens (UD-001, DATA-011).</strong> A browser asks every site for
 <code>/favicon.ico</code>; without one a visitor&#39;s first page logged a 404. HVL has not supplied its logo files, so the
-icon is a plain mark in HVL&#39;s colours, not the logo: a rounded square in <code>primary-dark</code> with a play triangle in
-<code>surface</code> (10.82 : 1). <code>packages/design-tokens/scripts/siteIcon.mjs</code> draws it once and
-<code>buildSiteIcon.mjs</code> writes <code>apps/web/src/app/icon.svg</code> and <code>favicon.ico</code> (one 32 × 32 picture, stored without
-compression so no zlib version decides a byte); <code>npm run tokens:build</code> and <code>tokens:check</code> cover both, so CI
-holds them like the token CSS. Next.js serves them and links them from every page; <code>/favicon.ico</code> also answers
-for a page of Express&#39;s own that names no icon.</li>
+icon is a plain mark in HVL&#39;s colours, not the logo: a rounded square in <code>primary-dark</code> with a play triangle
+in <code>surface</code> (10.82 : 1). <code>packages/design-tokens/scripts/siteIcon.mjs</code> draws it once and <code>buildSiteIcon.mjs</code>
+writes <code>apps/web/src/app/icon.svg</code> and <code>favicon.ico</code> (one 32 × 32 picture, stored without compression so no
+zlib version decides a byte); <code>npm run tokens:build</code> and <code>tokens:check</code> cover both, so CI holds them like the
+token CSS. Next.js serves them and links them from every page; <code>/favicon.ico</code> also answers for a page of
+Express&#39;s own that names no icon.</li>
 <li><strong>Decision — the quoted part of a sentence carries the activity&#39;s language (UD-010).</strong> A text of the activity
 that stands in an element of its own already had <code>lang</code>. A text quoted inside a translated sentence (a chart
 summary, a table caption, a shortlist line, an announcement, the list&#39;s title in the printout and the
 projection, and a chart&#39;s label) now has it too: the sentence is built with its quoted range, found by the
-placeholder&#39;s place and never by searching for the value, and written with only that range in
-<code>&lt;span lang&gt;</code> (<code>apps/web/src/features/insight/quotedText.tsx</code>). A fallback name («Spørsmål 3 (utan tekst)»,
-«Oppgåve utan tittel») is never marked. No text changed.</li>
+placeholder&#39;s place and never by searching for the value, and written with only that range in <code>&lt;span lang&gt;</code>
+(<code>apps/web/src/features/insight/quotedText.tsx</code>). A fallback name («Spørsmål 3 (utan tekst)», «Oppgåve utan
+tittel») is never marked. No text changed.</li>
 <li><strong>Decision — three details of the journeys have an end-to-end test (PROD-001, PROD-003, UD-021, NFR-001,
 INS-003).</strong> <code>e2e/journeyVideoPattern.e2e.test.ts</code> plays J1&#39;s steps 2 to 5 with the video pattern: the editor
 opens with the Interactive Video skeleton (three check questions at 150, 300 and 450 s and a summary task),
@@ -14240,28 +14241,28 @@ signed in.</li>
 entries are the same versions and checksums as Dependabot&#39;s proposal; one nested package that npm would also
 have moved stays where it was. The SBOM lists 478 npm packages, as before.</li>
 <li><strong>Residual:</strong> the correction of a set&#39;s answer reads two fields of the library&#39;s instance, which no interface
-promises; the end-to-end test on the real library fails if they move, and the fallback is an answer that is not
-sent. An answer a set sent before this step keeps the place on screen; there is none outside test data.
-A question removed from a set after <em>k</em> learners answered it is listed without a name, like any removed
-question (D-121). The union of a set&#39;s learners in a video list is one more count about the same learners;
-it is suppressed below <em>k</em> like every count, and nothing is added to what a statement stores. Repair (m) puts a
+promises; the end-to-end test on the real library fails if they move, and the fallback is an answer that is
+not sent. An answer a set sent before this step keeps the place on screen; there is none outside test data. A
+question removed from a set after <em>k</em> learners answered it is listed without a name, like any removed question
+(D-121). The union of a set&#39;s learners in a video list is one more count about the same learners; it is
+suppressed below <em>k</em> like every count, and nothing is added to what a statement stores. Repair (m) puts a
 Nynorsk word before an English sentence in one name; a screen reader reads both with the page&#39;s voice, as it
 read the English sentence before.</li>
 <li><strong>Verified:</strong> tests written first. <code>e2e/singleChoiceSetInsight.e2e.test.ts</code> plays a Column with a set of two
 questions as five Canvas learners in the real player: on the old code the view held two rows without a name,
-each 60 % right, though every learner chose the right alternative of one and a wrong one of the other; now each
-question has its name, 5 learners, 100 % and 0 %, and its alternatives with their counts.
+each 60 % right in that run, though every learner chose the right alternative of one and a wrong one of the
+other; now each question has its name, 5 learners, 100 % and 0 %, and its alternatives with their counts.
 <code>test/insight/singleChoiceSetQuestions.test.ts</code> (6: the catalogue, a set as main library and malformed sets, a
 view&#39;s numbers, the answer key, the video interaction and its count) failed on the old catalogue;
-<code>packages/hvl-h5p-theme/test/xapiSingleChoiceSet.test.ts</code> (5: the stored index, a statement of another
-library left alone, no answer without the record, nothing changed, the bridge with the raising instance)
-failed before the correction existed. <code>a11yRepairsLabelInName.test.ts</code> (5; four failed on the old script), and
-the accessibility suite with the newer scanner: 14 of 563 tests failed for the one rule before the repairs,
-none after. <code>packages/design-tokens/test/siteIcon.test.ts</code> (6) and the browser test of the icon in
+<code>packages/hvl-h5p-theme/test/xapiSingleChoiceSet.test.ts</code> (5: the stored index, a statement of another library
+left alone, no answer without the record, nothing changed, the bridge with the raising instance) failed before
+the correction existed. <code>a11yRepairsLabelInName.test.ts</code> (5; four failed on the old script), and the
+accessibility suite with the newer scanner: 14 of 563 tests failed for the one rule before the repairs, none
+after. <code>packages/design-tokens/test/siteIcon.test.ts</code> (6) and the browser test of the icon in
 <code>test/web/webPages.browser.int.test.ts</code>, which found no icon link on the old build. The language marks:
-<code>apps/web/test/features/insight/InsightQuotedLanguage.test.tsx</code> (5) and <code>quotedText.test.tsx</code> (3); three failed
-before, and the two that passed guard what must stay unmarked. The three journey tests above. The full gate
-and the Docker smoke test ran; step 35 in <code>PROGRESS.md</code> has the output.</li>
+<code>apps/web/test/features/insight/InsightQuotedLanguage.test.tsx</code> (5) and <code>quotedText.test.tsx</code> (3); three
+failed before, and the two that passed guard what must stay unmarked. The three journey tests above. The full
+gate and the Docker smoke test ran; step 35 in <code>PROGRESS.md</code> has the output.</li>
 <li><strong>Consequences:</strong> <code>CLAUDE.md</code> §2 names the bridge&#39;s four scripts, and the theme&#39;s README and the tests that
 list them follow. Three report drafts are added to <code>docs/upstream/</code> (the set&#39;s statement; the slide-menu
 button&#39;s name; a question button&#39;s name and MultiChoice&#39;s untranslated labels). The READMEs of the design
@@ -17918,7 +17919,7 @@ learner and the answers as rows without a name. Each question of a set is now a 
 its text and its alternatives; in a video the set is one interaction, answered through its questions. The
 browser test found more: the library writes the chosen alternative&#39;s place on screen as the answer and
 judges by it, and it shuffles the alternatives, so five learners who all answered one question right and
-another wrong gave 60 % right for both. The xAPI bridge now sends the stored index the set itself recorded,
+another wrong gave 60 % right for both in one run. The xAPI bridge now sends the stored index the set itself recorded,
 read from the instance that raised the event, or no answer when it cannot read it; a fourth player-only
 script, <code>xapiSingleChoiceSet.js</code>. A report for H5P is drafted.</li>
 <li>The newer scanner (UD-030, SEC-007): <code>@axe-core/playwright</code> 4.14.0 runs the rule for WCAG 2.5.3 Label in

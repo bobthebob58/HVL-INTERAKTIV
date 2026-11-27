@@ -3555,7 +3555,7 @@ Append one entry per session: date, session, what was done, gate output, and any
     its text and its alternatives; in a video the set is one interaction, answered through its questions. The
     browser test found more: the library writes the chosen alternative's place on screen as the answer and
     judges by it, and it shuffles the alternatives, so five learners who all answered one question right and
-    another wrong gave 60 % right for both. The xAPI bridge now sends the stored index the set itself recorded,
+    another wrong gave 60 % right for both in one run. The xAPI bridge now sends the stored index the set itself recorded,
     read from the instance that raised the event, or no answer when it cannot read it; a fourth player-only
     script, `xapiSingleChoiceSet.js`. A report for H5P is drafted.
   - The newer scanner (UD-030, SEC-007): `@axe-core/playwright` 4.14.0 runs the rule for WCAG 2.5.3 Label in
