@@ -3334,3 +3334,68 @@ Append one entry per session: date, session, what was done, gate output, and any
   $ node tools/spec-site/buildSpecSite.mjs --check     up to date
   $ npx vitest run --project tools                     586 passed (78 files)
   ```
+
+- **2026-11-27 · Security repairs, step 32 (D-148)** — Dependabot's first proposals after D-145 failed CI and were
+  closed by the owner; their updates were read and taken by hand, without the two that need a step of their own.
+  - 22 minor and patch updates (SEC-007): exact pins in the three manifests, the lock file from Dependabot's own
+    resolution with playwright-core kept at 1.56.1 (949 registry packages, 954 before; 108 with a new version, 37
+    of them in the running server), and the SBOM. Held back: playwright-core (its Chromium, the image and the
+    cookie tests go together) and `@axe-core/playwright` (axe-core 4.14.1 turns on a rule for WCAG 2.5.3 that
+    fails 14 of 563 accessibility tests on two of H5P's controls).
+  - A body that ends inside a part nobody reads is an ordinary 400 (SEC-005): `readMultipart` listens for the
+    error of a file it discards, and `@fastify/busboy` 3.2.6 does so for the parts it skips itself. Test:
+    `multipartUploadCutOff.test.ts` (four bodies, each sent in two pieces; two of them reached the process's fault
+    handler before this step).
+  - Two tests pin what the new versions must not change: `svgLinkAddresses.test.ts` (a link in an uploaded SVG
+    points only inside the drawing) and one more in `FeideClient.test.ts` (an answer without an ID token is
+    refused, for that reason).
+  - Dependabot (`.github/dependabot.yml`): playwright-core in a group of its own; no other `ubuntu` version is
+    proposed. `ciDependencyGates.test.mjs` holds both. Risk R-10 has the review date for the base image.
+  - The two `image-size` exceptions were read again and run until 2027-03-27 (amends D-030; risk R-08). The
+    documents that named 2027-01-31 follow.
+  - The gate found a fault of this step: the regenerated SBOM had lost `tslib` 2.8.1, which the server loads
+    (the SBOM's own test of the real tree failed), and it had 476 npm packages where 477 were listed before, which
+    went unnoticed when the file was written. The cause is in how npm describes the installed tree, in two ways
+    (D-148): one component per name and version, by the first copy npm meets, and a copy that no installed package
+    needs is called extraneous although a production install keeps it. Now the SBOM and `check:licences` go by
+    what a production install keeps (SEC-007, NFR-005): `tools/sbom/lockFileCorrections.mjs` and
+    `tools/dependency-check/lockFileProduction.mjs`, with tests of both rules and of the real tree. The SBOM lists
+    478 npm packages: `tslib` again, and `@emnapi/runtime` 1.11.3, which npm now leaves in the image and nothing
+    loads. A production install made in a scratch folder, as the image build makes it, holds the same 473 registry
+    packages. The tools suite was run again after the repair; the other suites do not read these files.
+  - No page looks different: the built stylesheet changes in two rules, and the five public pages are pixel for
+    pixel the same in `nn` at 1280 and 390 px, compared from a build without Next.js's build cache. Gate output:
+
+  ```
+  $ npm run build                                      exit 0
+  $ HVLI_DOCKER_SANDBOX=1 bash deploy/smoke/dockerSmoke.sh   passed in 440 s (image built from this lock file)
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run lint:css                                   exit 0
+  $ npm run doc:lint && npm run check:filesize         11 checks passed; file-size passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run privacy:dpia-check                         13 sections, the developer key and the residuals agree
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins && npm run check:licences       every version pinned; 489 production packages compatible
+  $ npm run check:lockfile                             949 packages from the registry with sha512; 4 install scripts reviewed
+  $ npm run check:workflows                            3 workflows: actions by commit, images by digest
+  $ npm run check:audit                                2 high/critical advisories, both covered by reviewed exceptions
+  $ npm run sbom -- --check                            current: 478 npm packages, 12 H5P components, 3 images
+  $ npm run content:check && npm run tokens:check      exit 0
+  $ node tools/spec-site/buildSpecSite.mjs --check     up to date
+  $ npm run docs:api                                   exit 0
+  $ npm run a11y:report -- --check                     exit 0
+  $ npx vitest run --project web                       644 passed (100 files)
+  $ npx vitest run --project api-contract              123 passed (15 files)
+  $ npx vitest run --project tools                     599 passed (80 files); in the gate's own run, before
+      the repair above, 586 passed and 1 failed: the SBOM's test of the real tree
+  $ npx vitest run --project design-tokens             156 passed
+  $ npx vitest run --project hvl-h5p-theme             206 passed
+  $ LIVE_TARGET=mock npm run test:live                 36 passed
+  $ npm run test:a11y                                  563 passed (18 files)
+  $ npm run test:e2e                                   36 passed, 1 skipped; 1 file failed: learnerDataRights
+      (needs the privileged database, like DATA-010's tests)
+  $ npx vitest run --project server                    27154 passed, 31 skipped; 1 failed in 4 files: a
+      privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
+      MAPPE-004)
+  ```

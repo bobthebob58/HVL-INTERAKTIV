@@ -6497,8 +6497,9 @@ loading of one spec per session are kept.
   `eslint` 10.15.0, `typescript-eslint` 8.73.0, `eslint-plugin-jsdoc` 65.5.3, `globals` 17.14.0, `prettier`
   3.10.1, `lint-staged` 17.6.2, `tailwindcss` and `@tailwindcss/postcss` 4.3.5,
   `fast-check` 4.11.0, `pdfjs-dist` 6.5.438, `supertest` 7.3.2, `jose` 6.2.18, `oauth2-mock-server` 9.3.0 and
-  `@types/yazl` 3.3.1. The lock file is Dependabot's own resolution with playwright-core kept at 1.56.1: 954
-  packages, 108 with a new version, 37 of them in the running server. One package is new in a production install,
+  `@types/yazl` 3.3.1. The lock file is Dependabot's own resolution with playwright-core kept at 1.56.1: 949
+  registry packages (954 before), 108 with a new version, 37 of them in the running server; 11 folders are new and
+  16 are gone, all for building and testing. One package is new in a production install,
   `@emnapi/runtime` 1.11.3, which npm leaves there and nothing loads (the SBOM decision below). A plain
   `npm install` gave a wider change (it moved packages nothing asked to move), so it was not used. The SBOM follows.
 - **Decision — a body that ends inside a discarded part is an ordinary 400 (SEC-005).** `readMultipart` listens
