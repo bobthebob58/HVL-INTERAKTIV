@@ -16,7 +16,7 @@ what is done, what is verified, and what is blocked.
 | S4+ | Whole-code-base simplification pass (owner decision, 2026-10-24) | — | ✅ Done (2026-10-25): 59 changes, 569 lines shorter, every test kept, S4 gate green again; a second round is the owner's call |
 | S5 | Læringsdesign studio, patterns, planner, pedagogisk mappe export | 04; 00 S5 rows | ✅ Gate passed (2026-10-30); the ALU and pilot review (Q17), the bank consent text and the manual PDF check open; the Canvas side in S6 |
 | S6 | xAPI → AGS grade bridge, insight, privacy jobs, Docker, conformance report | 02 §4–§8; 05; 00 §3 (journeys J1–J5), §6; 01 `H5P-009`, `H5P-010`, `SEC-004`, `SEC-006`; 03 `UD-003`, §6 (`UD-040`); 04 `MAPPE-003`, `MAPPE-004` (D-101) | ✅ Done (gate passed 2026-11-06; started 2026-10-30; D-101…D-116) |
-| SR | Security repairs after the S6 gate: 34 steps, each with tests, a gate run and a decision entry | The spec a step names | ✅ Done (2026-11-20 to 2026-11-27; D-117…D-150; session log, steps 1–34); open: HVL IT's and the owner's questions Q32, Q33 and Q34, with the earlier ones |
+| SR | Security repairs after the S6 gate: 35 steps, each with tests, a gate run and a decision entry | The spec a step names | ✅ Done (2026-11-20 to 2026-11-27; D-117…D-151; session log, steps 1–35); open: HVL IT's and the owner's questions Q32, Q33 and Q34, with the earlier ones |
 
 Legend: ⬜ not started · 🟨 in progress · ✅ done (gate passed, output pasted below) · ⛔ blocked
 
@@ -3546,3 +3546,33 @@ Append one entry per session: date, session, what was done, gate output, and any
       MAPPE-004). After the second read's corrections, the Feide and launch-ceiling tests ran again: 159 passed
       (14 files)
   ```
+
+- **2026-11-27 · Security repairs, step 35 (D-151)** — the small things S6's log left open, the newer
+  accessibility scanner with two repairs, and four package updates.
+  - A Single Choice Set in insight (INS-002, INS-003, INS-005, LTI-010): the library sends one answer per
+    question of a set, under the question's own ID, and none for the set, so the view listed the set with no
+    learner and the answers as rows without a name. Each question of a set is now a question of its own, with
+    its text and its alternatives; in a video the set is one interaction, answered through its questions. The
+    browser test found more: the library writes the chosen alternative's place on screen as the answer and
+    judges by it, and it shuffles the alternatives, so five learners who all answered one question right and
+    another wrong gave 60 % right for both. The xAPI bridge now sends the stored index the set itself recorded,
+    read from the instance that raised the event, or no answer when it cannot read it; a fourth player-only
+    script, `xapiSingleChoiceSet.js`. A report for H5P is drafted.
+  - The newer scanner (UD-030, SEC-007): `@axe-core/playwright` 4.14.0 runs the rule for WCAG 2.5.3 Label in
+    Name. Two of H5P's controls had a name without the words they show: CoursePresentation's slide-menu button
+    and a question button whose label is in another language than its word. Both are repaired in
+    `a11yRepairs.js`, attributes only; the conformance report is rewritten from a run recorded with the newer
+    scanner. With it: `@aws-sdk/client-s3` and `@aws-sdk/lib-storage` 3.1176.0 and `typescript-eslint` 8.74.0,
+    by exact pin, the lock file's changed entries equal to Dependabot's proposal. The SBOM lists 478 npm
+    packages, as before.
+  - A site icon (UD-001): a plain mark in HVL's colours, generated from the tokens as `icon.svg` and
+    `favicon.ico` and held by `tokens:check`; a visitor's first page no longer logs a 404.
+  - The language of quoted texts (UD-010): a text of the activity quoted inside a sentence of the Innsikt tab
+    (a chart summary, a caption, a shortlist line, an announcement, the list's title, a chart label) carries the
+    activity's language, as the texts in elements of their own already did.
+  - Three details of the journeys have an end-to-end test (PROD-001, PROD-003, UD-021, NFR-001, INS-003): the
+    video pattern with a pasted Panopto link and the captions error; the open on a phone, timed under 3 s; the
+    printed shortlist. The server's README describes the server as it is today.
+  - Noted and not changed: in H5P's video dialog the texts are partly Bokmål (the editor's own texts fall back
+    from Nynorsk), and its heading invites a YouTube link while HVL's field text says such links cannot be played
+    here; a wording question for the language advisers.

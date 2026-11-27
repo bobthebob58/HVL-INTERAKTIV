@@ -281,7 +281,7 @@ asynchronous and synchronous teaching, it is out of scope.</p>
 <tr>
 <td>S6</td><td>xAPI → AGS grade bridge, insight, privacy jobs, Docker, conformance report</td><td>02 §4–§8; 05; 00 §3 (journeys J1–J5), §6; 01 <a class="req-ref" href="#r-H5P-009"><code>H5P-009</code></a>, <a class="req-ref" href="#r-H5P-010"><code>H5P-010</code></a>, <a class="req-ref" href="#r-SEC-004"><code>SEC-004</code></a>, <a class="req-ref" href="#r-SEC-006"><code>SEC-006</code></a>; 03 <a class="req-ref" href="#r-UD-003"><code>UD-003</code></a>, §6 (<a class="req-ref" href="#r-UD-040"><code>UD-040</code></a>); 04 <a class="req-ref" href="#r-MAPPE-003"><code>MAPPE-003</code></a>, <a class="req-ref" href="#r-MAPPE-004"><code>MAPPE-004</code></a> (D-101)</td><td>✅ Done (gate passed 2026-11-06; started 2026-10-30; D-101…D-116)</td></tr>
 <tr>
-<td>SR</td><td>Security repairs after the S6 gate: 34 steps, each with tests, a gate run and a decision entry</td><td>The spec a step names</td><td>✅ Done (2026-11-20 to 2026-11-27; D-117…D-150; session log, steps 1–34); open: HVL IT&#39;s and the owner&#39;s questions Q32, Q33 and Q34, with the earlier ones</td></tr>
+<td>SR</td><td>Security repairs after the S6 gate: 35 steps, each with tests, a gate run and a decision entry</td><td>The spec a step names</td><td>✅ Done (2026-11-20 to 2026-11-27; D-117…D-151; session log, steps 1–35); open: HVL IT&#39;s and the owner&#39;s questions Q32, Q33 and Q34, with the earlier ones</td></tr>
 </tbody></table></div>
 
 <p class="more"><a href="#progress">Open the build tracker</a> · <a href="#evaluator-guide--5-session-gates">See each session's pass/fail gate</a></p>
@@ -6656,7 +6656,7 @@ the gate output lists them so (limitation 23).</p>
 <tr>
 <td><a class="req-ref" href="#r-NFR-006"><code>NFR-006</code></a> Request log</td><td><code>-t &quot;\[NFR-006\]&quot;</code>: one line per request with the route pattern, status and duration, an <code>X-Request-Id</code> that a client cannot fill with text of its choice, and no ltik, learner key or activity ID in any line through a whole launch, play and xAPI batch (<code>test/http/requestLog*.test.ts</code>); the LTI error pages log their route pattern and a fixed code, never the path or a client&#39;s text (<code>test/lti/http/ltiErrorLog.test.ts</code>)</td><td>The reverse proxy&#39;s access log leaves out the query string (deployment checklist)</td></tr>
 <tr>
-<td><a class="req-ref" href="#r-NFR-001"><code>NFR-001</code></a> Performance</td><td><code>npm run load:smoke</code> (20 learners for 30 s, here: page ready p95 1.1–1.5 s against 3 s, API p95 22–27 ms against 300 ms, no failed request) and <code>-t &quot;\[NFR-001\]&quot;</code> (the k6 profiles, batches and summary in <code>tools/load/test/</code>)</td><td>HVL runs <code>npm run load:full</code> (200 learners) on a node like production (<a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/ops/runbook.md" rel="noopener" class="ext">ops/runbook.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> §8); Lighthouse on Fast 4G is not added (D-114)</td></tr>
+<td><a class="req-ref" href="#r-NFR-001"><code>NFR-001</code></a> Performance</td><td><code>npm run load:smoke</code> (20 learners for 30 s, here: page ready p95 1.1–1.5 s against 3 s, API p95 22–27 ms against 300 ms, no failed request) and <code>-t &quot;\[NFR-001\]&quot;</code> (the k6 profiles, batches and summary in <code>tools/load/test/</code>); the phone journey times one learner&#39;s open from Canvas to a started activity, under 3 s on the test machine with no network profile (<code>e2e/journeyPhoneResume.e2e.test.ts</code>, D-151)</td><td>HVL runs <code>npm run load:full</code> (200 learners) on a node like production (<a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/ops/runbook.md" rel="noopener" class="ext">ops/runbook.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> §8); Lighthouse on Fast 4G is not added (D-114)</td></tr>
 <tr>
 <td><a class="req-ref" href="#r-NFR-002"><code>NFR-002</code></a> Availability, backups</td><td><code>-t &quot;\[NFR-002\]&quot;</code>: the backup round trip and the restore&#39;s refusals (<code>tools/ops/test/</code>), the health check and clean start and stop (<code>test/server/</code>); document review of <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/ops/runbook.md" rel="noopener" class="ext">ops/runbook.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> §6</td><td>HVL schedules the daily backup with its encrypted off-server copy and logs the restore drill each semester</td></tr>
 <tr>
@@ -14158,6 +14158,119 @@ table lists the new files under <a class="req-ref" href="#r-AUTH-001"><code>AUTH
 No line reference moved: the edits keep each file&#39;s line count, and this entry and step 34 stand at the end
 of their files. The status overview counts 34 steps.</li>
 </ul>
+<h3 id="decisions--d-151--step-35-a-single-choice-sets-questions-in-insight-two-label-in-name-repairs-with-the-newer-accessibility-scanner-a-site-icon-the-language-of-quoted-texts-three-journey-details-and-four-package-updates" tabindex="-1">D-151 · Step 35: a Single Choice Set&#39;s questions in insight, two label-in-name repairs with the newer accessibility scanner, a site icon, the language of quoted texts, three journey details and four package updates</h3>
+<ul>
+<li><strong>Context:</strong> S6&#39;s log left five small things open (a Single Choice Set&#39;s answers in insight, the language of a
+text quoted inside a sentence of the Innsikt tab, three details of the journeys without an end-to-end test, no
+site icon, the server&#39;s README), D-148 held the accessibility scanner back at 4.13.0, and Dependabot&#39;s monthly
+run proposed four npm updates in one pull request, the scanner among them.</li>
+<li><strong>Decision — each question of a Single Choice Set is a question of its own (INS-002, INS-003, INS-005).</strong>
+H5P.SingleChoiceSet 1.11 sends one <code>answered</code> per question, under that question&#39;s own <code>subContentId</code> (each is
+an <code>isSubContent</code> group), and none for the set. The catalogue listed the set as one question under the set&#39;s
+ID, so its row never got a learner, and the answers showed only as rows without a name once <em>k</em> learners had
+answered. The catalogue now lists each question of a set that has an ID, with its text and its alternatives
+(the first stored alternative is the right one; the library has no feedback text per alternative), and the set
+itself is no question (<code>src/insight/content/questionShapes.ts</code> <code>singleChoiceQuestions</code>,
+<code>questionCatalogue.ts</code>). In an InteractiveVideo the set stays one interaction, answered by a learner who
+answered any of its questions, counted once (<code>activityCapabilities.ts</code> <code>answeredBy</code>,
+<code>aggregate/videoEngagement.ts</code>); a set whose questions have no ID is not listed, since the server stores no
+answer without one. A question of a set now has an answer key like any choice question, so a save that changes
+the number of its alternatives is a change of the answer key (PROD-013, D-137).</li>
+<li><strong>Decision — the bridge sends a set&#39;s answer as the set recorded it (LTI-010, DATA-012; amends D-115).</strong>
+The library shuffles a question&#39;s alternatives and keeps two records of an answer: the chosen alternative&#39;s
+place on screen (<code>userResponses</code>) and its stored index (<code>userAnswerIndex</code>). Its statement is written from the
+first: <code>result.response</code> is the place on screen, and <code>success</code> and <code>score</code> say &quot;right&quot; when the alternative
+shown first was chosen (<code>scripts/single-choice-set.js</code> lines 202, 203 and 234 at commit d570a968; the default
+branch read on 2026-11-27 is the same). Five learners who all chose the right alternative of one question and a
+wrong one of another gave 3 of 5 &quot;right&quot; for both. H5P Core calls a listener of its outside dispatcher with the
+instance that raised the event as <code>this</code>, also for events of its own iframes
+(<code>h5p-event-dispatcher.js</code>, <code>h5p.js</code>), so the bridge reads the set&#39;s own record and sends the stored index as
+the response, with <code>success</code> and <code>score</code> to match (<code>packages/hvl-h5p-theme/src/xapiSingleChoiceSet.js</code>, a
+fourth player-only script, first of the four). When it cannot read the record (another version of the library)
+it sends the statement without an answer: a question then shows its learners and no share right, never a false
+one. Nothing new leaves the page: an index replaces an index in the same fields. The correction goes when a
+pinned SingleChoiceSet writes the stored index itself (<code>docs/upstream/h5p-single-choice-set-xapi-response.md</code>);
+<code>e2e/singleChoiceSetInsight.e2e.test.ts</code> then still passes without it.</li>
+<li><strong>Decision — two more repairs of H5P&#39;s markup, for WCAG 2.5.3 Label in Name (UD-030; amends D-080 and D-148).</strong>
+<code>@axe-core/playwright</code> 4.14.0 (axe-core 4.14.1) runs <code>label-content-name-mismatch</code> by default, and the suite
+reports two controls. <strong>(l)</strong> CoursePresentation 1.28&#39;s footer button for the slide menu shows the current
+slide&#39;s title and is labelled «Vis sidemeny». H5P.Tooltip shows that label and <code>cp.js</code> rewrites it when the menu
+opens, so the label stays; the button gets <code>aria-labelledby</code> naming the title it shows and then itself, and a
+reference to itself reads its own <code>aria-label</code>: the name is «Tre fasar Vis sidemeny» and follows a new slide
+and the open menu without another write. <strong>(m)</strong> H5P.Question 1.5 gives a button the content&#39;s text for
+assistive technology (<code>a11yCheck</code> and its like) as <code>aria-label</code> and the content&#39;s button word as its text.
+Content with the two in different languages (an English label on a button that says «Sjekk», as in a package
+made from the libraries&#39; own Nynorsk files, where those texts are still English) has a name without the word it
+shows; the shown word is then put first in the name («Sjekk. Check the answers. …»). A label that already
+holds the word is left alone, which is every activity made in our editor (D-111&#39;s overlay). Both are
+attribute-only like the other repairs (<code>packages/hvl-h5p-theme/src/a11yRepairs.js</code>): (l) adds two <code>id</code>s and
+one <code>aria-labelledby</code>; (m) remembers the library&#39;s label in <code>data-hvl-*</code> attributes so a later label or word
+of H5P&#39;s is followed. (l) goes when a pinned CoursePresentation names the button by what it shows; (m) when a
+pinned H5P.Question keeps the shown word in the name. No register entry is needed.</li>
+<li><strong>Decision — a site icon generated from the tokens (UD-001, DATA-011).</strong> A browser asks every site for
+<code>/favicon.ico</code>; without one a visitor&#39;s first page logged a 404. HVL has not supplied its logo files, so the
+icon is a plain mark in HVL&#39;s colours, not the logo: a rounded square in <code>primary-dark</code> with a play triangle in
+<code>surface</code> (10.82 : 1). <code>packages/design-tokens/scripts/siteIcon.mjs</code> draws it once and
+<code>buildSiteIcon.mjs</code> writes <code>apps/web/src/app/icon.svg</code> and <code>favicon.ico</code> (one 32 × 32 picture, stored without
+compression so no zlib version decides a byte); <code>npm run tokens:build</code> and <code>tokens:check</code> cover both, so CI
+holds them like the token CSS. Next.js serves them and links them from every page; <code>/favicon.ico</code> also answers
+for a page of Express&#39;s own that names no icon.</li>
+<li><strong>Decision — the quoted part of a sentence carries the activity&#39;s language (UD-010).</strong> A text of the activity
+that stands in an element of its own already had <code>lang</code>. A text quoted inside a translated sentence (a chart
+summary, a table caption, a shortlist line, an announcement, the list&#39;s title in the printout and the
+projection, and a chart&#39;s label) now has it too: the sentence is built with its quoted range, found by the
+placeholder&#39;s place and never by searching for the value, and written with only that range in
+<code>&lt;span lang&gt;</code> (<code>apps/web/src/features/insight/quotedText.tsx</code>). A fallback name («Spørsmål 3 (utan tekst)»,
+«Oppgåve utan tittel») is never marked. No text changed.</li>
+<li><strong>Decision — three details of the journeys have an end-to-end test (PROD-001, PROD-003, UD-021, NFR-001,
+INS-003).</strong> <code>e2e/journeyVideoPattern.e2e.test.ts</code> plays J1&#39;s steps 2 to 5 with the video pattern: the editor
+opens with the Interactive Video skeleton (three check questions at 150, 300 and 450 s and a summary task),
+<strong>Sjekk og publiser</strong> reports the missing video, the author pastes a Panopto link in H5P&#39;s own dialog and
+saves, and the check then reports V-VID-CAPTIONS in place of the missing video; every request off the machine
+is refused and recorded, and none was made. <code>journeyPhoneResume</code> times J2&#39;s step 1, from the click in Canvas
+to a started activity: under 3 s for the quicker of the journey&#39;s two opens, since a busy machine only adds
+time (about 0.6 s on the development machine). It is one learner with no network profile; NFR-001&#39;s 200
+learners and its Fast 4G profile stay the load test&#39;s and Lighthouse&#39;s (D-114). <code>journeySeminarInsight</code> prints
+J3&#39;s list: the page&#39;s print call is held back, Chromium prints the document to a PDF, and the paper holds the
+list&#39;s title, the question, its share and the feedback, and no tab, heading or button of the page. The
+governance journey no longer excuses every failed resource, only the two answers that say a visitor is not
+signed in.</li>
+<li><strong>Decision — four package updates taken by hand (SEC-007).</strong> <code>@aws-sdk/client-s3</code> and <code>@aws-sdk/lib-storage</code>
+3.1176.0, <code>typescript-eslint</code> 8.74.0 and <code>@axe-core/playwright</code> 4.14.0, by exact pin. The lock file&#39;s changed
+entries are the same versions and checksums as Dependabot&#39;s proposal; one nested package that npm would also
+have moved stays where it was. The SBOM lists 478 npm packages, as before.</li>
+<li><strong>Residual:</strong> the correction of a set&#39;s answer reads two fields of the library&#39;s instance, which no interface
+promises; the end-to-end test on the real library fails if they move, and the fallback is an answer that is not
+sent. An answer a set sent before this step keeps the place on screen; there is none outside test data.
+A question removed from a set after <em>k</em> learners answered it is listed without a name, like any removed
+question (D-121). The union of a set&#39;s learners in a video list is one more count about the same learners;
+it is suppressed below <em>k</em> like every count, and nothing is added to what a statement stores. Repair (m) puts a
+Nynorsk word before an English sentence in one name; a screen reader reads both with the page&#39;s voice, as it
+read the English sentence before.</li>
+<li><strong>Verified:</strong> tests written first. <code>e2e/singleChoiceSetInsight.e2e.test.ts</code> plays a Column with a set of two
+questions as five Canvas learners in the real player: on the old code the view held two rows without a name,
+each 60 % right, though every learner chose the right alternative of one and a wrong one of the other; now each
+question has its name, 5 learners, 100 % and 0 %, and its alternatives with their counts.
+<code>test/insight/singleChoiceSetQuestions.test.ts</code> (6: the catalogue, a set as main library and malformed sets, a
+view&#39;s numbers, the answer key, the video interaction and its count) failed on the old catalogue;
+<code>packages/hvl-h5p-theme/test/xapiSingleChoiceSet.test.ts</code> (5: the stored index, a statement of another
+library left alone, no answer without the record, nothing changed, the bridge with the raising instance)
+failed before the correction existed. <code>a11yRepairsLabelInName.test.ts</code> (5; four failed on the old script), and
+the accessibility suite with the newer scanner: 14 of 563 tests failed for the one rule before the repairs,
+none after. <code>packages/design-tokens/test/siteIcon.test.ts</code> (6) and the browser test of the icon in
+<code>test/web/webPages.browser.int.test.ts</code>, which found no icon link on the old build. The language marks:
+<code>apps/web/test/features/insight/InsightQuotedLanguage.test.tsx</code> (5) and <code>quotedText.test.tsx</code> (3); three failed
+before, and the two that passed guard what must stay unmarked. The three journey tests above. The full gate
+and the Docker smoke test ran; step 35 in <code>PROGRESS.md</code> has the output.</li>
+<li><strong>Consequences:</strong> <code>CLAUDE.md</code> §2 names the bridge&#39;s four scripts, and the theme&#39;s README and the tests that
+list them follow. Three report drafts are added to <code>docs/upstream/</code> (the set&#39;s statement; the slide-menu
+button&#39;s name; a question button&#39;s name and MultiChoice&#39;s untranslated labels). The READMEs of the design
+tokens and the web app name the generated icon; the server&#39;s README describes the server as it is today, not
+as of Session 4. The conformance report is rewritten from a run recorded with axe-core 4.14.1: criterion 2.5.3
+now has a rule that runs. The evaluator guide&#39;s <a class="req-ref" href="#r-NFR-001"><code>NFR-001</code></a> row names the timed open. No line reference moved:
+this entry and step 35 stand at the end of their files, and the one in-line edit keeps its file&#39;s line count.
+The status overview counts 35 steps.</li>
+</ul>
 
 </section>
 <section class="view doc" id="progress" aria-labelledby="progress-h">
@@ -14185,7 +14298,7 @@ what is done, what is verified, and what is blocked.</p>
 <tr>
 <td>S6</td><td>xAPI → AGS grade bridge, insight, privacy jobs, Docker, conformance report</td><td>02 §4–§8; 05; 00 §3 (journeys J1–J5), §6; 01 <a class="req-ref" href="#r-H5P-009"><code>H5P-009</code></a>, <a class="req-ref" href="#r-H5P-010"><code>H5P-010</code></a>, <a class="req-ref" href="#r-SEC-004"><code>SEC-004</code></a>, <a class="req-ref" href="#r-SEC-006"><code>SEC-006</code></a>; 03 <a class="req-ref" href="#r-UD-003"><code>UD-003</code></a>, §6 (<a class="req-ref" href="#r-UD-040"><code>UD-040</code></a>); 04 <a class="req-ref" href="#r-MAPPE-003"><code>MAPPE-003</code></a>, <a class="req-ref" href="#r-MAPPE-004"><code>MAPPE-004</code></a> (D-101)</td><td>✅ Done (gate passed 2026-11-06; started 2026-10-30; D-101…D-116)</td></tr>
 <tr>
-<td>SR</td><td>Security repairs after the S6 gate: 34 steps, each with tests, a gate run and a decision entry</td><td>The spec a step names</td><td>✅ Done (2026-11-20 to 2026-11-27; D-117…D-150; session log, steps 1–34); open: HVL IT&#39;s and the owner&#39;s questions Q32, Q33 and Q34, with the earlier ones</td></tr>
+<td>SR</td><td>Security repairs after the S6 gate: 35 steps, each with tests, a gate run and a decision entry</td><td>The spec a step names</td><td>✅ Done (2026-11-20 to 2026-11-27; D-117…D-151; session log, steps 1–35); open: HVL IT&#39;s and the owner&#39;s questions Q32, Q33 and Q34, with the earlier ones</td></tr>
 </tbody></table></div>
 <p>Legend: ⬜ not started · 🟨 in progress · ✅ done (gate passed, output pasted below) · ⛔ blocked</p>
 <hr>
@@ -17795,6 +17908,38 @@ $ npx vitest run --project server                    27164 passed, 31 skipped; 1
     privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
     MAPPE-004). After the second read's corrections, the Feide and launch-ceiling tests ran again: 159 passed
     (14 files)</code></pre>
+</li>
+<li><p><strong>2026-11-27 · Security repairs, step 35 (D-151)</strong> — the small things S6&#39;s log left open, the newer
+accessibility scanner with two repairs, and four package updates.</p>
+<ul>
+<li>A Single Choice Set in insight (INS-002, INS-003, INS-005, LTI-010): the library sends one answer per
+question of a set, under the question&#39;s own ID, and none for the set, so the view listed the set with no
+learner and the answers as rows without a name. Each question of a set is now a question of its own, with
+its text and its alternatives; in a video the set is one interaction, answered through its questions. The
+browser test found more: the library writes the chosen alternative&#39;s place on screen as the answer and
+judges by it, and it shuffles the alternatives, so five learners who all answered one question right and
+another wrong gave 60 % right for both. The xAPI bridge now sends the stored index the set itself recorded,
+read from the instance that raised the event, or no answer when it cannot read it; a fourth player-only
+script, <code>xapiSingleChoiceSet.js</code>. A report for H5P is drafted.</li>
+<li>The newer scanner (UD-030, SEC-007): <code>@axe-core/playwright</code> 4.14.0 runs the rule for WCAG 2.5.3 Label in
+Name. Two of H5P&#39;s controls had a name without the words they show: CoursePresentation&#39;s slide-menu button
+and a question button whose label is in another language than its word. Both are repaired in
+<code>a11yRepairs.js</code>, attributes only; the conformance report is rewritten from a run recorded with the newer
+scanner. With it: <code>@aws-sdk/client-s3</code> and <code>@aws-sdk/lib-storage</code> 3.1176.0 and <code>typescript-eslint</code> 8.74.0,
+by exact pin, the lock file&#39;s changed entries equal to Dependabot&#39;s proposal. The SBOM lists 478 npm
+packages, as before.</li>
+<li>A site icon (UD-001): a plain mark in HVL&#39;s colours, generated from the tokens as <code>icon.svg</code> and
+<code>favicon.ico</code> and held by <code>tokens:check</code>; a visitor&#39;s first page no longer logs a 404.</li>
+<li>The language of quoted texts (UD-010): a text of the activity quoted inside a sentence of the Innsikt tab
+(a chart summary, a caption, a shortlist line, an announcement, the list&#39;s title, a chart label) carries the
+activity&#39;s language, as the texts in elements of their own already did.</li>
+<li>Three details of the journeys have an end-to-end test (PROD-001, PROD-003, UD-021, NFR-001, INS-003): the
+video pattern with a pasted Panopto link and the captions error; the open on a phone, timed under 3 s; the
+printed shortlist. The server&#39;s README describes the server as it is today.</li>
+<li>Noted and not changed: in H5P&#39;s video dialog the texts are partly Bokmål (the editor&#39;s own texts fall back
+from Nynorsk), and its heading invites a YouTube link while HVL&#39;s field text says such links cannot be played
+here; a wording question for the language advisers.</li>
+</ul>
 </li>
 </ul>
 

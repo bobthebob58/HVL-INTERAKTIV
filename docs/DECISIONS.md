@@ -6725,3 +6725,115 @@ loading of one spec per session are kept.
   table lists the new files under `AUTH-001`. Q34 and the architecture paper say that code scanning is on.
   No line reference moved: the edits keep each file's line count, and this entry and step 34 stand at the end
   of their files. The status overview counts 34 steps.
+
+### D-151 · Step 35: a Single Choice Set's questions in insight, two label-in-name repairs with the newer accessibility scanner, a site icon, the language of quoted texts, three journey details and four package updates
+- **Context:** S6's log left five small things open (a Single Choice Set's answers in insight, the language of a
+  text quoted inside a sentence of the Innsikt tab, three details of the journeys without an end-to-end test, no
+  site icon, the server's README), D-148 held the accessibility scanner back at 4.13.0, and Dependabot's monthly
+  run proposed four npm updates in one pull request, the scanner among them.
+- **Decision — each question of a Single Choice Set is a question of its own (INS-002, INS-003, INS-005).**
+  H5P.SingleChoiceSet 1.11 sends one `answered` per question, under that question's own `subContentId` (each is
+  an `isSubContent` group), and none for the set. The catalogue listed the set as one question under the set's
+  ID, so its row never got a learner, and the answers showed only as rows without a name once *k* learners had
+  answered. The catalogue now lists each question of a set that has an ID, with its text and its alternatives
+  (the first stored alternative is the right one; the library has no feedback text per alternative), and the set
+  itself is no question (`src/insight/content/questionShapes.ts` `singleChoiceQuestions`,
+  `questionCatalogue.ts`). In an InteractiveVideo the set stays one interaction, answered by a learner who
+  answered any of its questions, counted once (`activityCapabilities.ts` `answeredBy`,
+  `aggregate/videoEngagement.ts`); a set whose questions have no ID is not listed, since the server stores no
+  answer without one. A question of a set now has an answer key like any choice question, so a save that changes
+  the number of its alternatives is a change of the answer key (PROD-013, D-137).
+- **Decision — the bridge sends a set's answer as the set recorded it (LTI-010, DATA-012; amends D-115).**
+  The library shuffles a question's alternatives and keeps two records of an answer: the chosen alternative's
+  place on screen (`userResponses`) and its stored index (`userAnswerIndex`). Its statement is written from the
+  first: `result.response` is the place on screen, and `success` and `score` say "right" when the alternative
+  shown first was chosen (`scripts/single-choice-set.js` lines 202, 203 and 234 at commit d570a968; the default
+  branch read on 2026-11-27 is the same). Five learners who all chose the right alternative of one question and a
+  wrong one of another gave 3 of 5 "right" for both. H5P Core calls a listener of its outside dispatcher with the
+  instance that raised the event as `this`, also for events of its own iframes
+  (`h5p-event-dispatcher.js`, `h5p.js`), so the bridge reads the set's own record and sends the stored index as
+  the response, with `success` and `score` to match (`packages/hvl-h5p-theme/src/xapiSingleChoiceSet.js`, a
+  fourth player-only script, first of the four). When it cannot read the record (another version of the library)
+  it sends the statement without an answer: a question then shows its learners and no share right, never a false
+  one. Nothing new leaves the page: an index replaces an index in the same fields. The correction goes when a
+  pinned SingleChoiceSet writes the stored index itself (`docs/upstream/h5p-single-choice-set-xapi-response.md`);
+  `e2e/singleChoiceSetInsight.e2e.test.ts` then still passes without it.
+- **Decision — two more repairs of H5P's markup, for WCAG 2.5.3 Label in Name (UD-030; amends D-080 and D-148).**
+  `@axe-core/playwright` 4.14.0 (axe-core 4.14.1) runs `label-content-name-mismatch` by default, and the suite
+  reports two controls. **(l)** CoursePresentation 1.28's footer button for the slide menu shows the current
+  slide's title and is labelled «Vis sidemeny». H5P.Tooltip shows that label and `cp.js` rewrites it when the menu
+  opens, so the label stays; the button gets `aria-labelledby` naming the title it shows and then itself, and a
+  reference to itself reads its own `aria-label`: the name is «Tre fasar Vis sidemeny» and follows a new slide
+  and the open menu without another write. **(m)** H5P.Question 1.5 gives a button the content's text for
+  assistive technology (`a11yCheck` and its like) as `aria-label` and the content's button word as its text.
+  Content with the two in different languages (an English label on a button that says «Sjekk», as in a package
+  made from the libraries' own Nynorsk files, where those texts are still English) has a name without the word it
+  shows; the shown word is then put first in the name («Sjekk. Check the answers. …»). A label that already
+  holds the word is left alone, which is every activity made in our editor (D-111's overlay). Both are
+  attribute-only like the other repairs (`packages/hvl-h5p-theme/src/a11yRepairs.js`): (l) adds two `id`s and
+  one `aria-labelledby`; (m) remembers the library's label in `data-hvl-*` attributes so a later label or word
+  of H5P's is followed. (l) goes when a pinned CoursePresentation names the button by what it shows; (m) when a
+  pinned H5P.Question keeps the shown word in the name. No register entry is needed.
+- **Decision — a site icon generated from the tokens (UD-001, DATA-011).** A browser asks every site for
+  `/favicon.ico`; without one a visitor's first page logged a 404. HVL has not supplied its logo files, so the
+  icon is a plain mark in HVL's colours, not the logo: a rounded square in `primary-dark` with a play triangle in
+  `surface` (10.82 : 1). `packages/design-tokens/scripts/siteIcon.mjs` draws it once and
+  `buildSiteIcon.mjs` writes `apps/web/src/app/icon.svg` and `favicon.ico` (one 32 × 32 picture, stored without
+  compression so no zlib version decides a byte); `npm run tokens:build` and `tokens:check` cover both, so CI
+  holds them like the token CSS. Next.js serves them and links them from every page; `/favicon.ico` also answers
+  for a page of Express's own that names no icon.
+- **Decision — the quoted part of a sentence carries the activity's language (UD-010).** A text of the activity
+  that stands in an element of its own already had `lang`. A text quoted inside a translated sentence (a chart
+  summary, a table caption, a shortlist line, an announcement, the list's title in the printout and the
+  projection, and a chart's label) now has it too: the sentence is built with its quoted range, found by the
+  placeholder's place and never by searching for the value, and written with only that range in
+  `<span lang>` (`apps/web/src/features/insight/quotedText.tsx`). A fallback name («Spørsmål 3 (utan tekst)»,
+  «Oppgåve utan tittel») is never marked. No text changed.
+- **Decision — three details of the journeys have an end-to-end test (PROD-001, PROD-003, UD-021, NFR-001,
+  INS-003).** `e2e/journeyVideoPattern.e2e.test.ts` plays J1's steps 2 to 5 with the video pattern: the editor
+  opens with the Interactive Video skeleton (three check questions at 150, 300 and 450 s and a summary task),
+  **Sjekk og publiser** reports the missing video, the author pastes a Panopto link in H5P's own dialog and
+  saves, and the check then reports V-VID-CAPTIONS in place of the missing video; every request off the machine
+  is refused and recorded, and none was made. `journeyPhoneResume` times J2's step 1, from the click in Canvas
+  to a started activity: under 3 s for the quicker of the journey's two opens, since a busy machine only adds
+  time (about 0.6 s on the development machine). It is one learner with no network profile; NFR-001's 200
+  learners and its Fast 4G profile stay the load test's and Lighthouse's (D-114). `journeySeminarInsight` prints
+  J3's list: the page's print call is held back, Chromium prints the document to a PDF, and the paper holds the
+  list's title, the question, its share and the feedback, and no tab, heading or button of the page. The
+  governance journey no longer excuses every failed resource, only the two answers that say a visitor is not
+  signed in.
+- **Decision — four package updates taken by hand (SEC-007).** `@aws-sdk/client-s3` and `@aws-sdk/lib-storage`
+  3.1176.0, `typescript-eslint` 8.74.0 and `@axe-core/playwright` 4.14.0, by exact pin. The lock file's changed
+  entries are the same versions and checksums as Dependabot's proposal; one nested package that npm would also
+  have moved stays where it was. The SBOM lists 478 npm packages, as before.
+- **Residual:** the correction of a set's answer reads two fields of the library's instance, which no interface
+  promises; the end-to-end test on the real library fails if they move, and the fallback is an answer that is not
+  sent. An answer a set sent before this step keeps the place on screen; there is none outside test data.
+  A question removed from a set after *k* learners answered it is listed without a name, like any removed
+  question (D-121). The union of a set's learners in a video list is one more count about the same learners;
+  it is suppressed below *k* like every count, and nothing is added to what a statement stores. Repair (m) puts a
+  Nynorsk word before an English sentence in one name; a screen reader reads both with the page's voice, as it
+  read the English sentence before.
+- **Verified:** tests written first. `e2e/singleChoiceSetInsight.e2e.test.ts` plays a Column with a set of two
+  questions as five Canvas learners in the real player: on the old code the view held two rows without a name,
+  each 60 % right, though every learner chose the right alternative of one and a wrong one of the other; now each
+  question has its name, 5 learners, 100 % and 0 %, and its alternatives with their counts.
+  `test/insight/singleChoiceSetQuestions.test.ts` (6: the catalogue, a set as main library and malformed sets, a
+  view's numbers, the answer key, the video interaction and its count) failed on the old catalogue;
+  `packages/hvl-h5p-theme/test/xapiSingleChoiceSet.test.ts` (5: the stored index, a statement of another
+  library left alone, no answer without the record, nothing changed, the bridge with the raising instance)
+  failed before the correction existed. `a11yRepairsLabelInName.test.ts` (5; four failed on the old script), and
+  the accessibility suite with the newer scanner: 14 of 563 tests failed for the one rule before the repairs,
+  none after. `packages/design-tokens/test/siteIcon.test.ts` (6) and the browser test of the icon in
+  `test/web/webPages.browser.int.test.ts`, which found no icon link on the old build. The language marks:
+  `apps/web/test/features/insight/InsightQuotedLanguage.test.tsx` (5) and `quotedText.test.tsx` (3); three failed
+  before, and the two that passed guard what must stay unmarked. The three journey tests above. The full gate
+  and the Docker smoke test ran; step 35 in `PROGRESS.md` has the output.
+- **Consequences:** `CLAUDE.md` §2 names the bridge's four scripts, and the theme's README and the tests that
+  list them follow. Three report drafts are added to `docs/upstream/` (the set's statement; the slide-menu
+  button's name; a question button's name and MultiChoice's untranslated labels). The READMEs of the design
+  tokens and the web app name the generated icon; the server's README describes the server as it is today, not
+  as of Session 4. The conformance report is rewritten from a run recorded with axe-core 4.14.1: criterion 2.5.3
+  now has a rule that runs. The evaluator guide's `NFR-001` row names the timed open. No line reference moved:
+  this entry and step 35 stand at the end of their files, and the one in-line edit keeps its file's line count.
+  The status overview counts 35 steps.
