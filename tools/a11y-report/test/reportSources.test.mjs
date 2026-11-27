@@ -51,7 +51,11 @@ describe('[UD-040] the sources of the conformance report', () => {
     const parsing = rulesOfCriterion(axe, '4.1.1');
     expect(parsing.running).toEqual([]);
     expect(parsing.notRunning.map((r) => `${r.id} ${r.keptOutBy}`)).toContain('duplicate-id deprecated');
-    expect(rulesOfCriterion(axe, '2.5.3').notRunning.map((r) => r.keptOutBy)).toEqual(['experimental']);
+    expect(rulesOfCriterion(axe, '1.3.4').notRunning.map((r) => `${r.id} ${r.keptOutBy}`)).toEqual([
+      'css-orientation-lock experimental',
+    ]);
+    // WHY: axe-core 4.14 runs the rule for Label in Name, which 4.13 kept out as experimental (D-151).
+    expect(rulesOfCriterion(axe, '2.5.3').running.map((r) => r.id)).toEqual(['label-content-name-mismatch']);
   });
 
   it('[UD-040] reads the protocol’s steps with their action and the page checks with their criteria', () => {
