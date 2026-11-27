@@ -130,8 +130,8 @@ is written out in full.
    profile and `SYS_CHROOT`; the two DNS names; a clamd (Q5).
 4. **Feide.** Who registers the tool, with which test users, and who may log in (Q3, Q29).
 5. **The image.** Who builds it and where, and whether it is signed (Q33).
-6. **An end date** for the test install. test-environment.md §4 proposes 2027-01-31 at the latest. On that day the
-   `image-size` audit exceptions expire, and CI fails until one of three choices is made
+6. **An end date** for the test install. test-environment.md §4 proposes 2027-03-27 at the latest. On that day the
+   `image-size` audit exceptions (renewed on 2026-11-27, D-148) expire, and CI fails until one of three choices is made
    ([lumi-path.md](lumi-path.md)).
 7. **Who reads the code first,** which area, and the private channel for security findings (section 3;
    human-review.md §4, §5).

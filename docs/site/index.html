@@ -281,7 +281,7 @@ asynchronous and synchronous teaching, it is out of scope.</p>
 <tr>
 <td>S6</td><td>xAPI → AGS grade bridge, insight, privacy jobs, Docker, conformance report</td><td>02 §4–§8; 05; 00 §3 (journeys J1–J5), §6; 01 <a class="req-ref" href="#r-H5P-009"><code>H5P-009</code></a>, <a class="req-ref" href="#r-H5P-010"><code>H5P-010</code></a>, <a class="req-ref" href="#r-SEC-004"><code>SEC-004</code></a>, <a class="req-ref" href="#r-SEC-006"><code>SEC-006</code></a>; 03 <a class="req-ref" href="#r-UD-003"><code>UD-003</code></a>, §6 (<a class="req-ref" href="#r-UD-040"><code>UD-040</code></a>); 04 <a class="req-ref" href="#r-MAPPE-003"><code>MAPPE-003</code></a>, <a class="req-ref" href="#r-MAPPE-004"><code>MAPPE-004</code></a> (D-101)</td><td>✅ Done (gate passed 2026-11-06; started 2026-10-30; D-101…D-116)</td></tr>
 <tr>
-<td>SR</td><td>Security repairs after the S6 gate: 31 steps, each with tests, a gate run and a decision entry</td><td>The spec a step names</td><td>✅ Done (2026-11-20 to 2026-11-26; D-117…D-147; session log, steps 1–31); open: HVL IT&#39;s and the owner&#39;s questions Q32, Q33 and Q34, with the earlier ones</td></tr>
+<td>SR</td><td>Security repairs after the S6 gate: 32 steps, each with tests, a gate run and a decision entry</td><td>The spec a step names</td><td>✅ Done (2026-11-20 to 2026-11-27; D-117…D-148; session log, steps 1–32); open: HVL IT&#39;s and the owner&#39;s questions Q32, Q33 and Q34, with the earlier ones</td></tr>
 </tbody></table></div>
 
 <p class="more"><a href="#progress">Open the build tracker</a> · <a href="#evaluator-guide--5-session-gates">See each session's pass/fail gate</a></p>
@@ -347,7 +347,7 @@ asynchronous and synchronous teaching, it is out of scope.</p>
 <tr>
 <td>D-029</td><td>Own licence and audit checks instead of <code>license-checker</code> and plain <code>npm audit</code></td><td>Accepted (2026-10-21)</td></tr>
 <tr>
-<td>D-030</td><td>Accepted advisory: <code>image-size</code> parser loops (until 2027-01-31)</td><td>Accepted (2026-10-21), expires 2027-01-31</td></tr>
+<td>D-030</td><td>Accepted advisory: <code>image-size</code> parser loops (until 2027-01-31)</td><td>Accepted (2026-10-21); renewed on 2026-11-27, expires 2027-03-27 (D-148)</td></tr>
 <tr>
 <td>D-031</td><td>Session 1 items that finish in Session 2 (spike steps 3–6, F1/F3 wiring, import directory, TypeDoc)</td><td>Accepted (2026-10-22)</td></tr>
 <tr>
@@ -6928,7 +6928,7 @@ with the commands given.</p>
 <tr>
 <td>D-029</td><td>Own licence and audit checks instead of <code>license-checker</code> and plain <code>npm audit</code></td><td>Accepted (2026-10-21)</td></tr>
 <tr>
-<td>D-030</td><td>Accepted advisory: <code>image-size</code> parser loops (until 2027-01-31)</td><td>Accepted (2026-10-21), expires 2027-01-31</td></tr>
+<td>D-030</td><td>Accepted advisory: <code>image-size</code> parser loops (until 2027-01-31)</td><td>Accepted (2026-10-21); renewed on 2026-11-27, expires 2027-03-27 (D-148)</td></tr>
 <tr>
 <td>D-031</td><td>Session 1 items that finish in Session 2 (spike steps 3–6, F1/F3 wiring, import directory, TypeDoc)</td><td>Accepted (2026-10-22)</td></tr>
 <tr>
@@ -7404,6 +7404,9 @@ Review again at expiry, or earlier if h5p-server releases a version with <code>i
 <li><p><strong>Amendment (2026-11-26, D-145):</strong> an exception needs every field, a real calendar date at most 120 days ahead,
 and covers its advisory only for the package it names. The two entries here pass as they are; a renewal on
 2027-01-31 can run to 2027-05-31 at most.</p>
+</li>
+<li><p><strong>Amendment (2026-11-27, D-148):</strong> both advisories were read again and the exceptions renewed. They now expire
+on <strong>2027-03-27</strong>, the latest date the 120-day rule allows from the day of the review.</p>
 </li>
 </ul>
 <h3 id="decisions--d-031--session-1-items-that-finish-in-session-2" tabindex="-1">D-031 · Session 1 items that finish in Session 2</h3>
@@ -13692,7 +13695,7 @@ yearly-purge operations notes, the runbook and the READMEs of <code>deploy/</cod
 </ul>
 <h3 id="decisions--d-145--security-repairs-step-29-the-lock-file-is-held-to-one-source-and-one-checksum-an-install-script-outside-the-reviewed-list-stops-the-install-the-workflows-name-commits-and-digests-an-audit-exception-is-dated-and-bound-to-its-package-and-the-advisories-are-checked-every-day" tabindex="-1">D-145 · Security repairs, step 29: the lock file is held to one source and one checksum, an install script outside the reviewed list stops the install, the workflows name commits and digests, an audit exception is dated and bound to its package, and the advisories are checked every day</h3>
 <ul>
-<li><strong>Context:</strong> Six gaps in how the dependencies and the build steps are held. (1) <code>npm run check:audit</code> failed:
+<li><p><strong>Context:</strong> Six gaps in how the dependencies and the build steps are held. (1) <code>npm run check:audit</code> failed:
 <code>effect</code> 3.20.0, an exact dependency of <code>@prisma/config</code> 7.10.1 (Prisma&#39;s command-line tool), is named by
 GHSA-7589-6fvf-x4pw (a slow pattern in <code>Schema.TemplateLiteral</code>; fixed in 3.22.1). (2) The audit check compared
 an exception&#39;s <code>expires</code> with today as text, so an entry without a date, with a misspelt one or with a date
@@ -13703,47 +13706,55 @@ lists the reviewed install scripts in <code>allowScripts</code>, but npm 11 runs
 unless <code>strict-allow-scripts</code> is set, and there was no <code>.npmrc</code>. (5) The workflows named their actions by major
 tag and three of the gate&#39;s service images by tag; a tag can be moved by its publisher. (6) The audit check ran
 only on a push or a pull request, and Dependabot proposes updates once a month (the owner&#39;s choice of
-2026-10-28, where <a class="req-ref" href="#r-SEC-007"><code>SEC-007</code></a> says weekly), so an advisory published in between waited for the next push.</li>
-<li><strong>Decision — <code>effect</code> 3.22.4 by an exact override (SEC-007).</strong> The root <code>overrides</code> pins <code>effect</code> at 3.22.4, as
+2026-10-28, where <a class="req-ref" href="#r-SEC-007"><code>SEC-007</code></a> says weekly), so an advisory published in between waited for the next push.</p>
+</li>
+<li><p><strong>Decision — <code>effect</code> 3.22.4 by an exact override (SEC-007).</strong> The root <code>overrides</code> pins <code>effect</code> at 3.22.4, as
 D-030 did for <code>underscore</code>: Prisma 7.10.1 is the newest 7.x and names 3.20.0 exactly. 3.22.4 was five weeks old;
 the newest, 3.22.5, one week. The package is used by Prisma&#39;s CLI (<code>generate</code>, <code>migrate deploy</code>) to read our own
 <code>prisma.config.ts</code>; <code>@prisma/client</code>, which the server runs, does not load it. Remove the override when a Prisma
-release names a fixed <code>effect</code> itself. The two <code>image-size</code> exceptions stay (D-030): no 1.x release is fixed.</li>
-<li><strong>Decision — an exception is complete, dated and bound to its package.</strong>
+release names a fixed <code>effect</code> itself. The two <code>image-size</code> exceptions stay (D-030): no 1.x release is fixed.</p>
+</li>
+<li><p><strong>Decision — an exception is complete, dated and bound to its package.</strong>
 <code>tools/dependency-check/auditExceptionRules.mjs</code>: an entry needs <code>advisory</code>, <code>package</code>, <code>decision</code>, <code>expires</code>
 and <code>mitigation</code>; <code>expires</code> is a real calendar date (<code>2027-02-30</code> is not one) at most 120 days after today, so
 every exception is read again within four months; two entries for the same advisory and package are refused.
 <code>checkAudit.mjs</code> matches an advisory to an exception by ID and package, and reports an advisory once for each
-package npm names. D-030&#39;s entries (until 2027-01-31) pass.</li>
-<li><strong>Decision — <code>npm run check:lockfile</code> (SEC-007).</strong> <code>tools/dependency-check/checkLockfile.mjs</code> holds every
+package npm names. D-030&#39;s entries (until 2027-01-31) pass.</p>
+</li>
+<li><p><strong>Decision — <code>npm run check:lockfile</code> (SEC-007).</strong> <code>tools/dependency-check/checkLockfile.mjs</code> holds every
 package of the lock file that is not one of our workspaces to
 <code>https://registry.npmjs.org/&lt;name&gt;/-/&lt;name&gt;-&lt;version&gt;.tgz</code> and to a <code>sha512-</code> value of the full length; an alias
 or a bundled package fails until a person has reviewed it; a link points at a local package. It uses Node alone,
 and both workflows run it before <code>npm ci</code>. Not required: a rule for another registry. A mirror at HVL would be a
-change of this check on purpose.</li>
-<li><strong>Decision — an install script outside the reviewed list stops the install.</strong> <code>.npmrc</code> sets
+change of this check on purpose.</p>
+</li>
+<li><p><strong>Decision — an install script outside the reviewed list stops the install.</strong> <code>.npmrc</code> sets
 <code>strict-allow-scripts=true</code>. <code>allowScripts</code> names the four packages of the lock file with a script, each as
 <code>name@version</code>: <code>esbuild</code>, <code>prisma</code> and <code>@prisma/engines</code> run theirs, and <code>fsevents</code> (macOS only) is <code>false</code>,
 because it ships its built file and its script would only build it again. <code>installScriptRules.mjs</code> compares the
 lock file with the list both ways and requires the setting; <code>deploy/Dockerfile</code> copies <code>.npmrc</code> before its
-<code>npm ci</code>, and <code>tools/deploy-check</code> requires that copy.</li>
-<li><strong>Decision — the workflows name commits and digests (<code>npm run check:workflows</code>).</strong> Each action is written as
+<code>npm ci</code>, and <code>tools/deploy-check</code> requires that copy.</p>
+</li>
+<li><p><strong>Decision — the workflows name commits and digests (<code>npm run check:workflows</code>).</strong> Each action is written as
 <code>owner/repo@&lt;commit&gt; # v1.2.3</code> (checkout v7.0.1, setup-node v7.1.0, cache v6.1.0, upload-artifact v7.0.2; each
 commit read from the action&#39;s tag list and fetched). The gate&#39;s <code>postgres</code>, <code>redis</code> and <code>moto</code> services carry
 the digests of <code>deploy/compose.app.yml</code>, and the check refuses another digest for an image the stack names.
 It also requires top-level <code>permissions</code> without <code>write</code>, and <code>persist-credentials: false</code> on every checkout,
-which the two workflows already had. Dependabot proposes new action commits; an image digest is changed by hand.</li>
-<li><strong>Decision — a daily advisory run; Dependabot stays monthly (the owner, 2026-11-26).</strong>
+which the two workflows already had. Dependabot proposes new action commits; an image digest is changed by hand.</p>
+</li>
+<li><p><strong>Decision — a daily advisory run; Dependabot stays monthly (the owner, 2026-11-26).</strong>
 <code>.github/workflows/audit.yml</code> runs <code>check:lockfile</code> and <code>check:audit</code> once a day on the default branch. Nothing
 is installed for it: both read the lock file and use Node and npm alone. <a class="req-ref" href="#r-SEC-007"><code>SEC-007</code></a> is amended. Not known from
 here: whom GitHub notifies about a failed scheduled run, and when it pauses a schedule in a quiet repository
-<em>(verify; GitHub&#39;s documentation could not be reached from the development sandbox)</em>.</li>
-<li><strong>Recorded, not built.</strong> A secret scan of the repository: the repository is public, so GitHub&#39;s secret scanning
+<em>(verify; GitHub&#39;s documentation could not be reached from the development sandbox)</em>.</p>
+</li>
+<li><p><strong>Recorded, not built.</strong> A secret scan of the repository: the repository is public, so GitHub&#39;s secret scanning
 and push protection are settings the owner can switch on; no scanner was added to CI, because none could be run
 in the development sandbox to see what it reports (Q34). Signing the image and stating where it was built: no
 workflow publishes an image, so there is nothing to sign yet; where the production image is built and whether it
-is signed there is HVL IT&#39;s choice (Q33).</li>
-<li><strong>Verified:</strong> unit tests of each rule on the real files and on changed copies: an exception without a date,
+is signed there is HVL IT&#39;s choice (Q33).</p>
+</li>
+<li><p><strong>Verified:</strong> unit tests of each rule on the real files and on changed copies: an exception without a date,
 with text for a date, with a date that does not exist, more than 120 days ahead, for another package or twice;
 a lock-file entry from another server or another package&#39;s address, with a weak, cut or missing checksum, as an
 alias or bundled, and a link out of the repository; a script the list does not name, a stale or loosely written
@@ -13759,14 +13770,20 @@ fresh builder built the image, its <code>npm ci</code> with the strict setting a
 8 of 8 migrations with <code>effect</code> 3.22.4; the PDF printed with Chromium&#39;s sandbox on, and the checks of D-144
 passed (no code cache, a stopped server unhealthy after 19 s). The workflow files themselves have not run on
 GitHub: GitHub runs them for <code>main</code> and for pull requests only, so they first run with the pull request that
-brings this branch to <code>main</code>.</li>
-<li><strong>Consequences:</strong> <code>package.json</code>, <code>package-lock.json</code>, <code>.npmrc</code>, <code>docs/assurance/sbom.cdx.json</code> (the SBOM lists
+brings this branch to <code>main</code>.</p>
+</li>
+<li><p><strong>Consequences:</strong> <code>package.json</code>, <code>package-lock.json</code>, <code>.npmrc</code>, <code>docs/assurance/sbom.cdx.json</code> (the SBOM lists
 <code>effect</code> 3.22.4); <code>tools/dependency-check/</code> (<code>auditExceptionRules.mjs</code>, <code>checkLockfile.mjs</code>,
 <code>installScriptRules.mjs</code>, <code>checkWorkflows.mjs</code>, <code>checkAudit.mjs</code>, their tests and the README);
 <code>tools/deploy-check/deployRules.mjs</code>; <code>deploy/Dockerfile</code>; <code>.github/workflows/ci.yml</code>, <code>docker.yml</code>, <code>audit.yml</code>
 and <code>.github/dependabot.yml</code>; <code>tools/doc-lint/test/ciDependencyGates.test.mjs</code>; <code>CLAUDE.md</code> §3. An upgrade of a
 package with an install script now changes <code>allowScripts</code> in the same commit, and an exception renewed on its
-last day can run 120 days. Amends D-029, D-030 and D-110, and <a class="req-ref" href="#r-SEC-007"><code>SEC-007</code></a>. Open questions Q33 and Q34.</li>
+last day can run 120 days. Amends D-029, D-030 and D-110, and <a class="req-ref" href="#r-SEC-007"><code>SEC-007</code></a>. Open questions Q33 and Q34.</p>
+</li>
+<li><p><strong>Amendment (2026-11-27, D-148):</strong> Dependabot&#39;s npm entry has two groups. playwright-core comes as a pull
+request of its own, because its version is tied to the image and to the cookie tests; the other minor and
+patch updates come together as before. For <code>ubuntu</code> no minor version is proposed.</p>
+</li>
 </ul>
 <h3 id="decisions--d-146--security-repairs-step-30-the-insight-routes-answer-only-a-request-with-the-own-page-header-the-hjelp-header-shows-on-every-page-of-canvass-frame-the-shortlists-texts-say-what-it-holds-and-the-documents-line-references-are-re-pointed" tabindex="-1">D-146 · Security repairs, step 30: the insight routes answer only a request with the own-page header, the Hjelp header shows on every page of Canvas&#39;s frame, the shortlist&#39;s texts say what it holds, and the documents&#39; line references are re-pointed</h3>
 <ul>
@@ -13872,6 +13889,82 @@ the validator pass, and so does the gate (step 31 in <code>PROGRESS.md</code>).<
 <code>apps/server/test/h5p/semantics/lumiTextSanitizer.test.ts</code>. Amends D-140 (one sentence of its context, below
 it). The status overview counts 31 steps.</li>
 </ul>
+<h3 id="decisions--d-148--security-repairs-step-32-the-monthly-package-updates-taken-by-hand-an-upload-that-ends-inside-a-part-the-reader-discards-dependabots-groups-and-the-image-size-exceptions-renewed" tabindex="-1">D-148 · Security repairs, step 32: the monthly package updates taken by hand, an upload that ends inside a part the reader discards, Dependabot&#39;s groups, and the image-size exceptions renewed</h3>
+<ul>
+<li><strong>Context:</strong> Dependabot&#39;s first proposals after D-145 both failed CI, and the owner closed them on 2026-11-27.
+The npm one held 25 minor and patch updates. One of them, playwright-core 1.56.1 to 1.65.1, cannot be taken
+with the others: the image copies Chromium by its build number (<code>deploy/Dockerfile</code>), one type in the
+accessibility support changes, and the cookie tests were proven on the Chromium of 1.56.1 (D-065). The Docker
+one proposed <code>ubuntu</code> 24.10 for 24.04: Dependabot counts that as a minor version, but 24.10 is a release
+between two long-term ones, its support ended in July 2025, and its packages have left Ubuntu&#39;s archive, so the
+image no longer builds on it. A third update, sanitize-html 2.18.2, was already in (D-147). The other 23 were
+read before they were taken, because a release can close a weakness without a published advisory (D-147):
+the old and the new files of <code>@fastify/busboy</code>, <code>dompurify</code>, <code>file-type</code>, <code>openid-client</code> and <code>oauth4webapi</code>
+(which <code>openid-client</code> brings) side by side, and the other packages and the run-time packages they bring in a
+second reading whose findings were then checked. Found:<ul>
+<li><strong><code>@fastify/busboy</code> 3.2.6</strong> listens for the error of a part it skips. In 3.2.4 a body that ends inside a
+part past the part limit raised an error nobody listened for. <code>readMultipart</code> had the same gap of its own: a
+file under another field name was only resumed. Either way the error reached the process&#39;s fault handler,
+which stops the server (D-133). A body that arrives whole does not show it; the parts must arrive over time.</li>
+<li><strong><code>dompurify</code> 3.5.0</strong> adds guards against markup that changes meaning when it is read a second time, and
+lets one more kind of link address (<code>matrix:</code>) through by default.</li>
+<li><strong><code>openid-client</code> 6.9.1</strong> no longer asks for an ID token by itself when a nonce is expected.</li>
+<li><strong><code>tailwindcss</code> 4.3.5</strong> changes two rules of the built stylesheet: a <code>@supports</code> probe, and a space inside
+empty <code>var()</code> fallbacks.</li>
+<li><strong><code>axe-core</code> 4.14.1</strong> (through <code>@axe-core/playwright</code> 4.14.0) adds outcomes to several checks; it adds no
+rule and removes none.</li>
+<li><strong><code>file-type</code> 22.3.0</strong>, with <code>strtok3</code>, <code>token-types</code> and <code>@tokenizer/inflate</code>, reads ZIP and EBML containers
+more strictly. Nothing in the other packages changes what the server does.</li>
+</ul>
+</li>
+<li><strong>Decision — the 23 updates (SEC-007).</strong> Exact pins in the root, <code>apps/server</code> and <code>apps/web</code> manifests. In the
+running server: <code>@aws-sdk/client-s3</code> and <code>@aws-sdk/lib-storage</code> 3.1175.0, <code>@fastify/busboy</code> 3.2.6, <code>dompurify</code>
+3.5.0, <code>file-type</code> 22.3.0, <code>i18next</code> 26.7.2, <code>openid-client</code> 6.9.1. For building and testing: <code>vitest</code> 5.1.1,
+<code>eslint</code> 10.15.0, <code>typescript-eslint</code> 8.73.0, <code>eslint-plugin-jsdoc</code> 65.5.3, <code>globals</code> 17.14.0, <code>prettier</code>
+3.10.1, <code>lint-staged</code> 17.6.2, <code>tailwindcss</code> and <code>@tailwindcss/postcss</code> 4.3.5, <code>@axe-core/playwright</code> 4.14.0,
+<code>fast-check</code> 4.11.0, <code>pdfjs-dist</code> 6.5.438, <code>supertest</code> 7.3.2, <code>jose</code> 6.2.18, <code>oauth2-mock-server</code> 9.3.0 and
+<code>@types/yazl</code> 3.3.1. The lock file is Dependabot&#39;s own resolution with playwright-core kept at 1.56.1: 954
+packages, 110 with a new version, 37 of them in the running server and none added there. A plain <code>npm install</code>
+gave a wider change (it moved packages nothing asked to move), so it was not used. The SBOM follows.</li>
+<li><strong>Decision — a body that ends inside a discarded part is an ordinary 400 (SEC-005).</strong> <code>readMultipart</code> listens
+for the error of a file stream it discards, as it already did for the file it keeps. With busboy 3.2.6 the same
+holds for the parts the parser skips itself. The request is refused with 400, its folder is removed, and
+nothing reaches the process&#39;s fault handler.</li>
+<li><strong>Decision — nothing else in our code changes, and three tests say why.</strong> A link in an uploaded SVG may point
+only inside the drawing (<code>svgRules.ts</code>), whatever kinds of address the library lets through; <code>FeideClient</code>
+asks for the ID token itself and refuses an answer without one; the built stylesheet&#39;s two changed rules leave
+the five public pages pixel for pixel as they were (<code>nn</code>, 1280 and 390 px). That comparison needs a build
+without Next.js&#39;s build cache: with the cache, the stylesheet of the earlier build is served again.</li>
+<li><strong>Decision — Dependabot&#39;s groups (<code>.github/dependabot.yml</code>).</strong> playwright-core has a group of its own, so it
+comes as its own monthly pull request, which stays open as the reminder until the update is done as a step of
+its own, and the other updates no longer wait for it. For <code>ubuntu</code> a minor version is not proposed; a new
+digest of 24.04 still is <em>(verify at the next monthly run)</em>. The move to a later long-term Ubuntu is a decision
+of its own, together with a Playwright that supports it: 1.56.1 lists Ubuntu up to 24.04 (risk R-10).</li>
+<li><strong>Decision — the two image-size exceptions run until 2027-03-27 (amends D-030).</strong> Read again on 2026-11-27:
+npm&#39;s advisory list names the same two advisories for <code>image-size</code>, and 1.2.1 is still what Lumi 10.0.4
+brings. Lumi calls it in one place, for an uploaded file with an image MIME type, after the sanitisers. It
+chooses a parser by a file&#39;s first bytes: <code>icns</code> at the start, <code>ftyp</code> or <code>JXL </code> from the fifth byte, or <code>ff0a</code>.
+For an image extension the sniffer accepts only PNG, JPEG, GIF and WebP by their own first bytes (SEC-002), so
+no accepted file reaches one of the three parsers. The date is the latest D-145&#39;s 120-day rule allows from the
+day of the review. D-112&#39;s three choices stand; the release request to Lumi is the lasting one.</li>
+<li><strong>Residual:</strong> playwright-core 1.56.1 and its Chromium stay until the next step. The two advisories&#39; own pages
+could not be opened from the development sandbox, so the second reading rests on npm&#39;s list and on the code.</li>
+<li><strong>Verified:</strong> <code>multipartUploadCutOff.test.ts</code> sends four bodies that end inside a discarded part, each in two
+pieces. Before this step two of them reached the process&#39;s fault handler (a file under another field name, and
+a part past the part limit); with our listener one did; with busboy 3.2.6 none does. Each is refused with 400
+and leaves no folder. <code>svgLinkAddresses.test.ts</code> (ten kinds of address outside the drawing, as <code>href</code> and as
+<code>xlink:href</code>) and the new test in <code>FeideClient.test.ts</code> passed before and after. <code>FileTypeSniffer.test.ts</code>
+refuses ICNS, HEIF and JXL bytes under image names. <code>ciDependencyGates.test.mjs</code> holds the order of
+Dependabot&#39;s groups and the Ubuntu rule. The gate and the Docker smoke test are in step 32 of <code>PROGRESS.md</code>.</li>
+<li><strong>Consequences:</strong> <code>package.json</code>, <code>apps/server/package.json</code>, <code>apps/web/package.json</code>, <code>package-lock.json</code>,
+<code>docs/assurance/sbom.cdx.json</code>, <code>apps/server/src/http/multipartUpload.ts</code>, <code>.github/dependabot.yml</code>,
+<code>tools/dependency-check/audit-exceptions.json</code>; tests <code>multipartUploadCutOff.test.ts</code>,
+<code>svgLinkAddresses.test.ts</code>, <code>FeideClient.test.ts</code>, <code>ciDependencyGates.test.mjs</code>. Amends D-030 (the date) and
+D-145 (Dependabot&#39;s groups). Risk R-08 has the new date and R-10 is new. The documents that name the date
+follow, and with them the end date they propose for a stage-1 test install. The line references into this file
+and into <code>PROGRESS.md</code> moved by the lines added above them (27 of 44), each compared with the line it named
+before. The status overview counts 32 steps.</li>
+</ul>
 
 </section>
 <section class="view doc" id="progress" aria-labelledby="progress-h">
@@ -13899,7 +13992,7 @@ what is done, what is verified, and what is blocked.</p>
 <tr>
 <td>S6</td><td>xAPI → AGS grade bridge, insight, privacy jobs, Docker, conformance report</td><td>02 §4–§8; 05; 00 §3 (journeys J1–J5), §6; 01 <a class="req-ref" href="#r-H5P-009"><code>H5P-009</code></a>, <a class="req-ref" href="#r-H5P-010"><code>H5P-010</code></a>, <a class="req-ref" href="#r-SEC-004"><code>SEC-004</code></a>, <a class="req-ref" href="#r-SEC-006"><code>SEC-006</code></a>; 03 <a class="req-ref" href="#r-UD-003"><code>UD-003</code></a>, §6 (<a class="req-ref" href="#r-UD-040"><code>UD-040</code></a>); 04 <a class="req-ref" href="#r-MAPPE-003"><code>MAPPE-003</code></a>, <a class="req-ref" href="#r-MAPPE-004"><code>MAPPE-004</code></a> (D-101)</td><td>✅ Done (gate passed 2026-11-06; started 2026-10-30; D-101…D-116)</td></tr>
 <tr>
-<td>SR</td><td>Security repairs after the S6 gate: 31 steps, each with tests, a gate run and a decision entry</td><td>The spec a step names</td><td>✅ Done (2026-11-20 to 2026-11-26; D-117…D-147; session log, steps 1–31); open: HVL IT&#39;s and the owner&#39;s questions Q32, Q33 and Q34, with the earlier ones</td></tr>
+<td>SR</td><td>Security repairs after the S6 gate: 32 steps, each with tests, a gate run and a decision entry</td><td>The spec a step names</td><td>✅ Done (2026-11-20 to 2026-11-27; D-117…D-148; session log, steps 1–32); open: HVL IT&#39;s and the owner&#39;s questions Q32, Q33 and Q34, with the earlier ones</td></tr>
 </tbody></table></div>
 <p>Legend: ⬜ not started · 🟨 in progress · ✅ done (gate passed, output pasted below) · ⛔ blocked</p>
 <hr>
@@ -14751,7 +14844,7 @@ and the <a class="req-ref" href="#r-LTI-007"><code>LTI-007</code></a> duplicate 
 review and pin a Lumi commit built from source as D-022 pins the editor (its own decision: CLAUDE.md names
 10.0.4; the full gate), then remove the adapters it makes unnecessary; report our fixes and the D-080 barriers
 upstream to Lumi and H5P. Decided in D-112: Lumi stays at 10.0.4 in S6; the release request, the Lumi issues
-and the H5P barrier reports are drafted in <code>docs/upstream/</code> for the owner to file; before 2027-01-31 HVL or
+and the H5P barrier reports are drafted in <code>docs/upstream/</code> for the owner to file; before 2027-03-27 (D-148) HVL or
 the students choose how the <code>image-size</code> exceptions end. <strong>Drafted:</strong> <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/upstream/README.md" rel="noopener" class="ext">docs/upstream/<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>
 holds the Lumi release request, two Lumi bugs (<code>deleteAllContentUserDataByUser</code>, <code>alterLibraryLanguageFile</code>),
 a conditional Core 1.28 and new-Hub backport, eight small Lumi gaps, 15 H5P reports (14 accessibility
@@ -14759,7 +14852,7 @@ reports, one per library, including InteractiveVideo&#39;s untranslatable end-sc
 integration, and QuestionSet&#39;s retry, Q20), and drafts for clamscan and ltijs; the two security reports
 (one to H5P Group, one to Lumi) are held outside the public repository for the
 owner to send privately (D-112&#39;s amendment). Nothing is filed; <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/handoff/lumi-path.md" rel="noopener" class="ext">lumi-path.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> has
-the three choices before 2027-01-31</li>
+the three choices before 2027-03-27</li>
 <li><span class="task">✓ Done:</span> Problem reporting for the pilot (owner decision 2026-10-24): a short tester guide in Nynorsk in <code>docs/</code> and
 GitHub issue templates in <code>.github/ISSUE_TEMPLATE/</code> (a fault; an accessibility barrier) asking for the steps,
 what was expected and what happened, device, browser, assistive technology and zoom, the activity type or
@@ -14796,7 +14889,7 @@ tests against a clamd with both alerts on, and the Docker smoke on the final wor
 the seam&#39;s first run against ALU&#39;s test Canvas and real Feide with the Canvas acceptance checklist
 (<a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/handoff/canvas-acceptance.md" rel="noopener" class="ext">canvas-acceptance.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>); the Canvas side of the studio; <a class="req-ref" href="#r-LTI-009"><code>LTI-009</code></a>;
 <a class="req-ref" href="#r-INS-004"><code>INS-004</code></a>; insight&#39;s freshness (Q24); the research export (Q25, after the DPO); the simplification check if S6
-does not reach it; the Lumi path before 2027-01-31; triage and fixes of the pilot&#39;s issues; the overlay&#39;s
+does not reach it; the Lumi path before 2027-03-27; triage and fixes of the pilot&#39;s issues; the overlay&#39;s
 remaining English in <code>nn</code> and <code>nb</code> (editor labels, <code>H5PEditor.*</code> strings, less common sub-content) and keeping
 its entries current; the upstream links once the owner has filed the drafts; and, among the smaller items,
 narrowing or retiring the cookie-authenticated <code>/h5p/content/…</code> route (D-110)</li>
@@ -15025,9 +15118,11 @@ log, «2026-11-06 · S6 gate»)</li>
 <tr>
 <td>R-06</td><td>Upstream H5P accessibility barriers</td><td>High</td><td>Medium</td><td>Theme fixes where possible; report upstream; document in <a class="req-ref" href="#r-UD-040"><code>UD-040</code></a></td></tr>
 <tr>
-<td>R-08</td><td><code>image-size</code> (via h5p-server) has two unfixed DoS advisories; accepted until 2027-01-31 (D-030)</td><td>Low</td><td>Medium</td><td>Only reachable through authenticated uploads; <a class="req-ref" href="#r-SEC-002"><code>SEC-002</code></a> sniffing in S2; <code>check:audit</code> fails at expiry</td></tr>
+<td>R-08</td><td><code>image-size</code> (via h5p-server) has two unfixed DoS advisories; accepted until 2027-03-27 (D-030, renewed by D-148)</td><td>Low</td><td>Medium</td><td>Only reachable through authenticated uploads; <a class="req-ref" href="#r-SEC-002"><code>SEC-002</code></a> sniffing in S2; <code>check:audit</code> fails at expiry</td></tr>
 <tr>
-<td>R-09</td><td>Lumi&#39;s npm releases lag its repository: none since 10.0.4 (2025-03-08), while <code>master</code> carries file-security work we would want (D-081)</td><td>High</td><td>Medium</td><td>Our own file security (D-003) and adapters in our code; S6 asks for a release or pins a reviewed commit (D-081); the revisit triggers in D-081. The release request is drafted for the owner to file (<code>docs/upstream/lumi-release-request.md</code>, D-112); the choice before 2027-01-31 is in <code>docs/handoff/lumi-path.md</code></td></tr>
+<td>R-09</td><td>Lumi&#39;s npm releases lag its repository: none since 10.0.4 (2025-03-08), while <code>master</code> carries file-security work we would want (D-081)</td><td>High</td><td>Medium</td><td>Our own file security (D-003) and adapters in our code; S6 asks for a release or pins a reviewed commit (D-081); the revisit triggers in D-081. The release request is drafted for the owner to file (<code>docs/upstream/lumi-release-request.md</code>, D-112); the choice before 2027-03-27 is in <code>docs/handoff/lumi-path.md</code></td></tr>
+<tr>
+<td>R-10</td><td>The image is built on Ubuntu 24.04, whose security support ends in 2029; Dependabot proposes no other Ubuntu version, and the pinned Playwright lists Ubuntu up to 24.04 (D-148)</td><td>Low</td><td>Medium</td><td>Fresh digests of 24.04 come monthly; decide the move to a later long-term Ubuntu together with a Playwright update, and look at it again by 2028-04-30 at the latest</td></tr>
 </tbody></table></div>
 <h3 id="progress--session-log" tabindex="-1">Session log</h3>
 <p>Append one entry per session: date, session, what was done, gate output, and any decisions added.</p>

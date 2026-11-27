@@ -16,7 +16,7 @@ what is done, what is verified, and what is blocked.
 | S4+ | Whole-code-base simplification pass (owner decision, 2026-10-24) | — | ✅ Done (2026-10-25): 59 changes, 569 lines shorter, every test kept, S4 gate green again; a second round is the owner's call |
 | S5 | Læringsdesign studio, patterns, planner, pedagogisk mappe export | 04; 00 S5 rows | ✅ Gate passed (2026-10-30); the ALU and pilot review (Q17), the bank consent text and the manual PDF check open; the Canvas side in S6 |
 | S6 | xAPI → AGS grade bridge, insight, privacy jobs, Docker, conformance report | 02 §4–§8; 05; 00 §3 (journeys J1–J5), §6; 01 `H5P-009`, `H5P-010`, `SEC-004`, `SEC-006`; 03 `UD-003`, §6 (`UD-040`); 04 `MAPPE-003`, `MAPPE-004` (D-101) | ✅ Done (gate passed 2026-11-06; started 2026-10-30; D-101…D-116) |
-| SR | Security repairs after the S6 gate: 31 steps, each with tests, a gate run and a decision entry | The spec a step names | ✅ Done (2026-11-20 to 2026-11-26; D-117…D-147; session log, steps 1–31); open: HVL IT's and the owner's questions Q32, Q33 and Q34, with the earlier ones |
+| SR | Security repairs after the S6 gate: 32 steps, each with tests, a gate run and a decision entry | The spec a step names | ✅ Done (2026-11-20 to 2026-11-27; D-117…D-148; session log, steps 1–32); open: HVL IT's and the owner's questions Q32, Q33 and Q34, with the earlier ones |
 
 Legend: ⬜ not started · 🟨 in progress · ✅ done (gate passed, output pasted below) · ⛔ blocked
 
@@ -791,7 +791,7 @@ under the step that does it):
         review and pin a Lumi commit built from source as D-022 pins the editor (its own decision: CLAUDE.md names
         10.0.4; the full gate), then remove the adapters it makes unnecessary; report our fixes and the D-080 barriers
         upstream to Lumi and H5P. Decided in D-112: Lumi stays at 10.0.4 in S6; the release request, the Lumi issues
-        and the H5P barrier reports are drafted in `docs/upstream/` for the owner to file; before 2027-01-31 HVL or
+        and the H5P barrier reports are drafted in `docs/upstream/` for the owner to file; before 2027-03-27 (D-148) HVL or
         the students choose how the `image-size` exceptions end. **Drafted:** [docs/upstream/](docs/upstream/README.md)
         holds the Lumi release request, two Lumi bugs (`deleteAllContentUserDataByUser`, `alterLibraryLanguageFile`),
         a conditional Core 1.28 and new-Hub backport, eight small Lumi gaps, 15 H5P reports (14 accessibility
@@ -799,7 +799,7 @@ under the step that does it):
         integration, and QuestionSet's retry, Q20), and drafts for clamscan and ltijs; the two security reports
         (one to H5P Group, one to Lumi) are held outside the public repository for the
         owner to send privately (D-112's amendment). Nothing is filed; [lumi-path.md](docs/handoff/lumi-path.md) has
-        the three choices before 2027-01-31
+        the three choices before 2027-03-27
   - [x] Problem reporting for the pilot (owner decision 2026-10-24): a short tester guide in Nynorsk in `docs/` and
         GitHub issue templates in `.github/ISSUE_TEMPLATE/` (a fault; an accessibility barrier) asking for the steps,
         what was expected and what happened, device, browser, assistive technology and zoom, the activity type or
@@ -836,7 +836,7 @@ under the step that does it):
     the seam's first run against ALU's test Canvas and real Feide with the Canvas acceptance checklist
     ([canvas-acceptance.md](docs/handoff/canvas-acceptance.md)); the Canvas side of the studio; `LTI-009`;
     `INS-004`; insight's freshness (Q24); the research export (Q25, after the DPO); the simplification check if S6
-    does not reach it; the Lumi path before 2027-01-31; triage and fixes of the pilot's issues; the overlay's
+    does not reach it; the Lumi path before 2027-03-27; triage and fixes of the pilot's issues; the overlay's
     remaining English in `nn` and `nb` (editor labels, `H5PEditor.*` strings, less common sub-content) and keeping
     its entries current; the upstream links once the owner has filed the drafts; and, among the smaller items,
     narrowing or retiring the cookie-authenticated `/h5p/content/…` route (D-110)
@@ -1005,8 +1005,9 @@ under the step that does it):
 | R-04 | Hub registration at `hub-api.h5p.org/v1/sites` fails (HTTP 405 reports in 2026) | Medium | Low | Runtime does not depend on the Hub; offline seeding (`H5P-003`) |
 | R-05 | A session runs out of usage quota mid-milestone | Medium | Low | One milestone per session; commit early; update this file before stopping |
 | R-06 | Upstream H5P accessibility barriers | High | Medium | Theme fixes where possible; report upstream; document in `UD-040` |
-| R-08 | `image-size` (via h5p-server) has two unfixed DoS advisories; accepted until 2027-01-31 (D-030) | Low | Medium | Only reachable through authenticated uploads; `SEC-002` sniffing in S2; `check:audit` fails at expiry |
-| R-09 | Lumi's npm releases lag its repository: none since 10.0.4 (2025-03-08), while `master` carries file-security work we would want (D-081) | High | Medium | Our own file security (D-003) and adapters in our code; S6 asks for a release or pins a reviewed commit (D-081); the revisit triggers in D-081. The release request is drafted for the owner to file (`docs/upstream/lumi-release-request.md`, D-112); the choice before 2027-01-31 is in `docs/handoff/lumi-path.md` |
+| R-08 | `image-size` (via h5p-server) has two unfixed DoS advisories; accepted until 2027-03-27 (D-030, renewed by D-148) | Low | Medium | Only reachable through authenticated uploads; `SEC-002` sniffing in S2; `check:audit` fails at expiry |
+| R-09 | Lumi's npm releases lag its repository: none since 10.0.4 (2025-03-08), while `master` carries file-security work we would want (D-081) | High | Medium | Our own file security (D-003) and adapters in our code; S6 asks for a release or pins a reviewed commit (D-081); the revisit triggers in D-081. The release request is drafted for the owner to file (`docs/upstream/lumi-release-request.md`, D-112); the choice before 2027-03-27 is in `docs/handoff/lumi-path.md` |
+| R-10 | The image is built on Ubuntu 24.04, whose security support ends in 2029; Dependabot proposes no other Ubuntu version, and the pinned Playwright lists Ubuntu up to 24.04 (D-148) | Low | Medium | Fresh digests of 24.04 come monthly; decide the move to a later long-term Ubuntu together with a Playwright update, and look at it again by 2028-04-30 at the latest |
 
 ## Session log
 

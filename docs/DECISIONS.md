@@ -40,7 +40,7 @@ with the commands given.
 | D-027 | H5P core and editor files are fetched and verified, not committed | Accepted (2026-10-21) |
 | D-028 | The H5P user-data adapter moves to S2 with `H5P-005` | Accepted (2026-10-21) |
 | D-029 | Own licence and audit checks instead of `license-checker` and plain `npm audit` | Accepted (2026-10-21) |
-| D-030 | Accepted advisory: `image-size` parser loops (until 2027-01-31) | Accepted (2026-10-21), expires 2027-01-31 |
+| D-030 | Accepted advisory: `image-size` parser loops (until 2027-01-31) | Accepted (2026-10-21); renewed on 2026-11-27, expires 2027-03-27 (D-148) |
 | D-031 | Session 1 items that finish in Session 2 (spike steps 3–6, F1/F3 wiring, import directory, TypeDoc) | Accepted (2026-10-22) |
 | D-032 | `h5p-express` installed in S1; its Express 4 is overridden to 4.22.3 | Superseded by D-035 (2026-10-22) |
 | D-033 | Only running it()/test() titles prove a requirement | Accepted (2026-10-22) |
@@ -410,6 +410,8 @@ loading of one spec per session are kept.
 - **Amendment (2026-11-26, D-145):** an exception needs every field, a real calendar date at most 120 days ahead,
   and covers its advisory only for the package it names. The two entries here pass as they are; a renewal on
   2027-01-31 can run to 2027-05-31 at most.
+- **Amendment (2026-11-27, D-148):** both advisories were read again and the exceptions renewed. They now expire
+  on **2027-03-27**, the latest date the 120-day rule allows from the day of the review.
 
 ### D-031 · Session 1 items that finish in Session 2
 - **Context:** Some Session 1 work depends on things that only exist in Session 2, or on a network this
@@ -6358,6 +6360,10 @@ loading of one spec per session are kept.
   package with an install script now changes `allowScripts` in the same commit, and an exception renewed on its
   last day can run 120 days. Amends D-029, D-030 and D-110, and `SEC-007`. Open questions Q33 and Q34.
 
+- **Amendment (2026-11-27, D-148):** Dependabot's npm entry has two groups. playwright-core comes as a pull
+  request of its own, because its version is tied to the image and to the cookie tests; the other minor and
+  patch updates come together as before. For `ubuntu` no minor version is proposed.
+
 ### D-146 · Security repairs, step 30: the insight routes answer only a request with the own-page header, the Hjelp header shows on every page of Canvas's frame, the shortlist's texts say what it holds, and the documents' line references are re-pointed
 - **Context:** Four things left at the end of the repairs. (1) D-106's amendment of 2026-11-05 left a residual: the
   insight routes are GETs that write the audit trail (`DATA-007`), they take no CSRF token (D-057), and they told
@@ -6459,3 +6465,76 @@ loading of one spec per session are kept.
 - **Consequences:** `apps/server/package.json`, `package-lock.json`, `docs/assurance/sbom.cdx.json`,
   `apps/server/test/h5p/semantics/lumiTextSanitizer.test.ts`. Amends D-140 (one sentence of its context, below
   it). The status overview counts 31 steps.
+
+### D-148 · Security repairs, step 32: the monthly package updates taken by hand, an upload that ends inside a part the reader discards, Dependabot's groups, and the image-size exceptions renewed
+- **Context:** Dependabot's first proposals after D-145 both failed CI, and the owner closed them on 2026-11-27.
+  The npm one held 25 minor and patch updates. One of them, playwright-core 1.56.1 to 1.65.1, cannot be taken
+  with the others: the image copies Chromium by its build number (`deploy/Dockerfile`), one type in the
+  accessibility support changes, and the cookie tests were proven on the Chromium of 1.56.1 (D-065). The Docker
+  one proposed `ubuntu` 24.10 for 24.04: Dependabot counts that as a minor version, but 24.10 is a release
+  between two long-term ones, its support ended in July 2025, and its packages have left Ubuntu's archive, so the
+  image no longer builds on it. A third update, sanitize-html 2.18.2, was already in (D-147). The other 23 were
+  read before they were taken, because a release can close a weakness without a published advisory (D-147):
+  the old and the new files of `@fastify/busboy`, `dompurify`, `file-type`, `openid-client` and `oauth4webapi`
+  (which `openid-client` brings) side by side, and the other packages and the run-time packages they bring in a
+  second reading whose findings were then checked. Found:
+  - **`@fastify/busboy` 3.2.6** listens for the error of a part it skips. In 3.2.4 a body that ends inside a
+    part past the part limit raised an error nobody listened for. `readMultipart` had the same gap of its own: a
+    file under another field name was only resumed. Either way the error reached the process's fault handler,
+    which stops the server (D-133). A body that arrives whole does not show it; the parts must arrive over time.
+  - **`dompurify` 3.5.0** adds guards against markup that changes meaning when it is read a second time, and
+    lets one more kind of link address (`matrix:`) through by default.
+  - **`openid-client` 6.9.1** no longer asks for an ID token by itself when a nonce is expected.
+  - **`tailwindcss` 4.3.5** changes two rules of the built stylesheet: a `@supports` probe, and a space inside
+    empty `var()` fallbacks.
+  - **`axe-core` 4.14.1** (through `@axe-core/playwright` 4.14.0) adds outcomes to several checks; it adds no
+    rule and removes none.
+  - **`file-type` 22.3.0**, with `strtok3`, `token-types` and `@tokenizer/inflate`, reads ZIP and EBML containers
+    more strictly. Nothing in the other packages changes what the server does.
+- **Decision — the 23 updates (SEC-007).** Exact pins in the root, `apps/server` and `apps/web` manifests. In the
+  running server: `@aws-sdk/client-s3` and `@aws-sdk/lib-storage` 3.1175.0, `@fastify/busboy` 3.2.6, `dompurify`
+  3.5.0, `file-type` 22.3.0, `i18next` 26.7.2, `openid-client` 6.9.1. For building and testing: `vitest` 5.1.1,
+  `eslint` 10.15.0, `typescript-eslint` 8.73.0, `eslint-plugin-jsdoc` 65.5.3, `globals` 17.14.0, `prettier`
+  3.10.1, `lint-staged` 17.6.2, `tailwindcss` and `@tailwindcss/postcss` 4.3.5, `@axe-core/playwright` 4.14.0,
+  `fast-check` 4.11.0, `pdfjs-dist` 6.5.438, `supertest` 7.3.2, `jose` 6.2.18, `oauth2-mock-server` 9.3.0 and
+  `@types/yazl` 3.3.1. The lock file is Dependabot's own resolution with playwright-core kept at 1.56.1: 954
+  packages, 110 with a new version, 37 of them in the running server and none added there. A plain `npm install`
+  gave a wider change (it moved packages nothing asked to move), so it was not used. The SBOM follows.
+- **Decision — a body that ends inside a discarded part is an ordinary 400 (SEC-005).** `readMultipart` listens
+  for the error of a file stream it discards, as it already did for the file it keeps. With busboy 3.2.6 the same
+  holds for the parts the parser skips itself. The request is refused with 400, its folder is removed, and
+  nothing reaches the process's fault handler.
+- **Decision — nothing else in our code changes, and three tests say why.** A link in an uploaded SVG may point
+  only inside the drawing (`svgRules.ts`), whatever kinds of address the library lets through; `FeideClient`
+  asks for the ID token itself and refuses an answer without one; the built stylesheet's two changed rules leave
+  the five public pages pixel for pixel as they were (`nn`, 1280 and 390 px). That comparison needs a build
+  without Next.js's build cache: with the cache, the stylesheet of the earlier build is served again.
+- **Decision — Dependabot's groups (`.github/dependabot.yml`).** playwright-core has a group of its own, so it
+  comes as its own monthly pull request, which stays open as the reminder until the update is done as a step of
+  its own, and the other updates no longer wait for it. For `ubuntu` a minor version is not proposed; a new
+  digest of 24.04 still is *(verify at the next monthly run)*. The move to a later long-term Ubuntu is a decision
+  of its own, together with a Playwright that supports it: 1.56.1 lists Ubuntu up to 24.04 (risk R-10).
+- **Decision — the two image-size exceptions run until 2027-03-27 (amends D-030).** Read again on 2026-11-27:
+  npm's advisory list names the same two advisories for `image-size`, and 1.2.1 is still what Lumi 10.0.4
+  brings. Lumi calls it in one place, for an uploaded file with an image MIME type, after the sanitisers. It
+  chooses a parser by a file's first bytes: `icns` at the start, `ftyp` or `JXL ` from the fifth byte, or `ff0a`.
+  For an image extension the sniffer accepts only PNG, JPEG, GIF and WebP by their own first bytes (SEC-002), so
+  no accepted file reaches one of the three parsers. The date is the latest D-145's 120-day rule allows from the
+  day of the review. D-112's three choices stand; the release request to Lumi is the lasting one.
+- **Residual:** playwright-core 1.56.1 and its Chromium stay until the next step. The two advisories' own pages
+  could not be opened from the development sandbox, so the second reading rests on npm's list and on the code.
+- **Verified:** `multipartUploadCutOff.test.ts` sends four bodies that end inside a discarded part, each in two
+  pieces. Before this step two of them reached the process's fault handler (a file under another field name, and
+  a part past the part limit); with our listener one did; with busboy 3.2.6 none does. Each is refused with 400
+  and leaves no folder. `svgLinkAddresses.test.ts` (ten kinds of address outside the drawing, as `href` and as
+  `xlink:href`) and the new test in `FeideClient.test.ts` passed before and after. `FileTypeSniffer.test.ts`
+  refuses ICNS, HEIF and JXL bytes under image names. `ciDependencyGates.test.mjs` holds the order of
+  Dependabot's groups and the Ubuntu rule. The gate and the Docker smoke test are in step 32 of `PROGRESS.md`.
+- **Consequences:** `package.json`, `apps/server/package.json`, `apps/web/package.json`, `package-lock.json`,
+  `docs/assurance/sbom.cdx.json`, `apps/server/src/http/multipartUpload.ts`, `.github/dependabot.yml`,
+  `tools/dependency-check/audit-exceptions.json`; tests `multipartUploadCutOff.test.ts`,
+  `svgLinkAddresses.test.ts`, `FeideClient.test.ts`, `ciDependencyGates.test.mjs`. Amends D-030 (the date) and
+  D-145 (Dependabot's groups). Risk R-08 has the new date and R-10 is new. The documents that name the date
+  follow, and with them the end date they propose for a stage-1 test install. The line references into this file
+  and into `PROGRESS.md` moved by the lines added above them (27 of 44), each compared with the line it named
+  before. The status overview counts 32 steps.
