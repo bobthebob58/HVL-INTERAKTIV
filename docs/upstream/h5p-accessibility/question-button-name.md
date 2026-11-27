@@ -3,8 +3,8 @@
 | | |
 |---|---|
 | **Recipient** | H5P Group, repository `h5p/h5p-question` (and the language files of `h5p/h5p-multi-choice`) |
-| **Channel** | A public GitHub issue on `h5p/h5p-question`, with H5P's Bug Report form (see the README); the untranslated texts go as a pull request to the language files, as H5P's contribution guide asks |
-| **Status** | Needs the owner's check: whether to file the issue, the language pull request, or both |
+| **Channel** | A public GitHub issue on `h5p/h5p-question`, with H5P's Bug Report form (see the README); the issue names the untranslated texts, and a pull request to the language files, which H5P's contribution guide asks for, is left to H5P or to a later decision |
+| **Status** | Ready, as an issue only (the owner's choice, 2026-11-27); the issue names the untranslated labels, and no language pull request is sent |
 | **WCAG 2.2** | 2.5.3 Label in Name |
 | **Our records** | D-151 (repair (m)), D-111 (our language overlay), D-080 |
 | **Checked** | 2026-11-27 against H5P.Question 1.5.47 (commit fffb3c86) and H5P.MultiChoice 1.16 (`language/nn.json`, `language/nb.json`) |
