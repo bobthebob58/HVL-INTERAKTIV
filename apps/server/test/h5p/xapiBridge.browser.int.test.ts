@@ -14,6 +14,7 @@ import { openRealTypesServer, type RealTypesServer } from '../support/realTypesP
 import { describeWithServices } from '../support/services.js';
 import { openXapiPlay } from './support/xapiCapture.js';
 import {
+  ACTOR_COOKIE,
   bridgeFacts,
   describeItems,
   itemsFrom,
@@ -104,8 +105,11 @@ describeWithServices('[LTI-010] the xAPI bridge in the real player', () => {
             // Act: four answers and «Avslutt», then away before the next 2-second batch
             await QUESTION_SCRIPTS['H5P.QuestionSet']?.play(play, server);
             // WHY: Playwright's request interception (the host page's route) drops keepalive requests of an unloading
-            // frame, which a real browser sends; without a route the flush reaches the server.
+            // frame, which a real browser sends; without a route the flush reaches the server. The flush carries the
+            // page's own headers and cookies but not the test person's header, so a cookie names the person too.
             await play.page.context().unrouteAll({ behavior: 'wait' });
+            const person = { name: ACTOR_COOKIE, value: learner.header[1], url: server.base };
+            await play.page.context().addCookies([person]);
             await play.page.goto('about:blank');
             await waitForStatements(received, learner, before + 6);
             // Assert: sub attempted, interacted and progressed are never sent (D-115)
