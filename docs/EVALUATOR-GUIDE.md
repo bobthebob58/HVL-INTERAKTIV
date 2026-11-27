@@ -386,20 +386,20 @@ the gate output lists them so (limitation 23).
     [reference/alu-review-s5.md](reference/alu-review-s5.md) lists each; the review is required before the pilot.
     The English guide keeps Norwegian terms such as *kontekst* and *samskaping* in running text, which its Markdown
     cannot mark with their own language (WCAG 3.1.2 allows such terms).
-17. **The portfolio PDF needs Chromium on the server** (D-096). `playwright-core` 1.56.1 prints it with the server's
+17. **The portfolio PDF needs Chromium on the server** (D-096). `playwright-core` 1.65.1 prints it with the server's
     own Chromium, in a fresh context per export with JavaScript off, offline and every request aborted; at most
     `PDF_MAX_CONCURRENCY` exports at once (2) and one per person, 30 seconds each. Where no browser starts, the PDF
     export answers 503 and the page points to the Markdown export, which always works. The S6 image carries
-    Playwright's full Chromium 141 and fonts with æ, ø and å (the PDF uses Liberation Serif, because Georgia, the body
+    Playwright's full Chromium 159 and fonts with æ, ø and å (the PDF uses Liberation Serif, because Georgia, the body
     font token, is not installed) and runs the server as uid 10001; Chromium keeps its sandbox only with Playwright's
     seccomp profile and `CAP_SYS_CHROOT`, which OpenShift's `restricted-v2` does not allow (Q5; the
     development-only `PDF_ALLOW_NO_SANDBOX=true` is refused in production). The server logs at start whether the
     export works (`PDF export availability`). HVL keeps Chromium patched by rebuilding the image.
 18. **What the PDF does not tag yet is checked by hand** (D-096, `MAPPE-004`). The automated test reads the
     structure tree, the outline, `/Lang`, the title and the text with `pdfjs-dist`; a person checks the rest with PAC
-    and NVDA (protocol J4 in `docs/accessibility/manual-test-protocol.md`). Known residuals to record there: list
-    numbers are untagged, list items have no `Lbl` or `LBody`, and lists carry no numbering attribute; a table's
-    caption and header row become `NonStruct`; there is no XMP metadata and so no PDF/UA identifier; links have no
+    and NVDA (protocol J4 in `docs/accessibility/manual-test-protocol.md`). Known residuals to record there, as
+    Chromium 159 tags it (D-149): a list item has its `Lbl` but no `LBody`; a table has its `Caption` but no `THead`
+    or `TBody` for its header row; there is no XMP metadata and so no PDF/UA identifier; links have no
     `/Contents`; the header says PDF 1.4; activity titles and references carry no language of their own (D-094
     amendment); and an activity's address is plain text, not a link. No manual check is recorded yet.
 19. **Students' results in the mappe last until the yearly purge, not one academic year** (D-095 and its

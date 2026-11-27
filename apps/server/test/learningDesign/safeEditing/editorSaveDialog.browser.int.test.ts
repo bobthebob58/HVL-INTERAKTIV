@@ -152,7 +152,7 @@ describeWithServices('[PROD-013] the save choice dialog in the editor page (prob
             field?.focus();
             return document.activeElement === field;
           });
-        // Act: Chromium 141 does not keep focus out of an inert frame's document
+        // Act: Chromium (141 and 159) does not keep focus out of an inert frame's document
         await openByKeyboard(probe);
         const taken = await takeFocus();
         await probe.page.keyboard.press('Escape');

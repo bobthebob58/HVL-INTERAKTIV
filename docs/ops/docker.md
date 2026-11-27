@@ -18,7 +18,7 @@ One multi-stage `deploy/Dockerfile`, built from the repository root. Only its la
 | The server's TypeScript, the Prisma client, the built web app, the tokens and the theme | The repository | The build (`prisma generate`, `npm run build`) |
 | H5P core 1.28.0 and the pinned editor | Build context `h5pcore` (`apps/server/h5p`, from `npm run h5p:fetch-core`) | Every file against the committed hash lists, in stage `inputs` |
 | The ten content types | Build context `h5pbundle` (from `tools/h5p-bundle`) | Their `SHA256SUMS`, the ten names and the build-secret scan, in stage `inputs` (its rules file, `apps/server/src/h5p/libraries/libraryBuildSecrets.ts`, is copied there too); the seeder checks the hashes and scans each package again, then scans the library volume |
-| Full Chromium 141 (`chromium-1194`) | Playwright 1.56.1's download host, or build context `pwbrowsers` where that host is refused | `chrome --version` and its SHA-256, printed by the smoke test |
+| Full Chromium 159 (`chromium-1255`) | Playwright 1.65.1's download host, or build context `pwbrowsers` where that host is refused | `chrome --version` and its SHA-256, printed by the smoke test |
 | Chromium's system libraries, `fonts-dejavu-core`, `tini` | Ubuntu's archive (`install-deps chromium`) | The PDF check (æ, ø and å embedded) |
 
 The server runs as `hvli` (uid and gid 10001) under `tini`, as `node --import tsx src/server/main.ts` in
@@ -187,7 +187,7 @@ pulled `clamav/clamav` and `moby/buildkit` images stay for the next run).
 `HVLI_DOCKER_SANDBOX=1` the smoke passes the agent proxy's CA as the BuildKit secret `proxy_ca`, gives its builder the
 mirror and that CA, and takes Chromium from `/opt/pw-browsers` (`HVLI_PROXY_CA`, `HVLI_PW_BROWSERS`); after the build
 it searches every file of the image for the CA's own certificates (`deploy/smoke/proxyCaLines.mjs`). Where
-`/opt/pw-browsers/chromium-1194` is a link, name the folder it points into with `HVLI_PW_BROWSERS`: a build cannot
+`/opt/pw-browsers/chromium-1255` is a link, name the folder it points into with `HVLI_PW_BROWSERS`: a build cannot
 follow a link out of its context. Test anything
 else with Docker through a builder of your own too: a test build on the default builder leaves cache records that keep
 the image's layers on disk after the image is removed. The image is about

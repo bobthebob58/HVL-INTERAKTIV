@@ -145,9 +145,9 @@ what a person hears and what PAC reports.
 | J4.10 | Export the same activities in English and repeat J4.5 and J4.7. | The language is `en` and NVDA reads with its English voice; the result is otherwise the same. |
 
 **Known residuals of the PDF (D-096), to record in J4.5–J4.9 with PAC's or NVDA's own wording, not as new
-barriers:** list numbers («1.») are not tagged, list items have no `Lbl` or `LBody`, and lists carry no numbering
-attribute; a table's caption and its header row group become `NonStruct`, and there are no `Caption`, `THead` or
-`TBody` elements; there is no XMP metadata, so no PDF/UA identifier; links have no `/Contents`; the file header says
+barriers:** as Chromium 159 tags it (D-149), a list item has its number as `Lbl` but no `LBody`, and a table has
+its `Caption` but its header row group becomes `NonStruct`, with no `THead` or `TBody`
+element; there is no XMP metadata, so no PDF/UA identifier; links have no `/Contents`; the file header says
 PDF 1.4; activity titles carry no language of their own, so an English title in a Nynorsk portfolio is read with
 the Norwegian voice (WCAG 3.1.2); references carry no language of their own either, so an English reference in a
 Nynorsk portfolio, or a Norwegian one in an English portfolio, is read with the portfolio's voice (D-094

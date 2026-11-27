@@ -16,7 +16,7 @@ what is done, what is verified, and what is blocked.
 | S4+ | Whole-code-base simplification pass (owner decision, 2026-10-24) | — | ✅ Done (2026-10-25): 59 changes, 569 lines shorter, every test kept, S4 gate green again; a second round is the owner's call |
 | S5 | Læringsdesign studio, patterns, planner, pedagogisk mappe export | 04; 00 S5 rows | ✅ Gate passed (2026-10-30); the ALU and pilot review (Q17), the bank consent text and the manual PDF check open; the Canvas side in S6 |
 | S6 | xAPI → AGS grade bridge, insight, privacy jobs, Docker, conformance report | 02 §4–§8; 05; 00 §3 (journeys J1–J5), §6; 01 `H5P-009`, `H5P-010`, `SEC-004`, `SEC-006`; 03 `UD-003`, §6 (`UD-040`); 04 `MAPPE-003`, `MAPPE-004` (D-101) | ✅ Done (gate passed 2026-11-06; started 2026-10-30; D-101…D-116) |
-| SR | Security repairs after the S6 gate: 32 steps, each with tests, a gate run and a decision entry | The spec a step names | ✅ Done (2026-11-20 to 2026-11-27; D-117…D-148; session log, steps 1–32); open: HVL IT's and the owner's questions Q32, Q33 and Q34, with the earlier ones |
+| SR | Security repairs after the S6 gate: 33 steps, each with tests, a gate run and a decision entry | The spec a step names | ✅ Done (2026-11-20 to 2026-11-27; D-117…D-149; session log, steps 1–33); open: HVL IT's and the owner's questions Q32, Q33 and Q34, with the earlier ones |
 
 Legend: ⬜ not started · 🟨 in progress · ✅ done (gate passed, output pasted below) · ⛔ blocked
 
@@ -1007,7 +1007,7 @@ under the step that does it):
 | R-06 | Upstream H5P accessibility barriers | High | Medium | Theme fixes where possible; report upstream; document in `UD-040` |
 | R-08 | `image-size` (via h5p-server) has two unfixed DoS advisories; accepted until 2027-03-27 (D-030, renewed by D-148) | Low | Medium | Only reachable through authenticated uploads; `SEC-002` sniffing in S2; `check:audit` fails at expiry |
 | R-09 | Lumi's npm releases lag its repository: none since 10.0.4 (2025-03-08), while `master` carries file-security work we would want (D-081) | High | Medium | Our own file security (D-003) and adapters in our code; S6 asks for a release or pins a reviewed commit (D-081); the revisit triggers in D-081. The release request is drafted for the owner to file (`docs/upstream/lumi-release-request.md`, D-112); the choice before 2027-03-27 is in `docs/handoff/lumi-path.md` |
-| R-10 | The image is built on Ubuntu 24.04, whose security support ends in 2029; Dependabot proposes no other Ubuntu version, and the pinned Playwright lists Ubuntu up to 24.04 (D-148) | Low | Medium | Fresh digests of 24.04 come monthly; decide the move to a later long-term Ubuntu together with a Playwright update, and look at it again by 2028-04-30 at the latest |
+| R-10 | The image is built on Ubuntu 24.04, whose security support ends in 2029; Dependabot proposes no other Ubuntu version; the pinned Playwright lists Ubuntu up to 26.04 since D-149 (D-148) | Low | Medium | Fresh digests of 24.04 come monthly; the move to Ubuntu 26.04 is a step of its own (the image's packages and the smoke test go with it); look at it again by 2028-04-30 at the latest |
 
 ## Session log
 
