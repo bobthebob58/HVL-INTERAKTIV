@@ -4,9 +4,12 @@
  *
  * Why: `npm sbom --omit dev` is incomplete here. Its `.dev` selector drops every package reached through any
  *      devDependency edge, even when a runtime dependency needs it too: on 2026-11-05 it kept 239 of the 477
- *      production packages and lost playwright-core, tsx and react. npm marks a component
+ *      production packages and lost playwright-core, tsx and react. npm marks an installed copy
  *      `cdx:npm:package:development` only when dev dependencies alone need it, which is the same flag `npm query '*'`
  *      reports as `dev` and check:licences uses (D-071, D-113). So the full SBOM is filtered by that flag (SEC-007).
+ *      npm writes one component per name and version, by the first copy it meets, and calls a copy that no installed
+ *      package needs development; buildSbom.mjs therefore corrects the document first (lockFileCorrections.mjs), so
+ *      the flag read here says what a production install keeps.
  * Spec: SEC-007
  * Invariants:
  *   - A component stays only when npm marked it neither development nor extraneous (installed, but not in

@@ -6498,8 +6498,9 @@ loading of one spec per session are kept.
   3.10.1, `lint-staged` 17.6.2, `tailwindcss` and `@tailwindcss/postcss` 4.3.5,
   `fast-check` 4.11.0, `pdfjs-dist` 6.5.438, `supertest` 7.3.2, `jose` 6.2.18, `oauth2-mock-server` 9.3.0 and
   `@types/yazl` 3.3.1. The lock file is Dependabot's own resolution with playwright-core kept at 1.56.1: 954
-  packages, 108 with a new version, 37 of them in the running server and none added there. A plain `npm install`
-  gave a wider change (it moved packages nothing asked to move), so it was not used. The SBOM follows.
+  packages, 108 with a new version, 37 of them in the running server. One package is new in a production install,
+  `@emnapi/runtime` 1.11.3, which npm leaves there and nothing loads (the SBOM decision below). A plain
+  `npm install` gave a wider change (it moved packages nothing asked to move), so it was not used. The SBOM follows.
 - **Decision — a body that ends inside a discarded part is an ordinary 400 (SEC-005).** `readMultipart` listens
   for the error of a file stream it discards, as it already did for the file it keeps. With busboy 3.2.6 the same
   holds for the parts the parser skips itself. The request is refused with 400, its folder is removed, and
@@ -6526,20 +6527,45 @@ loading of one spec per session are kept.
   check button of the question types, whose accessible name in the test content is an English sentence while
   the button says «Sjekk». Each needs a repair or a register entry under D-080, and the conformance report's
   text for 2.5.3 changes with it, so the scanner is updated as a step of its own.
+- **Decision — the SBOM and the licence check go by what a production install keeps (SEC-007, NFR-005).** The
+  gate of this step failed one test: the regenerated SBOM had lost `tslib` 2.8.1, which the AWS SDK loads in the
+  server. npm's view of the installed tree differs in two ways from what `npm ci` and then `npm prune --omit=dev`,
+  the image build's two steps, leave behind. (1) npm's SBOM has one component per name and version: the first
+  installed copy it meets, with that copy's flags. `@tailwindcss/oxide-wasm32-wasi` 4.3.5 is no longer limited to
+  wasm32, so the `tslib` it bundles, which only dev tools need, is installed everywhere, and npm met it first.
+  (2) vitest 5.1.1 brings a rolldown whose wasm32 binding no longer bundles its helper packages. npm skips that
+  binding and `@img/sharp-wasm32` for the platform, but leaves what both depend on, `@emnapi/runtime` 1.11.3,
+  installed. npm calls it extraneous and dev; the lock file lists it as optional, and the prune keeps it. It is
+  in the image, nothing loads it, and neither the SBOM nor `check:licences` saw it. Now `lockFileCorrections.mjs`
+  rewrites a component that npm describes by a development copy as npm writes its production copy, and
+  `lockFileProduction.mjs` counts an installed copy as production when the lock file lists its folder as
+  production; the SBOM and `check:licences` both use it, and it only adds to the set. The SBOM lists 478 npm
+  packages, 473 of them from the registry, and `check:licences` checks 489 entries. Four more helper packages are
+  left installed the same way; the lock file lists them as dev, the prune removes them, and they count as
+  development.
 - **Residual:** playwright-core 1.56.1 and its Chromium stay until the next step, and axe-core 4.13.0 until the
   step above. The two advisories' own pages
   could not be opened from the development sandbox, so the second reading rests on npm's list and on the code.
+  The SBOM was compared with a real production install once, by hand; no test repeats the install, and CI does
+  not run `npm run sbom -- --check`.
 - **Verified:** `multipartUploadCutOff.test.ts` sends four bodies that end inside a discarded part, each in two
   pieces. Before this step two of them reached the process's fault handler (a file under another field name, and
   a part past the part limit); with our listener one did; with busboy 3.2.6 none does. Each is refused with 400
   and leaves no folder. `svgLinkAddresses.test.ts` (ten kinds of address outside the drawing, as `href` and as
   `xlink:href`) and the new test in `FeideClient.test.ts` passed before and after. `FileTypeSniffer.test.ts`
   refuses ICNS, HEIF and JXL bytes under image names. `ciDependencyGates.test.mjs` holds the order of
-  Dependabot's groups and the Ubuntu rule. The gate and the Docker smoke test are in step 32 of `PROGRESS.md`.
+  Dependabot's groups and the Ubuntu rule. A production install made as the image build makes it, in a folder
+  with only the manifests and the lock file, holds the same 473 registry packages as the SBOM; the SBOM first
+  written in this step lacked two of them. The `tslib` component is byte for byte the one of the SBOM before this
+  step. With either correction switched off, the tests of the real tree and of the two rules fail. The gate and
+  the Docker smoke test are in step 32 of `PROGRESS.md`.
 - **Consequences:** `package.json`, `apps/server/package.json`, `apps/web/package.json`, `package-lock.json`,
   `docs/assurance/sbom.cdx.json`, `apps/server/src/http/multipartUpload.ts`, `.github/dependabot.yml`,
-  `tools/dependency-check/audit-exceptions.json`; tests `multipartUploadCutOff.test.ts`,
-  `svgLinkAddresses.test.ts`, `FeideClient.test.ts`, `ciDependencyGates.test.mjs`. Amends D-030 (the date) and
+  `tools/dependency-check/audit-exceptions.json`, `tools/sbom/lockFileCorrections.mjs`,
+  `tools/sbom/buildSbom.mjs`, `tools/dependency-check/lockFileProduction.mjs`,
+  `tools/dependency-check/checkLicences.mjs`, the two tools' READMEs; tests `multipartUploadCutOff.test.ts`,
+  `svgLinkAddresses.test.ts`, `FeideClient.test.ts`, `ciDependencyGates.test.mjs`, `lockFileCorrections.test.mjs`,
+  `lockFileProduction.test.mjs`, `buildSbom.test.mjs`, `productionSetGuard.test.mjs`. Amends D-030 (the date) and
   D-145 (Dependabot's groups). Risk R-08 has the new date and R-10 is new. The documents that name the date
   follow, and with them the end date they propose for a stage-1 test install. The line references into this file
   and into `PROGRESS.md` moved by the lines added above them (27 of 44), each compared with the line it named

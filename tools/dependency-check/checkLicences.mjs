@@ -6,7 +6,8 @@
  * Spec: NFR-005
  * Invariants:
  *   - Every package a production install contains counts: npm's `dev` flag is false (`npm query '*'`), even when a
- *     dev tool uses it too (D-071). Our own workspaces are skipped.
+ *     dev tool uses it too (D-071), or the lock file lists its folder as production (lockFileProduction.mjs,
+ *     D-148). Our own workspaces are skipped.
  *   - A separate program's own dependencies are skipped only when SEPARATE_PROGRAMS names them with a reason.
  *   - SPDX `OR` passes if any branch is allowed; `AND` passes only if every part is allowed; AND binds
  *     tighter than OR and parentheses group, as in the SPDX specification. Malformed expressions fail.
@@ -14,11 +15,12 @@
  *   - The checked set must contain every workspace the root `workspaces` names and every runtime dependency the
  *     root and workspace manifests declare (productionSetGuard.mjs); otherwise npm did not see the workspaces and
  *     the check fails.
- * Collaborators: npm (query), productionSetGuard.mjs, CI (`npm run check:licences`).
+ * Collaborators: npm (query), productionSetGuard.mjs, lockFileProduction.mjs, CI (`npm run check:licences`).
  * Tests: tools/dependency-check/test/checkLicences.test.mjs, tools/dependency-check/test/productionSetGuard.test.mjs
  */
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { readLockPackages, withLockFileProduction } from './lockFileProduction.mjs';
 import {
   expectedProductionPackages,
   incompleteSetProblems,
@@ -175,7 +177,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     encoding: 'utf8',
     maxBuffer: 64 * 1024 * 1024,
   });
-  const packages = productionPackages(JSON.parse(out));
+  const packages = productionPackages(withLockFileProduction(JSON.parse(out), readLockPackages(cwd)));
   const expected = expectedProductionPackages(readWorkspaceManifests(cwd));
   const named = packages.filter((p) => typeof p.name === 'string');
   const problems = [...incompleteSetProblems(expected, packages), ...checkLicences(named)];

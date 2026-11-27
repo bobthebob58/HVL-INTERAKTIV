@@ -88,7 +88,7 @@ Runtime dependencies are pinned to exact versions, and `npm run check:pins` chec
 `tools/dependency-check/checkPins.mjs`). `npm run check:lockfile` holds the lock file to the npm registry and SHA-512
 checksums and the install scripts to the reviewed list, and `npm run check:workflows` holds the workflows to
 commits and digests (D-145). The SBOM ([sbom.cdx.json](sbom.cdx.json)) lists the npm production packages
-(477, our five workspaces among them), H5P core and editor, the ten root content types and three container images
+(478, our five workspaces among them), H5P core and editor, the ten root content types and three container images
 (the `ubuntu` and `node` base images, and the local stack's `clamav`). It does **not** list the Ubuntu packages or
 the Chromium build in the image, nor the other 110 H5P libraries in the manifest (`tools/sbom/README.md`, «What the
 file does not list»).

@@ -2,7 +2,7 @@
   "$schema": "http://cyclonedx.org/schema/bom-1.5.schema.json",
   "bomFormat": "CycloneDX",
   "specVersion": "1.5",
-  "serialNumber": "urn:uuid:1b4b07d9-d3e4-516b-ae3c-bf5e47a29a95",
+  "serialNumber": "urn:uuid:b3ef44b6-1af9-555f-9de4-2c1ca620fc97",
   "version": 1,
   "metadata": {
     "lifecycles": [
@@ -1142,6 +1142,48 @@
         {
           "license": {
             "id": "Apache-2.0"
+          }
+        }
+      ]
+    },
+    {
+      "bom-ref": "@emnapi/runtime@1.11.3",
+      "type": "library",
+      "name": "@emnapi/runtime",
+      "version": "1.11.3",
+      "scope": "optional",
+      "author": "toyobayashi",
+      "description": "emnapi runtime",
+      "purl": "pkg:npm/%40emnapi/runtime@1.11.3",
+      "properties": [],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@emnapi/runtime/-/runtime-1.11.3.tgz"
+        },
+        {
+          "type": "vcs",
+          "url": "git+https://github.com/toyobayashi/emnapi.git"
+        },
+        {
+          "type": "website",
+          "url": "https://github.com/toyobayashi/emnapi#readme"
+        },
+        {
+          "type": "issue-tracker",
+          "url": "https://github.com/toyobayashi/emnapi/issues"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "5f3e13a72922ed7caba5b50ad6347502174075a5f2861638959de778ba1d9a1a6e59fcb63c040de41e3ab00894e2588e5c62e41f2a67fea53e8ef7d64826182c"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
           }
         }
       ]
@@ -16706,6 +16748,48 @@
       ]
     },
     {
+      "bom-ref": "tslib@2.8.1",
+      "type": "library",
+      "name": "tslib",
+      "version": "2.8.1",
+      "scope": "required",
+      "author": "Microsoft Corp.",
+      "description": "Runtime library for TypeScript helper functions",
+      "purl": "pkg:npm/tslib@2.8.1",
+      "properties": [],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/tslib/-/tslib-2.8.1.tgz"
+        },
+        {
+          "type": "vcs",
+          "url": "https://github.com/Microsoft/tslib.git"
+        },
+        {
+          "type": "website",
+          "url": "https://www.typescriptlang.org/"
+        },
+        {
+          "type": "issue-tracker",
+          "url": "https://github.com/Microsoft/TypeScript/issues"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "a0916ef781d06fe29576e49440bef09e99aa9df98bb0e03f9c087a6fa107d30084a0ad3f98f79753a737c0a0d5f373243ae1cf447b525ca294f7d2016b34bfdb"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "0BSD"
+          }
+        }
+      ]
+    },
+    {
       "bom-ref": "tsx@4.23.15",
       "type": "library",
       "name": "tsx",
@@ -17770,7 +17854,8 @@
         "@aws-sdk/core@3.981.1",
         "@aws-sdk/types@3.975.1",
         "@smithy/core@3.41.0",
-        "@smithy/types@4.20.0"
+        "@smithy/types@4.20.0",
+        "tslib@2.8.1"
       ]
     },
     {
@@ -17785,7 +17870,8 @@
         "@smithy/core@3.41.0",
         "@smithy/fetch-http-handler@5.8.1",
         "@smithy/node-http-handler@4.14.2",
-        "@smithy/types@4.20.0"
+        "@smithy/types@4.20.0",
+        "tslib@2.8.1"
       ]
     },
     {
@@ -17797,7 +17883,8 @@
         "@smithy/core@3.41.0",
         "@smithy/signature-v4@5.7.5",
         "@smithy/types@4.20.0",
-        "bowser@2.15.1"
+        "bowser@2.15.1",
+        "tslib@2.8.1"
       ]
     },
     {
@@ -17806,7 +17893,8 @@
         "@aws-sdk/core@3.981.1",
         "@aws-sdk/types@3.975.1",
         "@smithy/core@3.41.0",
-        "@smithy/types@4.20.0"
+        "@smithy/types@4.20.0",
+        "tslib@2.8.1"
       ]
     },
     {
@@ -17817,7 +17905,8 @@
         "@smithy/core@3.41.0",
         "@smithy/fetch-http-handler@5.8.1",
         "@smithy/node-http-handler@4.14.2",
-        "@smithy/types@4.20.0"
+        "@smithy/types@4.20.0",
+        "tslib@2.8.1"
       ]
     },
     {
@@ -17834,7 +17923,8 @@
         "@aws-sdk/types@3.975.1",
         "@smithy/core@3.41.0",
         "@smithy/credential-provider-imds@4.5.2",
-        "@smithy/types@4.20.0"
+        "@smithy/types@4.20.0",
+        "tslib@2.8.1"
       ]
     },
     {
@@ -17844,7 +17934,8 @@
         "@aws-sdk/nested-clients@3.998.4",
         "@aws-sdk/types@3.975.1",
         "@smithy/core@3.41.0",
-        "@smithy/types@4.20.0"
+        "@smithy/types@4.20.0",
+        "tslib@2.8.1"
       ]
     },
     {
@@ -17859,7 +17950,8 @@
         "@aws-sdk/types@3.975.1",
         "@smithy/core@3.41.0",
         "@smithy/credential-provider-imds@4.5.2",
-        "@smithy/types@4.20.0"
+        "@smithy/types@4.20.0",
+        "tslib@2.8.1"
       ]
     },
     {
@@ -17868,7 +17960,8 @@
         "@aws-sdk/core@3.981.1",
         "@aws-sdk/types@3.975.1",
         "@smithy/core@3.41.0",
-        "@smithy/types@4.20.0"
+        "@smithy/types@4.20.0",
+        "tslib@2.8.1"
       ]
     },
     {
@@ -17879,7 +17972,8 @@
         "@aws-sdk/token-providers@3.1175.0",
         "@aws-sdk/types@3.975.1",
         "@smithy/core@3.41.0",
-        "@smithy/types@4.20.0"
+        "@smithy/types@4.20.0",
+        "tslib@2.8.1"
       ]
     },
     {
@@ -17889,7 +17983,8 @@
         "@aws-sdk/nested-clients@3.998.4",
         "@aws-sdk/types@3.975.1",
         "@smithy/core@3.41.0",
-        "@smithy/types@4.20.0"
+        "@smithy/types@4.20.0",
+        "tslib@2.8.1"
       ]
     },
     {
@@ -17900,7 +17995,8 @@
         "@smithy/types@4.20.0",
         "buffer@5.6.0",
         "events@3.3.0",
-        "stream-browserify@3.0.0"
+        "stream-browserify@3.0.0",
+        "tslib@2.8.1"
       ]
     },
     {
@@ -17910,7 +18006,8 @@
         "@aws-sdk/signature-v4-multi-region@3.996.52",
         "@aws-sdk/types@3.975.1",
         "@smithy/core@3.41.0",
-        "@smithy/types@4.20.0"
+        "@smithy/types@4.20.0",
+        "tslib@2.8.1"
       ]
     },
     {
@@ -17922,7 +18019,8 @@
         "@smithy/core@3.41.0",
         "@smithy/fetch-http-handler@5.8.1",
         "@smithy/node-http-handler@4.14.2",
-        "@smithy/types@4.20.0"
+        "@smithy/types@4.20.0",
+        "tslib@2.8.1"
       ]
     },
     {
@@ -17930,7 +18028,8 @@
       "dependsOn": [
         "@aws-sdk/types@3.975.1",
         "@smithy/signature-v4@5.7.5",
-        "@smithy/types@4.20.0"
+        "@smithy/types@4.20.0",
+        "tslib@2.8.1"
       ]
     },
     {
@@ -17940,19 +18039,22 @@
         "@aws-sdk/nested-clients@3.998.4",
         "@aws-sdk/types@3.975.1",
         "@smithy/core@3.41.0",
-        "@smithy/types@4.20.0"
+        "@smithy/types@4.20.0",
+        "tslib@2.8.1"
       ]
     },
     {
       "ref": "@aws-sdk/types@3.975.1",
       "dependsOn": [
-        "@smithy/types@4.20.0"
+        "@smithy/types@4.20.0",
+        "tslib@2.8.1"
       ]
     },
     {
       "ref": "@aws-sdk/xml-builder@3.972.43",
       "dependsOn": [
-        "@smithy/types@4.20.0"
+        "@smithy/types@4.20.0",
+        "tslib@2.8.1"
       ]
     },
     {
@@ -18008,6 +18110,12 @@
     {
       "ref": "@electric-sql/pglite@0.4.3",
       "dependsOn": []
+    },
+    {
+      "ref": "@emnapi/runtime@1.11.3",
+      "dependsOn": [
+        "tslib@2.8.1"
+      ]
     },
     {
       "ref": "@esbuild/linux-x64@0.28.2",
@@ -18416,40 +18524,47 @@
     {
       "ref": "@smithy/core@3.41.0",
       "dependsOn": [
-        "@smithy/types@4.20.0"
+        "@smithy/types@4.20.0",
+        "tslib@2.8.1"
       ]
     },
     {
       "ref": "@smithy/credential-provider-imds@4.5.2",
       "dependsOn": [
         "@smithy/core@3.41.0",
-        "@smithy/types@4.20.0"
+        "@smithy/types@4.20.0",
+        "tslib@2.8.1"
       ]
     },
     {
       "ref": "@smithy/fetch-http-handler@5.8.1",
       "dependsOn": [
         "@smithy/core@3.41.0",
-        "@smithy/types@4.20.0"
+        "@smithy/types@4.20.0",
+        "tslib@2.8.1"
       ]
     },
     {
       "ref": "@smithy/node-http-handler@4.14.2",
       "dependsOn": [
         "@smithy/core@3.41.0",
-        "@smithy/types@4.20.0"
+        "@smithy/types@4.20.0",
+        "tslib@2.8.1"
       ]
     },
     {
       "ref": "@smithy/signature-v4@5.7.5",
       "dependsOn": [
         "@smithy/core@3.41.0",
-        "@smithy/types@4.20.0"
+        "@smithy/types@4.20.0",
+        "tslib@2.8.1"
       ]
     },
     {
       "ref": "@smithy/types@4.20.0",
-      "dependsOn": []
+      "dependsOn": [
+        "tslib@2.8.1"
+      ]
     },
     {
       "ref": "@standard-schema/spec@1.1.0",
@@ -18457,7 +18572,9 @@
     },
     {
       "ref": "@swc/helpers@0.5.23",
-      "dependsOn": []
+      "dependsOn": [
+        "tslib@2.8.1"
+      ]
     },
     {
       "ref": "@tokenizer/inflate@0.6.1",
@@ -20629,6 +20746,10 @@
     },
     {
       "ref": "ts-deepmerge@7.0.3",
+      "dependsOn": []
+    },
+    {
+      "ref": "tslib@2.8.1",
       "dependsOn": []
     },
     {

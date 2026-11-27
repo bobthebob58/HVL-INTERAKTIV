@@ -7,8 +7,8 @@
  * Spec: SEC-007
  * Invariants:
  *   - The fixture has one package of each kind the generator treats differently, with npm's field order.
- *   - The throwaway repository gets copies of the real pin files and manifests that match the fixture, so the
- *     production-set guard passes; the real repository is never written.
+ *   - The throwaway repository gets copies of the real pin files, manifests that match the fixture, so the
+ *     production-set guard passes, and a lock file without packages; the real repository is never written.
  * Collaborators: tools/sbom/buildSbom.mjs, tools/sbom/npmComponents.mjs.
  * Tests: tools/sbom/test/npmComponents.test.mjs, tools/sbom/test/buildSbom.test.mjs
  */
@@ -114,6 +114,7 @@ export function fixtureRepository() {
     mkdirSync(dirname(join(root, file)), { recursive: true });
     writeFileSync(join(root, file), `${JSON.stringify(manifest, null, 2)}\n`);
   }
+  writeFileSync(join(root, 'package-lock.json'), `${JSON.stringify({ lockfileVersion: 3, packages: {} })}\n`);
   for (const file of PIN_FILES) cpSync(join(REPOSITORY, file), join(root, file));
   mkdirSync(join(root, 'docs/assurance'), { recursive: true });
   return root;

@@ -1,6 +1,7 @@
 /**
  * Tests for the assembled SBOM and the command: same input gives the same bytes, `--check` finds a stale or missing
- * file, a shrunken npm set is refused, and the real `npm sbom` of this repository gives the full production set.
+ * file, a shrunken npm set is refused, and the real `npm sbom` of this repository gives what a production install
+ * keeps.
  *
  * Spec: SEC-007
  */
@@ -25,6 +26,8 @@ const added = () => [
     ],
   },
 ];
+/** The fixture's installed tree needs no correction, so the command tests hand over an empty list of copies. */
+const npmQuery = () => [];
 const assemble = (npmBom) =>
   assembleSbom({ npmBom, npm: productionPart(npmBom), added: added(), platform: 'linux-x64' });
 
@@ -75,7 +78,7 @@ describe('[SEC-007] npm run sbom', () => {
   let root;
   let out;
   const run = (...argv) =>
-    main([...argv, `--out=${out}`], { root, npmSbom: npmBomFixture, platform: 'linux-x64' });
+    main([...argv, `--out=${out}`], { root, npmSbom: npmBomFixture, npmQuery, platform: 'linux-x64' });
   beforeEach(() => {
     root = fixtureRepository();
     out = join(root, 'docs/assurance/sbom.cdx.json');
@@ -106,6 +109,7 @@ describe('[SEC-007] npm run sbom', () => {
     const check = main(['--check', `--out=${out}`], {
       root,
       npmSbom: npmBomFixture,
+      npmQuery,
       platform: 'darwin-arm64',
     });
     expect(check).toBe(1);
@@ -120,7 +124,7 @@ describe('[SEC-007] npm run sbom', () => {
       return bom;
     };
     // Act
-    const code = main([`--out=${out}`], { root, npmSbom: shrunken, platform: 'linux-x64' });
+    const code = main([`--out=${out}`], { root, npmSbom: shrunken, npmQuery, platform: 'linux-x64' });
     // Assert
     expect(code).toBe(1);
     expect(existsSync(out)).toBe(false);
@@ -131,22 +135,31 @@ describe('[SEC-007] npm run sbom', () => {
 describe('[SEC-007] the real npm sbom', () => {
   afterEach(() => vi.unstubAllEnvs());
 
-  it('[SEC-007] lists every package npm query counts as production, with npm licences and purls', () => {
+  it('[SEC-007] lists what a production install keeps, every package npm query counts as production among it', () => {
     // Arrange: as under NODE_ENV=production, npm is told to omit dev packages; the generator must still see them all
     vi.stubEnv('npm_config_omit', 'dev');
     const npmBom = runNpmSbom(REPOSITORY);
     vi.unstubAllEnvs();
     const query = JSON.parse(execFileSync('npm', ['query', '*'], { cwd: REPOSITORY, maxBuffer: 64 << 20 }));
     const rootName = JSON.parse(readFileSync(join(REPOSITORY, 'package.json'), 'utf8')).name;
-    const production = new Set(
-      query.filter((e) => e.dev !== true && e.name !== rootName).map((e) => `${e.name}@${e.version}`),
+    const production = query
+      .filter((e) => e.dev !== true && e.name !== rootName)
+      .map((e) => `${e.name}@${e.version}`);
+    // WHY: `npm prune --omit=dev`, which the image build runs, keeps the folders the lock file lists without `dev`.
+    const lock = JSON.parse(readFileSync(join(REPOSITORY, 'package-lock.json'), 'utf8')).packages;
+    const kept = Object.entries(lock).filter(
+      ([folder, e]) => folder && !e.link && !e.dev && existsSync(join(REPOSITORY, folder, 'package.json')),
     );
+    const nameOf = (folder, e) => e.name ?? folder.slice(folder.lastIndexOf('node_modules/') + 13);
     // Act
-    const { bom, problems } = buildSbom(REPOSITORY, npmBom, 'linux-x64');
+    const { bom, problems } = buildSbom(REPOSITORY, npmBom, 'linux-x64', query);
     // Assert
     expect(problems).toEqual([]);
     const npm = bom.components.filter((c) => c.purl.startsWith('pkg:npm/'));
-    expect(new Set(npm.map((c) => c['bom-ref']))).toEqual(production);
+    const listed = new Set(npm.map((c) => c['bom-ref']));
+    expect(listed).toEqual(new Set(kept.map(([folder, e]) => `${nameOf(folder, e)}@${e.version}`)));
+    expect(production.filter((ref) => !listed.has(ref))).toEqual([]);
+    expect(npm.filter((c) => !c.hashes).every((c) => c.name.startsWith('@hvl-interaktiv/'))).toBe(true);
     expect(npm.map((c) => c.name)).toEqual(
       expect.arrayContaining(['playwright-core', 'tsx', 'react', 'prisma']),
     );

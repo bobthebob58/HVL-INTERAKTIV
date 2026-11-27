@@ -13924,8 +13924,9 @@ running server: <code>@aws-sdk/client-s3</code> and <code>@aws-sdk/lib-storage</
 3.10.1, <code>lint-staged</code> 17.6.2, <code>tailwindcss</code> and <code>@tailwindcss/postcss</code> 4.3.5,
 <code>fast-check</code> 4.11.0, <code>pdfjs-dist</code> 6.5.438, <code>supertest</code> 7.3.2, <code>jose</code> 6.2.18, <code>oauth2-mock-server</code> 9.3.0 and
 <code>@types/yazl</code> 3.3.1. The lock file is Dependabot&#39;s own resolution with playwright-core kept at 1.56.1: 954
-packages, 108 with a new version, 37 of them in the running server and none added there. A plain <code>npm install</code>
-gave a wider change (it moved packages nothing asked to move), so it was not used. The SBOM follows.</li>
+packages, 108 with a new version, 37 of them in the running server. One package is new in a production install,
+<code>@emnapi/runtime</code> 1.11.3, which npm leaves there and nothing loads (the SBOM decision below). A plain
+<code>npm install</code> gave a wider change (it moved packages nothing asked to move), so it was not used. The SBOM follows.</li>
 <li><strong>Decision — a body that ends inside a discarded part is an ordinary 400 (SEC-005).</strong> <code>readMultipart</code> listens
 for the error of a file stream it discards, as it already did for the file it keeps. With busboy 3.2.6 the same
 holds for the parts the parser skips itself. The request is refused with 400, its folder is removed, and
@@ -13952,20 +13953,45 @@ all for the one rule: Course Presentation&#39;s slide-menu button, whose visible
 check button of the question types, whose accessible name in the test content is an English sentence while
 the button says «Sjekk». Each needs a repair or a register entry under D-080, and the conformance report&#39;s
 text for 2.5.3 changes with it, so the scanner is updated as a step of its own.</li>
+<li><strong>Decision — the SBOM and the licence check go by what a production install keeps (SEC-007, NFR-005).</strong> The
+gate of this step failed one test: the regenerated SBOM had lost <code>tslib</code> 2.8.1, which the AWS SDK loads in the
+server. npm&#39;s view of the installed tree differs in two ways from what <code>npm ci</code> and then <code>npm prune --omit=dev</code>,
+the image build&#39;s two steps, leave behind. (1) npm&#39;s SBOM has one component per name and version: the first
+installed copy it meets, with that copy&#39;s flags. <code>@tailwindcss/oxide-wasm32-wasi</code> 4.3.5 is no longer limited to
+wasm32, so the <code>tslib</code> it bundles, which only dev tools need, is installed everywhere, and npm met it first.
+(2) vitest 5.1.1 brings a rolldown whose wasm32 binding no longer bundles its helper packages. npm skips that
+binding and <code>@img/sharp-wasm32</code> for the platform, but leaves what both depend on, <code>@emnapi/runtime</code> 1.11.3,
+installed. npm calls it extraneous and dev; the lock file lists it as optional, and the prune keeps it. It is
+in the image, nothing loads it, and neither the SBOM nor <code>check:licences</code> saw it. Now <code>lockFileCorrections.mjs</code>
+rewrites a component that npm describes by a development copy as npm writes its production copy, and
+<code>lockFileProduction.mjs</code> counts an installed copy as production when the lock file lists its folder as
+production; the SBOM and <code>check:licences</code> both use it, and it only adds to the set. The SBOM lists 478 npm
+packages, 473 of them from the registry, and <code>check:licences</code> checks 489 entries. Four more helper packages are
+left installed the same way; the lock file lists them as dev, the prune removes them, and they count as
+development.</li>
 <li><strong>Residual:</strong> playwright-core 1.56.1 and its Chromium stay until the next step, and axe-core 4.13.0 until the
 step above. The two advisories&#39; own pages
-could not be opened from the development sandbox, so the second reading rests on npm&#39;s list and on the code.</li>
+could not be opened from the development sandbox, so the second reading rests on npm&#39;s list and on the code.
+The SBOM was compared with a real production install once, by hand; no test repeats the install, and CI does
+not run <code>npm run sbom -- --check</code>.</li>
 <li><strong>Verified:</strong> <code>multipartUploadCutOff.test.ts</code> sends four bodies that end inside a discarded part, each in two
 pieces. Before this step two of them reached the process&#39;s fault handler (a file under another field name, and
 a part past the part limit); with our listener one did; with busboy 3.2.6 none does. Each is refused with 400
 and leaves no folder. <code>svgLinkAddresses.test.ts</code> (ten kinds of address outside the drawing, as <code>href</code> and as
 <code>xlink:href</code>) and the new test in <code>FeideClient.test.ts</code> passed before and after. <code>FileTypeSniffer.test.ts</code>
 refuses ICNS, HEIF and JXL bytes under image names. <code>ciDependencyGates.test.mjs</code> holds the order of
-Dependabot&#39;s groups and the Ubuntu rule. The gate and the Docker smoke test are in step 32 of <code>PROGRESS.md</code>.</li>
+Dependabot&#39;s groups and the Ubuntu rule. A production install made as the image build makes it, in a folder
+with only the manifests and the lock file, holds the same 473 registry packages as the SBOM; the SBOM first
+written in this step lacked two of them. The <code>tslib</code> component is byte for byte the one of the SBOM before this
+step. With either correction switched off, the tests of the real tree and of the two rules fail. The gate and
+the Docker smoke test are in step 32 of <code>PROGRESS.md</code>.</li>
 <li><strong>Consequences:</strong> <code>package.json</code>, <code>apps/server/package.json</code>, <code>apps/web/package.json</code>, <code>package-lock.json</code>,
 <code>docs/assurance/sbom.cdx.json</code>, <code>apps/server/src/http/multipartUpload.ts</code>, <code>.github/dependabot.yml</code>,
-<code>tools/dependency-check/audit-exceptions.json</code>; tests <code>multipartUploadCutOff.test.ts</code>,
-<code>svgLinkAddresses.test.ts</code>, <code>FeideClient.test.ts</code>, <code>ciDependencyGates.test.mjs</code>. Amends D-030 (the date) and
+<code>tools/dependency-check/audit-exceptions.json</code>, <code>tools/sbom/lockFileCorrections.mjs</code>,
+<code>tools/sbom/buildSbom.mjs</code>, <code>tools/dependency-check/lockFileProduction.mjs</code>,
+<code>tools/dependency-check/checkLicences.mjs</code>, the two tools&#39; READMEs; tests <code>multipartUploadCutOff.test.ts</code>,
+<code>svgLinkAddresses.test.ts</code>, <code>FeideClient.test.ts</code>, <code>ciDependencyGates.test.mjs</code>, <code>lockFileCorrections.test.mjs</code>,
+<code>lockFileProduction.test.mjs</code>, <code>buildSbom.test.mjs</code>, <code>productionSetGuard.test.mjs</code>. Amends D-030 (the date) and
 D-145 (Dependabot&#39;s groups). Risk R-08 has the new date and R-10 is new. The documents that name the date
 follow, and with them the end date they propose for a stage-1 test install. The line references into this file
 and into <code>PROGRESS.md</code> moved by the lines added above them (27 of 44), each compared with the line it named
