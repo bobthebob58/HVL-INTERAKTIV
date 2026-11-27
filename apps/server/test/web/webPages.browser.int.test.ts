@@ -2,9 +2,10 @@
  * Browser tests for every page of the built web app served inside Express: no console error, page error or CSP
  * violation; only first-party requests; the skip link first and a `main#main` on every page; no horizontal scrolling
  * at 320 px; and each route's signed-out, no-launch or launch state, the S5 studio pages included (D-089). The API
- * answers as for a signed-out browser; the public studio routes answer the fixture guide and pattern.
+ * answers as for a signed-out browser; the public studio routes answer the fixture guide and pattern. Every page
+ * links the site icon, which the design tokens generate (packages/design-tokens/scripts/siteIcon.mjs).
  *
- * Spec: DATA-011, UD-006, UD-008, UD-013, DATA-006, LTI-003, LTI-006
+ * Spec: DATA-011, UD-001, UD-006, UD-008, UD-013, DATA-006, LTI-003, LTI-006
  */
 import type { Page } from 'playwright-core';
 import { describe, expect, it } from 'vitest';
@@ -111,6 +112,30 @@ import {
         await page.close();
       },
     );
+
+    it('[UD-001][DATA-011] every page links the site icon, and /favicon.ico answers a browser that asks unasked', async () => {
+      // Act: the icons the start page links, and the address a browser tries on a page that links none
+      const { page, problems } = await open('/');
+      const links = await page.$$eval('link[rel="icon"]', (found) =>
+        found.map((link) => link.getAttribute('href') ?? ''),
+      );
+      const answers = await Promise.all(
+        ['/favicon.ico', ...links].map(async (href) => {
+          const res = await fetch(new URL(href, base()));
+          // WHY: read to the end; cancelling the web app's streamed 404 page never settles.
+          await res.arrayBuffer();
+          return `${res.status} ${res.headers.get('content-type') ?? ''}`;
+        }),
+      );
+      // Assert: our own files, as pictures
+      expect(links.map((href) => new URL(href, base()).pathname).sort()).toEqual([
+        '/favicon.ico',
+        '/icon.svg',
+      ]);
+      expect(answers.sort()).toEqual(['200 image/svg+xml', '200 image/x-icon', '200 image/x-icon']);
+      expect(problems).toEqual([]);
+      await page.close();
+    });
 
     it('[UD-013] the portal header has the main menu, which Canvas does not', async () => {
       // Act

@@ -1,0 +1,5 @@
+<!-- Generated from packages/design-tokens/tokens.json by `npm run tokens:build`. Do not edit. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect width="32" height="32" rx="6" fill="#004357"/>
+  <path d="M11.5 8 25 16 11.5 24z" fill="#FFFFFF"/>
+</svg>
