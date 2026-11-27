@@ -11,8 +11,9 @@
  *      all when it cannot read it: never the library's (D-151).
  * Spec: LTI-010, INS-002, INS-003, DATA-012
  * Invariants:
- *   - Only a statement that an H5P.SingleChoiceSet instance raised is touched (`libraryInfo.machineName`, which
- *     H5P.newRunnable sets); every other result is returned as it was given.
+ *   - Only a statement that an H5P.SingleChoiceSet instance raised (`libraryInfo.machineName`, which
+ *     H5P.newRunnable sets) and that carries a `subContentId` of its own is touched; every other result, the set's
+ *     own included, is returned as it was given.
  *   - With the set's record: `response` is the stored index, `success` and `score.raw`/`score.scaled` follow it
  *     (index 0 is right). Without it (another version of the library, a question the set does not hold): the result
  *     keeps only `completion` and `duration`.
@@ -60,10 +61,11 @@
   /**
    * The result to send for a statement.
    * `cut`: the result as ./xapiStatements.js cut it; `source`: the instance that raised the event; `subContentId`:
-   * the statement's own. Returns `cut` itself unless a SingleChoiceSet raised the statement.
+   * the statement's own. Returns `cut` itself unless a SingleChoiceSet raised the statement for one of its questions.
    */
   function result(cut, source, subContentId) {
-    if (!cut || !isSet(source)) return cut;
+    // WHY: a statement without an ID of its own is the set's own (its total), not a question's answer.
+    if (!cut || typeof subContentId !== 'string' || subContentId === '' || !isSet(source)) return cut;
     var out = {};
     if (cut.completion !== undefined) out.completion = cut.completion;
     if (cut.duration !== undefined) out.duration = cut.duration;

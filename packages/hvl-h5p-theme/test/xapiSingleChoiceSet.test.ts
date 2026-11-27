@@ -66,6 +66,14 @@ describe('[INS-002] the answer of a SingleChoiceSet question', () => {
     // Assert
     expect(results.every((result) => result === given)).toBe(true);
     expect(correction.result(undefined, setInstance(), SUM)).toBeUndefined();
+    // WHY: a statement without an ID of its own is the set's (its total), or a question's that no row can take;
+    // neither is a question's answer to correct, also when the set's questions have no ID themselves.
+    const withoutIds = { ...setInstance(), options: { choices: [{}, {}] } };
+    expect([undefined, '', 7].map((id) => correction.result(given, withoutIds, id))).toEqual([
+      given,
+      given,
+      given,
+    ]);
   });
 
   it('[INS-002][DATA-012] an answer the set’s record does not give is not sent at all, never the library’s', () => {
