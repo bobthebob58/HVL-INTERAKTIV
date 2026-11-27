@@ -15,11 +15,13 @@
  *   - The callback URL handed to openid-client is built on `PUBLIC_BASE_URL`, never on request headers.
  *   - Logout is a POST checked against the session's CSRF token; `/auth/session` gives the token to page scripts.
  *   - Errors are friendly pages (./../../http/pages/portalPages.ts), never JSON or stack traces.
+ *   - The login and the callback, which answer anyone, run behind a ceiling per network address.
  * Collaborators: ./FeideClient.ts, ./loginTransactions.ts, ./loginNavigation.ts, ./completeFeideLogin.ts, ../session/,
- *   ../audit/AuthAuditRecorder.ts.
- * Tests: apps/server/test/auth/feide/feideLogin.int.test.ts, apps/server/test/auth/feide/feideLogout.int.test.ts
+ *   ./loginRequestCeiling.ts, ../audit/AuthAuditRecorder.ts.
+ * Tests: apps/server/test/auth/feide/feideLogin.int.test.ts, apps/server/test/auth/feide/feideLogout.int.test.ts,
+ *   apps/server/test/auth/feide/feideLoginCeiling.int.test.ts
  */
-import express, { Router, type Request, type Response } from 'express';
+import express, { Router, type Request, type RequestHandler, type Response } from 'express';
 import type { Logger } from 'pino';
 import { authError } from '../../http/authErrors.js';
 import { sendPortalError, sendPortalPage } from '../../http/pages/portalPages.js';
@@ -48,6 +50,8 @@ export interface FeideRouteDeps {
   readonly sessions: SessionStore;
   readonly login: Omit<FeideLoginDeps, 'feide'>;
   readonly audit: Pick<AuthAuditRecorder, 'record'>;
+  /** Refuses an address past its ceiling, ahead of the login and the callback (./loginRequestCeiling.ts). */
+  readonly ceiling: RequestHandler;
   readonly publicBaseUrl: string;
   readonly logger: Logger;
 }
@@ -71,6 +75,8 @@ export function feideLoginRoutes(deps: FeideRouteDeps): Router {
 
   router.get(
     '/auth/feide/login',
+    // SECURITY: both routes answer anyone, so one address may only ask so often (./loginRequestCeiling.ts, D-150).
+    deps.ceiling,
     handle(async (req, res) => {
       const returnTo = safeReturnTo(queryText(req, 'returnTo'));
       // SECURITY: a login replaces the browser's session, so only a page the person opened starts one (D-131).
@@ -102,6 +108,7 @@ export function feideLoginRoutes(deps: FeideRouteDeps): Router {
 
   router.get(
     '/auth/feide/callback',
+    deps.ceiling,
     handle(async (req, res) => {
       const txId = readCookie(req, LOGIN_COOKIE);
       const refuse = async () => {
