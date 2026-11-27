@@ -3664,3 +3664,43 @@ Append one entry per session: date, session, what was done, gate output, and any
     written. All are corrected; the first has tests that fail on the earlier code
     (`useActivityPhase.test.tsx`).
   - With it: the third report draft for H5P (a question button's name) is ready as an issue, the owner's choice.
+  - The gate ran on the change as it stands, on top of step 35's two test corrections; nothing in it failed that
+    does not fail in this container for every step. The accessibility run is recorded in the conformance
+    report (575 tests, 181 scans) on commit `17d19832c720`, which holds the files the run was made on: the
+    branch was restarted from `main` after pull request #36 was merged, and that gave the commits new names.
+    Gate output:
+
+  ```
+  $ npm run build                                      exit 0
+  $ HVLI_DOCKER_SANDBOX=1 bash deploy/smoke/dockerSmoke.sh   passed in 231 s (the PDF printed as uid 10001 with
+      the sandbox seen in /proc)
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run lint:css                                   exit 0
+  $ npm run doc:lint && npm run check:filesize         11 checks passed; file-size passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run privacy:dpia-check                         13 sections, the developer key and the residuals agree
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins && npm run check:licences       every version pinned; 489 production packages compatible
+  $ npm run check:lockfile                             949 packages from the registry with sha512; 4 install scripts reviewed
+  $ npm run check:workflows                            3 workflows: actions by commit, images by digest
+  $ npm run check:audit                                2 high/critical advisories, both covered by reviewed exceptions
+  $ npm run sbom -- --check                            current: 478 npm packages, 12 H5P components, 3 images
+  $ npm run content:check && npm run tokens:check      exit 0
+  $ node tools/spec-site/buildSpecSite.mjs --check     up to date
+  $ node tools/deploy-check/checkDeployFiles.mjs       exit 0
+  $ npm run docs:api                                   exit 0
+  $ npm run a11y:report -- --check                     exit 0
+  $ npx vitest run --project web                       688 passed (106 files)
+  $ npx vitest run --project api-contract              123 passed (15 files)
+  $ npx vitest run --project tools                     604 passed (81 files)
+  $ npx vitest run --project design-tokens             162 passed
+  $ npx vitest run --project hvl-h5p-theme             217 passed
+  $ LIVE_TARGET=mock npm run test:live                 36 passed
+  $ npm run test:a11y                                  575 passed (18 files)
+  $ npm run test:e2e                                   39 passed, 1 skipped; 1 file failed: learnerDataRights
+      (needs the privileged database, like DATA-010's tests)
+  $ npx vitest run --project server                    27173 passed, 31 skipped; 1 failed in 4 files: a
+      privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
+      MAPPE-004)
+  ```

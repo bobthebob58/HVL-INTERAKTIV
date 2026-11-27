@@ -12,7 +12,7 @@
 |---|---|
 | Product | HVL Interaktiv: the web app, the server-rendered pages, the Canvas views and the ten H5P content types with the HVL theme |
 | Standard | WCAG 2.2, Level A and AA: 56 success criteria (4.1.1 *Parsing* included for WCAG 2.1 and EN 301 549) |
-| Last automated run | 2026-11-27, commit `dd77f6512636` (clean): 563 passed, 0 failed, 0 skipped (appendix A) |
+| Last automated run | 2026-11-27, commit `17d19832c720` (clean): 575 passed, 0 failed, 0 skipped (appendix A) |
 | Manual results | none recorded yet (*not yet tested by HVL*) |
 | Automated tools | axe-core 4.14.1 with the tags `wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`, `wcag22aa`; Playwright in Chromium (D-079) |
 
@@ -151,7 +151,7 @@ Level A · since WCAG 2.0 · [Understanding 1.1.1](https://www.w3.org/WAI/WCAG22
 
 **Automated evidence (generated):**
 
-- axe [`aria-meter-name`](https://dequeuniversity.com/rules/axe/4.14/aria-meter-name), [`aria-progressbar-name`](https://dequeuniversity.com/rules/axe/4.14/aria-progressbar-name), [`image-alt`](https://dequeuniversity.com/rules/axe/4.14/image-alt), [`input-image-alt`](https://dequeuniversity.com/rules/axe/4.14/input-image-alt), [`object-alt`](https://dequeuniversity.com/rules/axe/4.14/object-alt), [`role-img-alt`](https://dequeuniversity.com/rules/axe/4.14/role-img-alt), [`svg-img-alt`](https://dequeuniversity.com/rules/axe/4.14/svg-img-alt). Views: every page and frame the axe suites scan (179 scans). Last run: serious or critical: none; lower impact: none; left to review by hand: none.
+- axe [`aria-meter-name`](https://dequeuniversity.com/rules/axe/4.14/aria-meter-name), [`aria-progressbar-name`](https://dequeuniversity.com/rules/axe/4.14/aria-progressbar-name), [`image-alt`](https://dequeuniversity.com/rules/axe/4.14/image-alt), [`input-image-alt`](https://dequeuniversity.com/rules/axe/4.14/input-image-alt), [`object-alt`](https://dequeuniversity.com/rules/axe/4.14/object-alt), [`role-img-alt`](https://dequeuniversity.com/rules/axe/4.14/role-img-alt), [`svg-img-alt`](https://dequeuniversity.com/rules/axe/4.14/svg-img-alt). Views: every page and frame the axe suites scan (181 scans). Last run: serious or critical: none; lower impact: none; left to review by hand: none.
 - `UD-021` `V-IMG-ALT`: The pre-publish validator: an image without alternative text, or with a file name as its text, is an error the author fixes or acknowledges with a reason. Runs in `npm test`: [`apps/server/test/validation/rules/imageAltRule.test.ts`](../../apps/server/test/validation/rules/imageAltRule.test.ts) (3 test titles).
 - `UD-021` `V-IMG-ALT-LENGTH`: The validator warns about alternative text over 250 characters. Runs in `npm test`: [`apps/server/test/validation/rules/imageAltLengthRule.test.ts`](../../apps/server/test/validation/rules/imageAltLengthRule.test.ts) (1 test title).
 - `INS-008`: Every insight chart has a visible data table and a text summary. Runs in `npm test`: [`apps/web/test/features/insight/InsightCharts.test.tsx`](../../apps/web/test/features/insight/InsightCharts.test.tsx) (3 test titles), [`apps/web/test/features/insight/InsightMisconceptions.test.tsx`](../../apps/web/test/features/insight/InsightMisconceptions.test.tsx) (1 test title), [`apps/web/test/features/insight/insightFormat.test.ts`](../../apps/web/test/features/insight/insightFormat.test.ts) (2 test titles), [`apps/web/test/features/insight/insightSummaries.test.ts`](../../apps/web/test/features/insight/insightSummaries.test.ts) (1 test title).
@@ -195,7 +195,7 @@ Level A · since WCAG 2.0 · [Understanding 1.2.2](https://www.w3.org/WAI/WCAG22
 
 **Automated evidence (generated):**
 
-- axe [`video-caption`](https://dequeuniversity.com/rules/axe/4.14/video-caption). Views: every page and frame the axe suites scan (179 scans). Last run: serious or critical: none; lower impact: none; left to review by hand: `video-caption` (critical): 4 elements in 4 scans.
+- axe [`video-caption`](https://dequeuniversity.com/rules/axe/4.14/video-caption). Views: every page and frame the axe suites scan (181 scans). Last run: serious or critical: none; lower impact: none; left to review by hand: `video-caption` (critical): 4 elements in 4 scans.
 - `UD-021` `V-VID-CAPTIONS`: The validator: an InteractiveVideo or Video without a text track, unless its Panopto source is listed as captioned, is an error. Runs in `npm test`: [`apps/server/test/validation/rules/videoCaptionsRule.test.ts`](../../apps/server/test/validation/rules/videoCaptionsRule.test.ts) (1 test title).
 
 **Manual protocol:** no step names this criterion yet.
@@ -274,7 +274,7 @@ Level A · since WCAG 2.0 · [Understanding 1.3.1](https://www.w3.org/WAI/WCAG22
 
 **Automated evidence (generated):**
 
-- axe [`aria-hidden-body`](https://dequeuniversity.com/rules/axe/4.14/aria-hidden-body), [`aria-required-children`](https://dequeuniversity.com/rules/axe/4.14/aria-required-children), [`aria-required-parent`](https://dequeuniversity.com/rules/axe/4.14/aria-required-parent), [`definition-list`](https://dequeuniversity.com/rules/axe/4.14/definition-list), [`dlitem`](https://dequeuniversity.com/rules/axe/4.14/dlitem), [`list`](https://dequeuniversity.com/rules/axe/4.14/list), [`listitem`](https://dequeuniversity.com/rules/axe/4.14/listitem), [`td-headers-attr`](https://dequeuniversity.com/rules/axe/4.14/td-headers-attr), [`th-has-data-cells`](https://dequeuniversity.com/rules/axe/4.14/th-has-data-cells). Views: every page and frame the axe suites scan (179 scans). Last run: serious or critical: none; lower impact: none; left to review by hand: none.
+- axe [`aria-hidden-body`](https://dequeuniversity.com/rules/axe/4.14/aria-hidden-body), [`aria-required-children`](https://dequeuniversity.com/rules/axe/4.14/aria-required-children), [`aria-required-parent`](https://dequeuniversity.com/rules/axe/4.14/aria-required-parent), [`definition-list`](https://dequeuniversity.com/rules/axe/4.14/definition-list), [`dlitem`](https://dequeuniversity.com/rules/axe/4.14/dlitem), [`list`](https://dequeuniversity.com/rules/axe/4.14/list), [`listitem`](https://dequeuniversity.com/rules/axe/4.14/listitem), [`td-headers-attr`](https://dequeuniversity.com/rules/axe/4.14/td-headers-attr), [`th-has-data-cells`](https://dequeuniversity.com/rules/axe/4.14/th-has-data-cells). Views: every page and frame the axe suites scan (181 scans). Last run: serious or critical: none; lower impact: none; left to review by hand: none.
 - axe also has `p-as-heading` (experimental), `table-fake-caption` (experimental), `td-has-header` (experimental) for this criterion; axe leaves such rules out by default, so the suite does not run them.
 - `UD-021` `V-HEADING-ORDER`: The validator warns about rich-text headings that skip a level. Runs in `npm test`: [`apps/server/test/validation/rules/headingOrderRule.test.ts`](../../apps/server/test/validation/rules/headingOrderRule.test.ts) (2 test titles).
 - `UD-021` `V-TABLE-HEADERS`: The validator warns about tables in activities without header cells. Runs in `npm test`: [`apps/server/test/validation/rules/tableHeadersRule.test.ts`](../../apps/server/test/validation/rules/tableHeadersRule.test.ts) (1 test title).
@@ -333,7 +333,7 @@ Level AA · since WCAG 2.1 · [Understanding 1.3.4](https://www.w3.org/WAI/WCAG2
 **Automated evidence (generated):**
 
 - axe also has `css-orientation-lock` (experimental) for this criterion; axe leaves such rules out by default, so the suite does not run them.
-- `UD-008`, accessibility suite: Nothing scrolls sideways in either orientation: 320 × 640 and 640 × 320 CSS px. Views: the web app’s pages signed out and as the author, an activity’s «Spel», «Rediger», «Sjekk og publiser», «Poeng til Canvas» and «Innsikt» tabs, the Canvas page `/app/play` and its tabs, the studio’s seeded pages; the player of each of the ten content types in Canvas, fresh and started and answered. Last run: 84 passed. Tests: [`apps/server/a11y/reflowAndMotion.a11y.test.ts`](../../apps/server/a11y/reflowAndMotion.a11y.test.ts) (3 test titles).
+- `UD-008`, accessibility suite: Nothing scrolls sideways in either orientation: 320 × 640 and 640 × 320 CSS px. Views: the web app’s pages signed out and as the author, an activity’s «Spel», «Rediger», «Sjekk og publiser», «Poeng til Canvas» and «Innsikt» tabs, the Canvas page `/app/play` and its tabs, the studio’s seeded pages; the player of each of the ten content types in Canvas, fresh and started and answered. Last run: 86 passed. Tests: [`apps/server/a11y/reflowAndMotion.a11y.test.ts`](../../apps/server/a11y/reflowAndMotion.a11y.test.ts) (3 test titles).
 
 **Manual protocol:** J2.1 «Open the activity from the Canvas module.»
 
@@ -351,7 +351,7 @@ Level AA · since WCAG 2.1 · [Understanding 1.3.5](https://www.w3.org/WAI/WCAG2
 
 **Automated evidence (generated):**
 
-- axe [`autocomplete-valid`](https://dequeuniversity.com/rules/axe/4.14/autocomplete-valid). Views: every page and frame the axe suites scan (179 scans). Last run: serious or critical: none; lower impact: none; left to review by hand: none.
+- axe [`autocomplete-valid`](https://dequeuniversity.com/rules/axe/4.14/autocomplete-valid). Views: every page and frame the axe suites scan (181 scans). Last run: serious or critical: none; lower impact: none; left to review by hand: none.
 
 **Manual protocol:** no step names this criterion yet.
 
@@ -371,7 +371,7 @@ Level A · since WCAG 2.0 · [Understanding 1.4.1](https://www.w3.org/WAI/WCAG22
 
 **Automated evidence (generated):**
 
-- axe [`link-in-text-block`](https://dequeuniversity.com/rules/axe/4.14/link-in-text-block). Views: every page and frame the axe suites scan (179 scans). Last run: serious or critical: none; lower impact: none; left to review by hand: none.
+- axe [`link-in-text-block`](https://dequeuniversity.com/rules/axe/4.14/link-in-text-block). Views: every page and frame the axe suites scan (181 scans). Last run: serious or critical: none; lower impact: none; left to review by hand: none.
 - `UD-003`: Every right and wrong answer shows an icon and a text prefix (✓ Riktig: / ✗ Feil:) besides colour, drawn and in the accessibility tree, in the content types and inside containers; status badges likewise. Runs in `npm test`: [`apps/server/test/h5p/hvlFeedback.browser.int.test.ts`](../../apps/server/test/h5p/hvlFeedback.browser.int.test.ts) (5 test titles), [`apps/server/test/h5p/hvlFeedbackContainers.browser.int.test.ts`](../../apps/server/test/h5p/hvlFeedbackContainers.browser.int.test.ts) (3 test titles), [`apps/server/test/h5p/hvlFeedbackHotspot.browser.int.test.ts`](../../apps/server/test/h5p/hvlFeedbackHotspot.browser.int.test.ts) (2 test titles), [`apps/web/test/components/FindingsList.test.tsx`](../../apps/web/test/components/FindingsList.test.tsx) (1 test title), [`apps/web/test/components/StatusBadge.test.tsx`](../../apps/web/test/components/StatusBadge.test.tsx) (1 test title), [`apps/web/test/features/PlannerTable.test.tsx`](../../apps/web/test/features/PlannerTable.test.tsx) (2 test titles), [`apps/web/test/features/gradeSync/GradeSyncPanel.test.tsx`](../../apps/web/test/features/gradeSync/GradeSyncPanel.test.tsx) (1 test title), [`apps/web/test/features/gradeSync/GradeSyncPanelRetry.test.tsx`](../../apps/web/test/features/gradeSync/GradeSyncPanelRetry.test.tsx) (1 test title), [`apps/web/test/features/insight/InsightCharts.test.tsx`](../../apps/web/test/features/insight/InsightCharts.test.tsx) (1 test title), [`apps/web/test/features/insight/InsightFindings.test.tsx`](../../apps/web/test/features/insight/InsightFindings.test.tsx) (1 test title), [`apps/web/test/features/insight/InsightMisconceptions.test.tsx`](../../apps/web/test/features/insight/InsightMisconceptions.test.tsx) (1 test title), [`packages/design-tokens/test/contrast.test.ts`](../../packages/design-tokens/test/contrast.test.ts) (1 test title), [`packages/hvl-h5p-theme/test/feedbackNames.test.ts`](../../packages/hvl-h5p-theme/test/feedbackNames.test.ts) (6 test titles), [`packages/hvl-h5p-theme/test/feedbackPrefixes.test.ts`](../../packages/hvl-h5p-theme/test/feedbackPrefixes.test.ts) (6 test titles), [`packages/hvl-h5p-theme/test/feedbackPrefixesCss.test.ts`](../../packages/hvl-h5p-theme/test/feedbackPrefixesCss.test.ts) (10 test titles); in `npm run test:e2e`: [`apps/server/e2e/journeyPhoneResume.e2e.test.ts`](../../apps/server/e2e/journeyPhoneResume.e2e.test.ts) (1 test title).
 - `UD-021` `V-BRANCH-COLOUR`: The validator warns when a BranchingScenario choice relies on colour coding without text. Runs in `npm test`: [`apps/server/test/validation/rules/branchColourRule.test.ts`](../../apps/server/test/validation/rules/branchColourRule.test.ts) (3 test titles).
 - `UD-021` `V-COLOUR-WORDS`: The validator hints at text that refers to colour alone. Runs in `npm test`: [`apps/server/test/validation/rules/colourWordsRule.test.ts`](../../apps/server/test/validation/rules/colourWordsRule.test.ts) (4 test titles).
@@ -392,7 +392,7 @@ Level A · since WCAG 2.0 · [Understanding 1.4.2](https://www.w3.org/WAI/WCAG22
 
 **Automated evidence (generated):**
 
-- axe [`no-autoplay-audio`](https://dequeuniversity.com/rules/axe/4.14/no-autoplay-audio). Views: every page and frame the axe suites scan (179 scans). Last run: serious or critical: none; lower impact: none; left to review by hand: none.
+- axe [`no-autoplay-audio`](https://dequeuniversity.com/rules/axe/4.14/no-autoplay-audio). Views: every page and frame the axe suites scan (181 scans). Last run: serious or critical: none; lower impact: none; left to review by hand: none.
 
 **Manual protocol:** no step names this criterion yet.
 
@@ -410,7 +410,7 @@ Level AA · since WCAG 2.0 · [Understanding 1.4.3](https://www.w3.org/WAI/WCAG2
 
 **Automated evidence (generated):**
 
-- axe [`color-contrast`](https://dequeuniversity.com/rules/axe/4.14/color-contrast). Views: every page and frame the axe suites scan (179 scans). Last run: serious or critical: `color-contrast` (serious): 2 elements in 2 scans; lower impact: none; left to review by hand: `color-contrast` (serious): 1450 elements in 125 scans.
+- axe [`color-contrast`](https://dequeuniversity.com/rules/axe/4.14/color-contrast). Views: every page and frame the axe suites scan (181 scans). Last run: serious or critical: `color-contrast` (serious): 2 elements in 2 scans; lower impact: none; left to review by hand: `color-contrast` (serious): 1460 elements in 127 scans.
 - `UD-001`: Every foreground and background pairing of the design tokens is computed (≥ 4.5 : 1 for text, 3 : 1 for large text). Runs in `npm test`: [`packages/design-tokens/test/contrast.test.ts`](../../packages/design-tokens/test/contrast.test.ts) (7 test titles).
 - `UD-011`: H5P Core 1.28’s Daylight colours point at the HVL tokens and pass with them. Runs in `npm test`: [`packages/design-tokens/test/buildTokens.test.ts`](../../packages/design-tokens/test/buildTokens.test.ts) (1 test title), [`packages/design-tokens/test/contrast.test.ts`](../../packages/design-tokens/test/contrast.test.ts) (1 test title).
 
@@ -434,8 +434,8 @@ Level AA · since WCAG 2.0 · [Understanding 1.4.4](https://www.w3.org/WAI/WCAG2
 
 **Automated evidence (generated):**
 
-- axe [`meta-viewport`](https://dequeuniversity.com/rules/axe/4.14/meta-viewport). Views: every page and frame the axe suites scan (179 scans). Last run: serious or critical: none; lower impact: none; left to review by hand: none.
-- `UD-002`, accessibility suite: At 200 % zoom no text is clipped and nothing scrolls sideways. Views: the web app’s pages signed out and as the author, an activity’s «Spel», «Rediger», «Sjekk og publiser», «Poeng til Canvas» and «Innsikt» tabs, the Canvas page `/app/play` and its tabs, the studio’s seeded pages; the player of each of the ten content types in Canvas, fresh and started and answered. Last run: 43 passed. Tests: [`apps/server/a11y/textSpacingZoom.a11y.test.ts`](../../apps/server/a11y/textSpacingZoom.a11y.test.ts) (1 test title).
+- axe [`meta-viewport`](https://dequeuniversity.com/rules/axe/4.14/meta-viewport). Views: every page and frame the axe suites scan (181 scans). Last run: serious or critical: none; lower impact: none; left to review by hand: none.
+- `UD-002`, accessibility suite: At 200 % zoom no text is clipped and nothing scrolls sideways. Views: the web app’s pages signed out and as the author, an activity’s «Spel», «Rediger», «Sjekk og publiser», «Poeng til Canvas» and «Innsikt» tabs, the Canvas page `/app/play` and its tabs, the studio’s seeded pages; the player of each of the ten content types in Canvas, fresh and started and answered. Last run: 44 passed. Tests: [`apps/server/a11y/textSpacingZoom.a11y.test.ts`](../../apps/server/a11y/textSpacingZoom.a11y.test.ts) (1 test title).
 - `UD-002`: Style rules and theme: no font size in px, the HVL typeface and line height in the web app, the server pages and H5P. Runs in `npm test`: [`apps/server/test/http/pages/serverPages.browser.test.ts`](../../apps/server/test/http/pages/serverPages.browser.test.ts) (1 test title), [`packages/design-tokens/test/styleRules.test.ts`](../../packages/design-tokens/test/styleRules.test.ts) (1 test title), [`packages/design-tokens/test/tailwindTheme.test.ts`](../../packages/design-tokens/test/tailwindTheme.test.ts) (1 test title), [`packages/hvl-h5p-theme/test/themeStructure.test.ts`](../../packages/hvl-h5p-theme/test/themeStructure.test.ts) (1 test title).
 
 **Manual protocol:** §7 400 % zoom (Z400)
@@ -472,7 +472,7 @@ Level AA · since WCAG 2.1 · [Understanding 1.4.10](https://www.w3.org/WAI/WCAG
 
 **Automated evidence (generated):**
 
-- `UD-008`, accessibility suite: Nothing scrolls sideways at 320 CSS px wide (except an ImageHotspots image, which may pan, and the editor’s score-range table, which scrolls in its own box). Views: the web app’s pages signed out and as the author, an activity’s «Spel», «Rediger», «Sjekk og publiser», «Poeng til Canvas» and «Innsikt» tabs, the Canvas page `/app/play` and its tabs, the studio’s seeded pages; the player of each of the ten content types in Canvas, fresh and started and answered. Last run: 84 passed. Tests: [`apps/server/a11y/reflowAndMotion.a11y.test.ts`](../../apps/server/a11y/reflowAndMotion.a11y.test.ts) (3 test titles).
+- `UD-008`, accessibility suite: Nothing scrolls sideways at 320 CSS px wide (except an ImageHotspots image, which may pan, and the editor’s score-range table, which scrolls in its own box). Views: the web app’s pages signed out and as the author, an activity’s «Spel», «Rediger», «Sjekk og publiser», «Poeng til Canvas» and «Innsikt» tabs, the Canvas page `/app/play` and its tabs, the studio’s seeded pages; the player of each of the ten content types in Canvas, fresh and started and answered. Last run: 86 passed. Tests: [`apps/server/a11y/reflowAndMotion.a11y.test.ts`](../../apps/server/a11y/reflowAndMotion.a11y.test.ts) (3 test titles).
 
 **Manual protocol:** J2.1 «Open the activity from the Canvas module.»; J4.2 «Open «Planleggar», choose the course and «Vis planen».»; §7 400 % zoom (Z400)
 
@@ -510,8 +510,8 @@ Level AA · since WCAG 2.1 · [Understanding 1.4.12](https://www.w3.org/WAI/WCAG
 
 **Automated evidence (generated):**
 
-- axe [`avoid-inline-spacing`](https://dequeuniversity.com/rules/axe/4.14/avoid-inline-spacing). Views: every page and frame the axe suites scan (179 scans). Last run: serious or critical: none; lower impact: none; left to review by hand: none.
-- `UD-002`, accessibility suite: With the 1.4.12 text-spacing styles applied, no text is clipped. Views: the web app’s pages signed out and as the author, an activity’s «Spel», «Rediger», «Sjekk og publiser», «Poeng til Canvas» and «Innsikt» tabs, the Canvas page `/app/play` and its tabs, the studio’s seeded pages; the player of each of the ten content types in Canvas, fresh and started and answered. Last run: 42 passed. Tests: [`apps/server/a11y/textSpacingZoom.a11y.test.ts`](../../apps/server/a11y/textSpacingZoom.a11y.test.ts) (1 test title).
+- axe [`avoid-inline-spacing`](https://dequeuniversity.com/rules/axe/4.14/avoid-inline-spacing). Views: every page and frame the axe suites scan (181 scans). Last run: serious or critical: none; lower impact: none; left to review by hand: none.
+- `UD-002`, accessibility suite: With the 1.4.12 text-spacing styles applied, no text is clipped. Views: the web app’s pages signed out and as the author, an activity’s «Spel», «Rediger», «Sjekk og publiser», «Poeng til Canvas» and «Innsikt» tabs, the Canvas page `/app/play` and its tabs, the studio’s seeded pages; the player of each of the ten content types in Canvas, fresh and started and answered. Last run: 43 passed. Tests: [`apps/server/a11y/textSpacingZoom.a11y.test.ts`](../../apps/server/a11y/textSpacingZoom.a11y.test.ts) (1 test title).
 
 **Manual protocol:** §7 Text spacing
 
@@ -551,7 +551,7 @@ Level A · since WCAG 2.0 · [Understanding 2.1.1](https://www.w3.org/WAI/WCAG22
 
 **Automated evidence (generated):**
 
-- axe [`frame-focusable-content`](https://dequeuniversity.com/rules/axe/4.14/frame-focusable-content), [`scrollable-region-focusable`](https://dequeuniversity.com/rules/axe/4.14/scrollable-region-focusable), [`server-side-image-map`](https://dequeuniversity.com/rules/axe/4.14/server-side-image-map). Views: every page and frame the axe suites scan (179 scans). Last run: serious or critical: none; lower impact: none; left to review by hand: none.
+- axe [`frame-focusable-content`](https://dequeuniversity.com/rules/axe/4.14/frame-focusable-content), [`scrollable-region-focusable`](https://dequeuniversity.com/rules/axe/4.14/scrollable-region-focusable), [`server-side-image-map`](https://dequeuniversity.com/rules/axe/4.14/server-side-image-map). Views: every page and frame the axe suites scan (181 scans). Last run: serious or critical: none; lower impact: none; left to review by hand: none.
 - `UD-006`, accessibility suite: Journeys J1, J2 and J3 by keyboard alone: an activity picked in the Deep Linking picker, the tabs, the publish dialog, a MultiChoice answer in Canvas, the formative notice, and Innsikt with its period and the big-screen dialog. Views: the Deep Linking picker in Canvas, an activity page and `/app/play` with H5P.MultiChoice. Last run: 6 passed. Tests: [`apps/server/a11y/keyboardJourneys.a11y.test.ts`](../../apps/server/a11y/keyboardJourneys.a11y.test.ts) (6 test titles).
 - `UD-006`, accessibility suite: The studio by keyboard: the catalogue filters, the planner table and its links, adding and leaving as co-author, and the portfolio picker with its download. Views: the studio’s catalogue, planner, an activity’s Deling tab and `/mappe`. Last run: 6 passed. Tests: [`apps/server/a11y/keyboardStudioJourneys.a11y.test.ts`](../../apps/server/a11y/keyboardStudioJourneys.a11y.test.ts) (6 test titles).
 - `UD-006`, accessibility suite: The retry on «Poeng til Canvas» by keyboard. Views: an activity page in the portal. Last run: 1 passed. Tests: [`apps/server/a11y/axeGradeSync.a11y.test.ts`](../../apps/server/a11y/axeGradeSync.a11y.test.ts) (1 test title).
@@ -576,7 +576,7 @@ Level A · since WCAG 2.0 · [Understanding 2.1.2](https://www.w3.org/WAI/WCAG22
 
 **Automated evidence (generated):**
 
-- `UD-004`, accessibility suite: Tab is pressed through every page and its frames until focus comes back to the start or leaves the page; a stop that holds focus for three presses, or a cycle that never returns, fails. Views: the web app’s pages signed out and as the author, an activity’s «Spel», «Rediger», «Sjekk og publiser», «Poeng til Canvas» and «Innsikt» tabs, the Canvas page `/app/play` and its tabs, the studio’s seeded pages; the player of each of the ten content types in Canvas. Last run: 34 passed. Tests: [`apps/server/a11y/keyboardFocus.a11y.test.ts`](../../apps/server/a11y/keyboardFocus.a11y.test.ts) (3 test titles).
+- `UD-004`, accessibility suite: Tab is pressed through every page and its frames until focus comes back to the start or leaves the page; a stop that holds focus for three presses, or a cycle that never returns, fails. Views: the web app’s pages signed out and as the author, an activity’s «Spel», «Rediger», «Sjekk og publiser», «Poeng til Canvas» and «Innsikt» tabs, the Canvas page `/app/play` and its tabs, the studio’s seeded pages; the player of each of the ten content types in Canvas. Last run: 35 passed. Tests: [`apps/server/a11y/keyboardFocus.a11y.test.ts`](../../apps/server/a11y/keyboardFocus.a11y.test.ts) (3 test titles).
 - `UD-006`, accessibility suite: The publish dialog keeps focus inside and returns it on Escape. Views: an activity page. Last run: 1 passed. Tests: [`apps/server/a11y/keyboardJourneys.a11y.test.ts`](../../apps/server/a11y/keyboardJourneys.a11y.test.ts) (1 test title).
 
 **Manual protocol:** J1.8 «Activate «Publiser».»; J1.13 «Open the published MultiChoice with a student's progress (§4), add an answer option in «Rediger» and activate «Lagre».»; J2.6 «Complete the activity with the keyboard only (KB) and with NVDA (AT-1).»
@@ -615,7 +615,7 @@ Level A · since WCAG 2.0 · [Understanding 2.2.1](https://www.w3.org/WAI/WCAG22
 
 **Automated evidence (generated):**
 
-- axe [`meta-refresh`](https://dequeuniversity.com/rules/axe/4.14/meta-refresh). Views: every page and frame the axe suites scan (179 scans). Last run: serious or critical: none; lower impact: none; left to review by hand: none.
+- axe [`meta-refresh`](https://dequeuniversity.com/rules/axe/4.14/meta-refresh). Views: every page and frame the axe suites scan (181 scans). Last run: serious or critical: none; lower impact: none; left to review by hand: none.
 
 **Manual protocol:** no step names this criterion yet.
 
@@ -633,8 +633,8 @@ Level A · since WCAG 2.0 · [Understanding 2.2.2](https://www.w3.org/WAI/WCAG22
 
 **Automated evidence (generated):**
 
-- axe [`blink`](https://dequeuniversity.com/rules/axe/4.14/blink), [`marquee`](https://dequeuniversity.com/rules/axe/4.14/marquee). Views: every page and frame the axe suites scan (179 scans). Last run: serious or critical: none; lower impact: none; left to review by hand: none.
-- `UD-009`, accessibility suite: With reduced motion emulated, no CSS animation or transition runs (a recorder in every frame logs each one). Views: the web app’s pages signed out and as the author, an activity’s «Spel», «Rediger», «Sjekk og publiser», «Poeng til Canvas» and «Innsikt» tabs, the Canvas page `/app/play` and its tabs, the studio’s seeded pages; the player of each of the ten content types in Canvas, fresh and started and answered. Last run: 33 passed. Tests: [`apps/server/a11y/reflowAndMotion.a11y.test.ts`](../../apps/server/a11y/reflowAndMotion.a11y.test.ts) (2 test titles).
+- axe [`blink`](https://dequeuniversity.com/rules/axe/4.14/blink), [`marquee`](https://dequeuniversity.com/rules/axe/4.14/marquee). Views: every page and frame the axe suites scan (181 scans). Last run: serious or critical: none; lower impact: none; left to review by hand: none.
+- `UD-009`, accessibility suite: With reduced motion emulated, no CSS animation or transition runs (a recorder in every frame logs each one). Views: the web app’s pages signed out and as the author, an activity’s «Spel», «Rediger», «Sjekk og publiser», «Poeng til Canvas» and «Innsikt» tabs, the Canvas page `/app/play` and its tabs, the studio’s seeded pages; the player of each of the ten content types in Canvas, fresh and started and answered. Last run: 34 passed. Tests: [`apps/server/a11y/reflowAndMotion.a11y.test.ts`](../../apps/server/a11y/reflowAndMotion.a11y.test.ts) (2 test titles).
 - `UD-009`: The HVL theme stops transitions inside H5P under reduced motion. Runs in `npm test`: [`apps/server/test/h5p/hvlTheme.browser.int.test.ts`](../../apps/server/test/h5p/hvlTheme.browser.int.test.ts) (2 test titles).
 
 **Manual protocol:** §7 Reduced motion
@@ -673,8 +673,8 @@ Level A · since WCAG 2.0 · [Understanding 2.4.1](https://www.w3.org/WAI/WCAG22
 
 **Automated evidence (generated):**
 
-- axe [`bypass`](https://dequeuniversity.com/rules/axe/4.14/bypass). Views: every page and frame the axe suites scan (179 scans). Last run: serious or critical: none; lower impact: none; left to review by hand: none.
-- `UD-006`, accessibility suite: The first Tab reaches the skip link «Gå til hovudinnhaldet», which moves focus to `main`. Views: the web app’s pages signed out and as the author, an activity’s «Spel», «Rediger», «Sjekk og publiser», «Poeng til Canvas» and «Innsikt» tabs, the Canvas page `/app/play` and its tabs, the studio’s seeded pages. Last run: 16 passed. Tests: [`apps/server/a11y/keyboardFocus.a11y.test.ts`](../../apps/server/a11y/keyboardFocus.a11y.test.ts) (1 test title).
+- axe [`bypass`](https://dequeuniversity.com/rules/axe/4.14/bypass). Views: every page and frame the axe suites scan (181 scans). Last run: serious or critical: none; lower impact: none; left to review by hand: none.
+- `UD-006`, accessibility suite: The first Tab reaches the skip link «Gå til hovudinnhaldet», which moves focus to `main`. Views: the web app’s pages signed out and as the author, an activity’s «Spel», «Rediger», «Sjekk og publiser», «Poeng til Canvas» and «Innsikt» tabs, the Canvas page `/app/play` and its tabs, the studio’s seeded pages. Last run: 17 passed. Tests: [`apps/server/a11y/keyboardFocus.a11y.test.ts`](../../apps/server/a11y/keyboardFocus.a11y.test.ts) (1 test title).
 - `UD-006`: The skip link appears when focused. Runs in `npm test`: [`apps/server/test/http/pages/serverPages.browser.test.ts`](../../apps/server/test/http/pages/serverPages.browser.test.ts) (1 test title).
 
 **Manual protocol:** J1.4 «Sign in to HVL Interaktiv with Feide and open the draft activity from «Aktivitetane dine».»; §7 Skip link
@@ -693,7 +693,7 @@ Level A · since WCAG 2.0 · [Understanding 2.4.2](https://www.w3.org/WAI/WCAG22
 
 **Automated evidence (generated):**
 
-- axe [`document-title`](https://dequeuniversity.com/rules/axe/4.14/document-title). Views: every page and frame the axe suites scan (179 scans). Last run: serious or critical: none; lower impact: none; left to review by hand: none.
+- axe [`document-title`](https://dequeuniversity.com/rules/axe/4.14/document-title). Views: every page and frame the axe suites scan (181 scans). Last run: serious or critical: none; lower impact: none; left to review by hand: none.
 - `UD-013`: Every route has its own title, its name first. Runs in `npm test`: [`apps/server/test/web/webChrome.browser.int.test.ts`](../../apps/server/test/web/webChrome.browser.int.test.ts) (1 test title).
 
 **Manual protocol:** J1.4 «Sign in to HVL Interaktiv with Feide and open the draft activity from «Aktivitetane dine».»
@@ -732,7 +732,7 @@ Level A · since WCAG 2.0 · [Understanding 2.4.4](https://www.w3.org/WAI/WCAG22
 
 **Automated evidence (generated):**
 
-- axe [`area-alt`](https://dequeuniversity.com/rules/axe/4.14/area-alt), [`link-name`](https://dequeuniversity.com/rules/axe/4.14/link-name). Views: every page and frame the axe suites scan (179 scans). Last run: serious or critical: none; lower impact: none; left to review by hand: none.
+- axe [`area-alt`](https://dequeuniversity.com/rules/axe/4.14/area-alt), [`link-name`](https://dequeuniversity.com/rules/axe/4.14/link-name). Views: every page and frame the axe suites scan (181 scans). Last run: serious or critical: none; lower impact: none; left to review by hand: none.
 - `UD-021` `V-LINK-TEXT`: The validator warns about link texts such as «klikk her», «her», «les meir» or a bare URL. Runs in `npm test`: [`apps/server/test/validation/rules/linkTextRule.test.ts`](../../apps/server/test/validation/rules/linkTextRule.test.ts) (3 test titles).
 - `UD-007`: External links say that they leave the site; file links name their type and size. Runs in `npm test`: [`apps/server/test/http/pages/htmlPage.test.ts`](../../apps/server/test/http/pages/htmlPage.test.ts) (1 test title), [`apps/web/test/components/ExternalLink.test.tsx`](../../apps/web/test/components/ExternalLink.test.tsx) (3 test titles), [`apps/web/test/components/FileLink.test.tsx`](../../apps/web/test/components/FileLink.test.tsx) (2 test titles), [`apps/web/test/components/SiteHeader.test.tsx`](../../apps/web/test/components/SiteHeader.test.tsx) (1 test title).
 
@@ -788,7 +788,7 @@ Level AA · since WCAG 2.0 · [Understanding 2.4.7](https://www.w3.org/WAI/WCAG2
 
 **Automated evidence (generated):**
 
-- `UD-004`, accessibility suite: Every element that takes focus from the keyboard shows a ring that differs from its unfocused look. Views: the web app’s pages signed out and as the author, an activity’s «Spel», «Rediger», «Sjekk og publiser», «Poeng til Canvas» and «Innsikt» tabs, the Canvas page `/app/play` and its tabs, the studio’s seeded pages; the player of each of the ten content types in Canvas. Last run: 34 passed. Tests: [`apps/server/a11y/keyboardFocus.a11y.test.ts`](../../apps/server/a11y/keyboardFocus.a11y.test.ts) (3 test titles).
+- `UD-004`, accessibility suite: Every element that takes focus from the keyboard shows a ring that differs from its unfocused look. Views: the web app’s pages signed out and as the author, an activity’s «Spel», «Rediger», «Sjekk og publiser», «Poeng til Canvas» and «Innsikt» tabs, the Canvas page `/app/play` and its tabs, the studio’s seeded pages; the player of each of the ten content types in Canvas. Last run: 35 passed. Tests: [`apps/server/a11y/keyboardFocus.a11y.test.ts`](../../apps/server/a11y/keyboardFocus.a11y.test.ts) (3 test titles).
 - `UD-004`: The two-tone focus ring (#004357 outside, white inside) in the web app and in H5P. Runs in `npm test`: [`apps/server/test/h5p/hvlTheme.browser.int.test.ts`](../../apps/server/test/h5p/hvlTheme.browser.int.test.ts) (1 test title), [`packages/design-tokens/test/buildTokens.test.ts`](../../packages/design-tokens/test/buildTokens.test.ts) (1 test title), [`packages/design-tokens/test/contrast.test.ts`](../../packages/design-tokens/test/contrast.test.ts) (1 test title), [`packages/hvl-h5p-theme/test/a11yRepairsTour.test.ts`](../../packages/hvl-h5p-theme/test/a11yRepairsTour.test.ts) (1 test title), [`packages/hvl-h5p-theme/test/themeStructure.test.ts`](../../packages/hvl-h5p-theme/test/themeStructure.test.ts) (1 test title).
 
 **Manual protocol:** J2.6 «Complete the activity with the keyboard only (KB) and with NVDA (AT-1).»
@@ -807,7 +807,7 @@ Level AA · since WCAG 2.2 · [Understanding 2.4.11](https://www.w3.org/WAI/WCAG
 
 **Automated evidence (generated):**
 
-- `UD-004`, accessibility suite: Every focused element is in the viewport and not covered by the header or anything else (`elementFromPoint`). Views: the web app’s pages signed out and as the author, an activity’s «Spel», «Rediger», «Sjekk og publiser», «Poeng til Canvas» and «Innsikt» tabs, the Canvas page `/app/play` and its tabs, the studio’s seeded pages; the player of each of the ten content types in Canvas. Last run: 34 passed. Tests: [`apps/server/a11y/keyboardFocus.a11y.test.ts`](../../apps/server/a11y/keyboardFocus.a11y.test.ts) (3 test titles).
+- `UD-004`, accessibility suite: Every focused element is in the viewport and not covered by the header or anything else (`elementFromPoint`). Views: the web app’s pages signed out and as the author, an activity’s «Spel», «Rediger», «Sjekk og publiser», «Poeng til Canvas» and «Innsikt» tabs, the Canvas page `/app/play` and its tabs, the studio’s seeded pages; the player of each of the ten content types in Canvas. Last run: 35 passed. Tests: [`apps/server/a11y/keyboardFocus.a11y.test.ts`](../../apps/server/a11y/keyboardFocus.a11y.test.ts) (3 test titles).
 
 **Manual protocol:** J2.6 «Complete the activity with the keyboard only (KB) and with NVDA (AT-1).»
 
@@ -861,7 +861,7 @@ Level A · since WCAG 2.1 · [Understanding 2.5.3](https://www.w3.org/WAI/WCAG22
 
 **Automated evidence (generated):**
 
-- axe [`label-content-name-mismatch`](https://dequeuniversity.com/rules/axe/4.14/label-content-name-mismatch). Views: every page and frame the axe suites scan (179 scans). Last run: serious or critical: none; lower impact: none; left to review by hand: none.
+- axe [`label-content-name-mismatch`](https://dequeuniversity.com/rules/axe/4.14/label-content-name-mismatch). Views: every page and frame the axe suites scan (181 scans). Last run: serious or critical: none; lower impact: none; left to review by hand: none.
 
 **Manual protocol:** no step names this criterion yet.
 
@@ -917,8 +917,8 @@ Level AA · since WCAG 2.2 · [Understanding 2.5.8](https://www.w3.org/WAI/WCAG2
 
 **Automated evidence (generated):**
 
-- axe [`target-size`](https://dequeuniversity.com/rules/axe/4.14/target-size). Views: every page and frame the axe suites scan (179 scans). Last run: serious or critical: none; lower impact: none; left to review by hand: none.
-- `UD-005`, accessibility suite: Every pointer target of the page and its frames is at least 24 × 24 CSS px, or one of the exceptions of WCAG 2.5.8 (inline, spacing, equivalent, essential). Views: the web app’s pages signed out and as the author, an activity’s «Spel», «Rediger», «Sjekk og publiser», «Poeng til Canvas» and «Innsikt» tabs, the Canvas page `/app/play` and its tabs, the studio’s seeded pages; the player of each of the ten content types in Canvas, fresh and started and answered. Last run: 35 passed. Tests: [`apps/server/a11y/targetSize.a11y.test.ts`](../../apps/server/a11y/targetSize.a11y.test.ts) (3 test titles).
+- axe [`target-size`](https://dequeuniversity.com/rules/axe/4.14/target-size). Views: every page and frame the axe suites scan (181 scans). Last run: serious or critical: none; lower impact: none; left to review by hand: none.
+- `UD-005`, accessibility suite: Every pointer target of the page and its frames is at least 24 × 24 CSS px, or one of the exceptions of WCAG 2.5.8 (inline, spacing, equivalent, essential). Views: the web app’s pages signed out and as the author, an activity’s «Spel», «Rediger», «Sjekk og publiser», «Poeng til Canvas» and «Innsikt» tabs, the Canvas page `/app/play` and its tabs, the studio’s seeded pages; the player of each of the ten content types in Canvas, fresh and started and answered. Last run: 36 passed. Tests: [`apps/server/a11y/targetSize.a11y.test.ts`](../../apps/server/a11y/targetSize.a11y.test.ts) (3 test titles).
 - `UD-005`, accessibility suite: At 320, 390 and 640 CSS px a pointer can press all of every footer control of CoursePresentation. Views: H5P.CoursePresentation in Canvas. Last run: 6 passed. Tests: [`apps/server/a11y/reflowAndMotion.a11y.test.ts`](../../apps/server/a11y/reflowAndMotion.a11y.test.ts) (1 test title).
 - `UD-005`: Style rules: the theme and the web app give every control a 24 px minimum. Runs in `npm test`: [`packages/design-tokens/test/tailwindTheme.test.ts`](../../packages/design-tokens/test/tailwindTheme.test.ts) (1 test title), [`packages/hvl-h5p-theme/test/themeStructure.test.ts`](../../packages/hvl-h5p-theme/test/themeStructure.test.ts) (2 test titles).
 
@@ -942,8 +942,8 @@ Level A · since WCAG 2.0 · [Understanding 3.1.1](https://www.w3.org/WAI/WCAG22
 
 **Automated evidence (generated):**
 
-- axe [`html-has-lang`](https://dequeuniversity.com/rules/axe/4.14/html-has-lang), [`html-lang-valid`](https://dequeuniversity.com/rules/axe/4.14/html-lang-valid), [`html-xml-lang-mismatch`](https://dequeuniversity.com/rules/axe/4.14/html-xml-lang-mismatch). Views: every page and frame the axe suites scan (179 scans). Last run: serious or critical: none; lower impact: none; left to review by hand: none.
-- `UD-010`, accessibility suite: Every page has `<html lang="nn">` for an author with the default locale. Views: the web app’s pages signed out and as the author, an activity’s «Spel», «Rediger», «Sjekk og publiser», «Poeng til Canvas» and «Innsikt» tabs, the Canvas page `/app/play` and its tabs, the studio’s seeded pages. Last run: 23 passed. Tests: [`apps/server/a11y/language.a11y.test.ts`](../../apps/server/a11y/language.a11y.test.ts) (1 test title).
+- axe [`html-has-lang`](https://dequeuniversity.com/rules/axe/4.14/html-has-lang), [`html-lang-valid`](https://dequeuniversity.com/rules/axe/4.14/html-lang-valid), [`html-xml-lang-mismatch`](https://dequeuniversity.com/rules/axe/4.14/html-xml-lang-mismatch). Views: every page and frame the axe suites scan (181 scans). Last run: serious or critical: none; lower impact: none; left to review by hand: none.
+- `UD-010`, accessibility suite: Every page has `<html lang="nn">` for an author with the default locale. Views: the web app’s pages signed out and as the author, an activity’s «Spel», «Rediger», «Sjekk og publiser», «Poeng til Canvas» and «Innsikt» tabs, the Canvas page `/app/play` and its tabs, the studio’s seeded pages. Last run: 24 passed. Tests: [`apps/server/a11y/language.a11y.test.ts`](../../apps/server/a11y/language.a11y.test.ts) (1 test title).
 - `UD-010`: The page language follows the locale Express decides, not the client. Runs in `npm test`: [`apps/server/test/h5p/render/editorPage.test.ts`](../../apps/server/test/h5p/render/editorPage.test.ts) (1 test title), [`apps/server/test/web/webApp.browser.int.test.ts`](../../apps/server/test/web/webApp.browser.int.test.ts) (1 test title), [`apps/web/test/i18n/translate.test.ts`](../../apps/web/test/i18n/translate.test.ts) (1 test title).
 
 **Manual protocol:** J2.1 «Open the activity from the Canvas module.»
@@ -962,7 +962,7 @@ Level AA · since WCAG 2.0 · [Understanding 3.1.2](https://www.w3.org/WAI/WCAG2
 
 **Automated evidence (generated):**
 
-- axe [`valid-lang`](https://dequeuniversity.com/rules/axe/4.14/valid-lang). Views: every page and frame the axe suites scan (179 scans). Last run: serious or critical: none; lower impact: none; left to review by hand: none.
+- axe [`valid-lang`](https://dequeuniversity.com/rules/axe/4.14/valid-lang). Views: every page and frame the axe suites scan (181 scans). Last run: serious or critical: none; lower impact: none; left to review by hand: none.
 - `UD-010`, accessibility suite: The player’s content container and the editor’s frame carry the activity’s language. Views: the player and the editor of each of the ten content types. Last run: 10 passed. Tests: [`apps/server/a11y/language.a11y.test.ts`](../../apps/server/a11y/language.a11y.test.ts) (1 test title).
 - `UD-010`, accessibility suite: A reference, a learner purpose or a source title in another language than the page carries its own lang. Views: the guide page, an activity’s learner purpose and a copy’s attribution sign. Last run: 3 passed. Tests: [`apps/server/a11y/language.a11y.test.ts`](../../apps/server/a11y/language.a11y.test.ts) (3 test titles).
 - `UD-021` `V-LANG`: The validator warns when an activity does not state its language. Runs in `npm test`: [`apps/server/test/validation/rules/languageRule.test.ts`](../../apps/server/test/validation/rules/languageRule.test.ts) (1 test title).
@@ -1100,7 +1100,7 @@ Level A · since WCAG 2.0 · [Understanding 3.3.2](https://www.w3.org/WAI/WCAG22
 
 **Automated evidence (generated):**
 
-- axe [`form-field-multiple-labels`](https://dequeuniversity.com/rules/axe/4.14/form-field-multiple-labels). Views: every page and frame the axe suites scan (179 scans). Last run: serious or critical: none; lower impact: none; left to review by hand: `form-field-multiple-labels` (moderate): 2 elements in 2 scans.
+- axe [`form-field-multiple-labels`](https://dequeuniversity.com/rules/axe/4.14/form-field-multiple-labels). Views: every page and frame the axe suites scan (181 scans). Last run: serious or critical: none; lower impact: none; left to review by hand: `form-field-multiple-labels` (moderate): 2 elements in 2 scans.
 
 **Manual protocol:** J1.6 «In «Rediger», change the question text and save («Lagre»).»; J1.11 «Open the short-video pattern (`/laeringsdesign/monster/fa-video`), read it, and under «Lag frå dette mønsteret» activate «Lag aktiviteten».»; J4.1 «On an activity's «Læringsdesign» tab, set the phase, the course code, two learning outcomes with their category, a rationale, the minutes and the purpose; remove an outcome; save with «Lagre læringsdesignet».»; J4.3 «Open «Mappe» (`/mappe`), filter by the course, choose the activities with «Vel alle som passar», and pick the criteria set and the language Nynorsk.»
 
@@ -1214,7 +1214,7 @@ Level A · since WCAG 2.0 · [Understanding 4.1.2](https://www.w3.org/WAI/WCAG22
 
 **Automated evidence (generated):**
 
-- axe [`area-alt`](https://dequeuniversity.com/rules/axe/4.14/area-alt), [`aria-allowed-attr`](https://dequeuniversity.com/rules/axe/4.14/aria-allowed-attr), [`aria-braille-equivalent`](https://dequeuniversity.com/rules/axe/4.14/aria-braille-equivalent), [`aria-command-name`](https://dequeuniversity.com/rules/axe/4.14/aria-command-name), [`aria-conditional-attr`](https://dequeuniversity.com/rules/axe/4.14/aria-conditional-attr), [`aria-deprecated-role`](https://dequeuniversity.com/rules/axe/4.14/aria-deprecated-role), [`aria-hidden-body`](https://dequeuniversity.com/rules/axe/4.14/aria-hidden-body), [`aria-hidden-focus`](https://dequeuniversity.com/rules/axe/4.14/aria-hidden-focus), [`aria-input-field-name`](https://dequeuniversity.com/rules/axe/4.14/aria-input-field-name), [`aria-prohibited-attr`](https://dequeuniversity.com/rules/axe/4.14/aria-prohibited-attr), [`aria-required-attr`](https://dequeuniversity.com/rules/axe/4.14/aria-required-attr), [`aria-roles`](https://dequeuniversity.com/rules/axe/4.14/aria-roles), [`aria-tab-name`](https://dequeuniversity.com/rules/axe/4.14/aria-tab-name), [`aria-toggle-field-name`](https://dequeuniversity.com/rules/axe/4.14/aria-toggle-field-name), [`aria-tooltip-name`](https://dequeuniversity.com/rules/axe/4.14/aria-tooltip-name), [`aria-valid-attr`](https://dequeuniversity.com/rules/axe/4.14/aria-valid-attr), [`aria-valid-attr-value`](https://dequeuniversity.com/rules/axe/4.14/aria-valid-attr-value), [`button-name`](https://dequeuniversity.com/rules/axe/4.14/button-name), [`duplicate-id-aria`](https://dequeuniversity.com/rules/axe/4.14/duplicate-id-aria), [`frame-title`](https://dequeuniversity.com/rules/axe/4.14/frame-title), [`frame-title-unique`](https://dequeuniversity.com/rules/axe/4.14/frame-title-unique), [`input-button-name`](https://dequeuniversity.com/rules/axe/4.14/input-button-name), [`input-image-alt`](https://dequeuniversity.com/rules/axe/4.14/input-image-alt), [`label`](https://dequeuniversity.com/rules/axe/4.14/label), [`link-name`](https://dequeuniversity.com/rules/axe/4.14/link-name), [`nested-interactive`](https://dequeuniversity.com/rules/axe/4.14/nested-interactive), [`select-name`](https://dequeuniversity.com/rules/axe/4.14/select-name), [`summary-name`](https://dequeuniversity.com/rules/axe/4.14/summary-name). Views: every page and frame the axe suites scan (179 scans). Last run: serious or critical: `nested-interactive` (serious): 24 elements in 2 scans; lower impact: none; left to review by hand: `aria-allowed-attr` (critical): 36 elements in 4 scans; `aria-prohibited-attr` (serious): 12 elements in 4 scans; `aria-valid-attr-value` (critical): 6 elements in 6 scans.
+- axe [`area-alt`](https://dequeuniversity.com/rules/axe/4.14/area-alt), [`aria-allowed-attr`](https://dequeuniversity.com/rules/axe/4.14/aria-allowed-attr), [`aria-braille-equivalent`](https://dequeuniversity.com/rules/axe/4.14/aria-braille-equivalent), [`aria-command-name`](https://dequeuniversity.com/rules/axe/4.14/aria-command-name), [`aria-conditional-attr`](https://dequeuniversity.com/rules/axe/4.14/aria-conditional-attr), [`aria-deprecated-role`](https://dequeuniversity.com/rules/axe/4.14/aria-deprecated-role), [`aria-hidden-body`](https://dequeuniversity.com/rules/axe/4.14/aria-hidden-body), [`aria-hidden-focus`](https://dequeuniversity.com/rules/axe/4.14/aria-hidden-focus), [`aria-input-field-name`](https://dequeuniversity.com/rules/axe/4.14/aria-input-field-name), [`aria-prohibited-attr`](https://dequeuniversity.com/rules/axe/4.14/aria-prohibited-attr), [`aria-required-attr`](https://dequeuniversity.com/rules/axe/4.14/aria-required-attr), [`aria-roles`](https://dequeuniversity.com/rules/axe/4.14/aria-roles), [`aria-tab-name`](https://dequeuniversity.com/rules/axe/4.14/aria-tab-name), [`aria-toggle-field-name`](https://dequeuniversity.com/rules/axe/4.14/aria-toggle-field-name), [`aria-tooltip-name`](https://dequeuniversity.com/rules/axe/4.14/aria-tooltip-name), [`aria-valid-attr`](https://dequeuniversity.com/rules/axe/4.14/aria-valid-attr), [`aria-valid-attr-value`](https://dequeuniversity.com/rules/axe/4.14/aria-valid-attr-value), [`button-name`](https://dequeuniversity.com/rules/axe/4.14/button-name), [`duplicate-id-aria`](https://dequeuniversity.com/rules/axe/4.14/duplicate-id-aria), [`frame-title`](https://dequeuniversity.com/rules/axe/4.14/frame-title), [`frame-title-unique`](https://dequeuniversity.com/rules/axe/4.14/frame-title-unique), [`input-button-name`](https://dequeuniversity.com/rules/axe/4.14/input-button-name), [`input-image-alt`](https://dequeuniversity.com/rules/axe/4.14/input-image-alt), [`label`](https://dequeuniversity.com/rules/axe/4.14/label), [`link-name`](https://dequeuniversity.com/rules/axe/4.14/link-name), [`nested-interactive`](https://dequeuniversity.com/rules/axe/4.14/nested-interactive), [`select-name`](https://dequeuniversity.com/rules/axe/4.14/select-name), [`summary-name`](https://dequeuniversity.com/rules/axe/4.14/summary-name). Views: every page and frame the axe suites scan (181 scans). Last run: serious or critical: `nested-interactive` (serious): 24 elements in 2 scans; lower impact: none; left to review by hand: `aria-allowed-attr` (critical): 36 elements in 4 scans; `aria-prohibited-attr` (serious): 12 elements in 4 scans; `aria-valid-attr-value` (critical): 6 elements in 6 scans.
 - axe also has `aria-roledescription` (deprecated) for this criterion; axe leaves such rules out by default, so the suite does not run them.
 - `UD-006`: Tabs follow the WAI-ARIA tabs pattern; dialogs are labelled modals. Runs in `npm test`: [`apps/web/test/components/Dialog.test.tsx`](../../apps/web/test/components/Dialog.test.tsx) (1 test title), [`apps/web/test/components/Tabs.test.tsx`](../../apps/web/test/components/Tabs.test.tsx) (1 test title).
 - `UD-003`: Right and wrong answers carry their state in the accessibility tree. Runs in `npm test`: [`apps/server/test/h5p/hvlFeedback.browser.int.test.ts`](../../apps/server/test/h5p/hvlFeedback.browser.int.test.ts) (2 test titles).
@@ -1273,7 +1273,7 @@ their issue links once they are filed (D-112).
 
 ## Appendix A. The last automated run
 
-`npm run test:a11y` on 2026-11-27, commit `dd77f6512636` (clean), axe-core 4.14.1: 18 files, 0 of them failed; 563 tests passed, 0 failed, 0 skipped.
+`npm run test:a11y` on 2026-11-27, commit `17d19832c720` (clean), axe-core 4.14.1: 18 files, 0 of them failed; 575 tests passed, 0 failed, 0 skipped.
 
 | Suite file | File | Passed | Failed | Skipped |
 |---|---|---|---|---|
@@ -1284,23 +1284,23 @@ their issue links once they are filed (D-112).
 | [`apps/server/a11y/axeInsight.a11y.test.ts`](../../apps/server/a11y/axeInsight.a11y.test.ts) | passed | 9 | 0 | 0 |
 | [`apps/server/a11y/axeSaveChoice.a11y.test.ts`](../../apps/server/a11y/axeSaveChoice.a11y.test.ts) | passed | 2 | 0 | 0 |
 | [`apps/server/a11y/axeServerPages.a11y.test.ts`](../../apps/server/a11y/axeServerPages.a11y.test.ts) | passed | 20 | 0 | 0 |
-| [`apps/server/a11y/axeStudioViews.a11y.test.ts`](../../apps/server/a11y/axeStudioViews.a11y.test.ts) | passed | 19 | 0 | 0 |
+| [`apps/server/a11y/axeStudioViews.a11y.test.ts`](../../apps/server/a11y/axeStudioViews.a11y.test.ts) | passed | 21 | 0 | 0 |
 | [`apps/server/a11y/axeWebRoutes.a11y.test.ts`](../../apps/server/a11y/axeWebRoutes.a11y.test.ts) | passed | 50 | 0 | 0 |
-| [`apps/server/a11y/firstParty.a11y.test.ts`](../../apps/server/a11y/firstParty.a11y.test.ts) | passed | 52 | 0 | 0 |
-| [`apps/server/a11y/keyboardFocus.a11y.test.ts`](../../apps/server/a11y/keyboardFocus.a11y.test.ts) | passed | 51 | 0 | 0 |
+| [`apps/server/a11y/firstParty.a11y.test.ts`](../../apps/server/a11y/firstParty.a11y.test.ts) | passed | 53 | 0 | 0 |
+| [`apps/server/a11y/keyboardFocus.a11y.test.ts`](../../apps/server/a11y/keyboardFocus.a11y.test.ts) | passed | 53 | 0 | 0 |
 | [`apps/server/a11y/keyboardJourneys.a11y.test.ts`](../../apps/server/a11y/keyboardJourneys.a11y.test.ts) | passed | 6 | 0 | 0 |
 | [`apps/server/a11y/keyboardStudioJourneys.a11y.test.ts`](../../apps/server/a11y/keyboardStudioJourneys.a11y.test.ts) | passed | 6 | 0 | 0 |
-| [`apps/server/a11y/language.a11y.test.ts`](../../apps/server/a11y/language.a11y.test.ts) | passed | 39 | 0 | 0 |
-| [`apps/server/a11y/reflowAndMotion.a11y.test.ts`](../../apps/server/a11y/reflowAndMotion.a11y.test.ts) | passed | 124 | 0 | 0 |
-| [`apps/server/a11y/targetSize.a11y.test.ts`](../../apps/server/a11y/targetSize.a11y.test.ts) | passed | 35 | 0 | 0 |
-| [`apps/server/a11y/textSpacingZoom.a11y.test.ts`](../../apps/server/a11y/textSpacingZoom.a11y.test.ts) | passed | 86 | 0 | 0 |
+| [`apps/server/a11y/language.a11y.test.ts`](../../apps/server/a11y/language.a11y.test.ts) | passed | 40 | 0 | 0 |
+| [`apps/server/a11y/reflowAndMotion.a11y.test.ts`](../../apps/server/a11y/reflowAndMotion.a11y.test.ts) | passed | 127 | 0 | 0 |
+| [`apps/server/a11y/targetSize.a11y.test.ts`](../../apps/server/a11y/targetSize.a11y.test.ts) | passed | 36 | 0 | 0 |
+| [`apps/server/a11y/textSpacingZoom.a11y.test.ts`](../../apps/server/a11y/textSpacingZoom.a11y.test.ts) | passed | 88 | 0 | 0 |
 | [`apps/server/a11y/upstreamRegister.a11y.test.ts`](../../apps/server/a11y/upstreamRegister.a11y.test.ts) | passed | 5 | 0 | 0 |
 
 Files Vitest marked failed (a failed test, or a hook or an import that failed, which leaves the file’s tests skipped or unlisted): none.
 
 Failed tests: none.
 
-axe scanned 179 times (appendix B). Serious and critical findings (the suite fails on any that the register does not list):
+axe scanned 181 times (appendix B). Serious and critical findings (the suite fails on any that the register does not list):
 
 | Rule | Impact | Elements | Scans |
 |---|---|---|---|
@@ -1318,7 +1318,7 @@ Left to review by hand (axe’s *incomplete* results, e.g. contrast over a gradi
 | `aria-allowed-attr` | critical | 36 | 4 |
 | `aria-prohibited-attr` | serious | 12 | 4 |
 | `aria-valid-attr-value` | critical | 6 | 6 |
-| `color-contrast` | serious | 1450 | 125 |
+| `color-contrast` | serious | 1460 | 127 |
 | `form-field-multiple-labels` | moderate | 2 | 2 |
 | `video-caption` | critical | 4 | 4 |
 
@@ -1360,6 +1360,7 @@ Left to review by hand (axe’s *incomplete* results, e.g. contrast over a gradi
 - forced colours, signed in: /aktivitet/&lt;copy> (attribution)
 - forced colours, signed in: /aktivitet/&lt;id> (Deling)
 - forced colours, signed in: /aktivitet/&lt;id> (Læringsdesign)
+- forced colours, signed in: /aktivitet/&lt;id> (Sjekk og publiser, published Etterarbeid)
 - forced colours, signed in: /aktivitet/ny
 - forced colours, signed in: /finst-ikkje
 - forced colours, signed in: /hjelp
@@ -1448,6 +1449,7 @@ Left to review by hand (axe’s *incomplete* results, e.g. contrast over a gradi
 - light, signed in: /aktivitet/&lt;copy> (attribution)
 - light, signed in: /aktivitet/&lt;id> (Deling)
 - light, signed in: /aktivitet/&lt;id> (Læringsdesign)
+- light, signed in: /aktivitet/&lt;id> (Sjekk og publiser, published Etterarbeid)
 - light, signed in: /aktivitet/ny
 - light, signed in: /finst-ikkje
 - light, signed in: /hjelp
