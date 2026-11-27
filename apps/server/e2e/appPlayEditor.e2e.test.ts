@@ -22,7 +22,8 @@ import { REAL_PACKAGES_DIR } from '../test/support/realPackages.js';
 import { openRealWebApp, type RealWebApp } from '../test/support/realWebApp.js';
 import { describeWithRealWebApp } from '../test/support/realWebAppPrerequisites.js';
 import { testActor } from '../test/support/testActors.js';
-import { launchCookieTestChromium, startCookieCanary } from '../test/support/thirdPartyCookies.js';
+import { startCookieCanary } from '../test/support/thirdPartyCookieCanary.js';
+import { launchCookieTestChromium } from '../test/support/thirdPartyCookies.js';
 import { pressEditorSave } from './support/editorSave.js';
 
 /** The path of a frame's current address (`about:blank` has none of ours). */

@@ -7,7 +7,7 @@
  *      As in ./browser.ts, a missing browser skips the block locally and fails it in CI (`CI=true`).
  * Spec: H5P-009, LTI-010
  * Invariants: the browser starts once per block and is closed in `afterAll`; nothing else is launched.
- * Collaborators: playwright-core 1.56.1 (`PLAYWRIGHT_BROWSERS_PATH` finds the build), ./browser.ts (same rule for
+ * Collaborators: playwright-core 1.65.1 (`PLAYWRIGHT_BROWSERS_PATH` finds the build), ./browser.ts (same rule for
  *   the headless shell), ./thirdPartyCookies.ts (the full build with cookie switches).
  * Tests: used by apps/server/test/h5p/xapiQuestionTypes.browser.int.test.ts and
  *   apps/server/test/h5p/xapiContainerTypes.browser.int.test.ts.

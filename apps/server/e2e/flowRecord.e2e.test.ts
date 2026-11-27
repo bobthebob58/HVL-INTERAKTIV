@@ -11,7 +11,8 @@ import { createPrismaClient, type Database } from '../src/infra/prismaClient.js'
 import { recordFlow } from '../test/support/flowRecorder.js';
 import { LOST_ROWS_HINT, lostRowsFact } from '../test/support/lostTestRows.js';
 import { describeWithServices, serviceEnv } from '../test/support/services.js';
-import { launchCookieTestChromium, startCookieCanary } from '../test/support/thirdPartyCookies.js';
+import { startCookieCanary } from '../test/support/thirdPartyCookieCanary.js';
+import { launchCookieTestChromium } from '../test/support/thirdPartyCookies.js';
 
 /** An ltik-shaped JWT (not a real one): header, payload and signature in base64url. */
 const FAKE_LTIK = ['{"alg":"RS256"}', '{"tid":"flow-record"}', 'signature']
