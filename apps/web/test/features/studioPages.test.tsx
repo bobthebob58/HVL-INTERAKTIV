@@ -94,6 +94,9 @@ describe('[UD-013] the studio pages', () => {
     // Act
     inLocale('nn', PatternView);
     const create = await screen.findByRole('region', { name: 'Lag frå dette mønsteret' });
+    // WHY: the section draws itself first and asks who is signed in after that; its link shows once that is answered,
+    // so the requests are counted only then.
+    const login = await within(create).findByRole('link', { name: 'Logg inn med Feide' });
     // Assert
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe(DETAIL.name.nn);
     expect(requests.map((request) => request.path).sort()).toEqual([
@@ -101,7 +104,7 @@ describe('[UD-013] the studio pages', () => {
       '/api/studio/patterns/fa-video',
       '/auth/session',
     ]);
-    expect(await within(create).findByRole('link', { name: 'Logg inn med Feide' })).toBeTruthy();
+    expect(login.getAttribute('href')).toContain('/auth/feide/login');
   });
 
   it.each(AUTHOR_PAGES)(

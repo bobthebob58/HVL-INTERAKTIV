@@ -3704,3 +3704,9 @@ Append one entry per session: date, session, what was done, gate output, and any
       privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
       MAPPE-004)
   ```
+  - GitHub's run on the pull request failed in one older web test that this step does not touch
+    (`studioPages.test.tsx`, a pattern's page signed out): it counted the page's requests as soon as the «Lag frå
+    dette mønsteret» section was drawn, and the section asks who is signed in only after it has drawn itself, so
+    on a slow machine the count came one request short. Every test of this step passed in that run (854 of 855
+    files). The test now waits for the section's sign-in link, which shows once the question is answered, and
+    counts then; it passed five times after the change, twice of them with every processor kept busy.
