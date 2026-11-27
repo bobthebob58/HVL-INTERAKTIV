@@ -16,12 +16,14 @@
  *     `MAX_UPLOAD_FIELD_BYTES` bytes each, with a name of at most `MAX_UPLOAD_FIELD_NAME` characters, in a request
  *     of at most `MAX_UPLOAD_PARTS` parts. A request past one of these is 400 after its body was read; no field is
  *     ever cut short and passed on.
- *   - No failure leaves a rejected promise unhandled (a truncated body would otherwise end the process).
+ *   - No failure leaves a rejected promise or a stream error unhandled (a truncated body would otherwise end the
+ *     process), also when the body ends inside a part that is discarded unread.
  *   - When the request fails part-way (a broken connection), the file being written is stopped first, so the
  *     function answers and the folder is removed at once, with no file left open (D-118).
  *   - Folder names start with `UPLOAD_FOLDER_PREFIX`, which ./staleUploadFolders.ts looks for at start-up.
  * Collaborators: ./routes/ajaxRoutes.ts, ../security/ContentFileHeaders.ts (MIME type by extension).
- * Tests: apps/server/test/http/multipartUpload.test.ts
+ * Tests: apps/server/test/http/multipartUpload.test.ts, apps/server/test/http/multipartUploadFields.test.ts,
+ *   apps/server/test/http/multipartUploadCutOff.test.ts
  */
 import { createWriteStream } from 'node:fs';
 import { mkdtemp, rm } from 'node:fs/promises';
@@ -119,7 +121,12 @@ export async function readMultipart(req: Request, options: MultipartOptions): Pr
       else fields[name] = value;
     });
     busboy.on('file', (fieldname, stream, filename) => {
-      if (fieldname !== options.fileField || file) return void stream.resume();
+      if (fieldname !== options.fileField || file) {
+        // SECURITY: when the body ends inside a discarded file, the parser reports it on this stream; with no
+        // listener that report is an uncaught fault, which stops the server. The request fails below instead.
+        stream.on('error', () => undefined);
+        return void stream.resume();
+      }
       const ext = safeExtension(filename);
       const path = join(dir, `upload${ext}`);
       let tooLarge = false;

@@ -13,24 +13,30 @@
  *   - `--check` writes nothing; it exits 1 when the file is missing or differs, and names the command that fixes it.
  *   - Refuses, writing nothing, when npm's production set lacks a workspace or a declared runtime dependency, or a
  *     pin cannot be read.
- *   - Reads files and runs `npm sbom --no-update-notifier` on the installed tree; it contacts no server.
+ *   - Reads files and runs `npm sbom` and `npm query`, both with `--no-update-notifier`, on the installed tree; it
+ *     contacts no server.
+ *   - A package is listed when a production install keeps a copy of it, whichever copy npm's document describes
+ *     and whatever npm calls it on the installed tree (lockFileCorrections.mjs).
  * Usage:
  *   npm run sbom                      write docs/assurance/sbom.cdx.json
  *   npm run sbom -- --check           exit 1 when the committed file is not current
  *   npm run sbom -- --out=<file>      write (or with --check, compare) another file
- * Collaborators: ./npmComponents.mjs, ./h5pComponents.mjs, ./imageComponents.mjs, ./assembleSbom.mjs,
- *   ../dependency-check/productionSetGuard.mjs, npm (`npm sbom`).
+ * Collaborators: ./npmComponents.mjs, ./lockFileCorrections.mjs, ./h5pComponents.mjs, ./imageComponents.mjs,
+ *   ./assembleSbom.mjs, ../dependency-check/productionSetGuard.mjs, ../dependency-check/lockFileProduction.mjs,
+ *   npm (`npm sbom`, `npm query`).
  * Tests: tools/sbom/test/buildSbom.test.mjs
  */
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { readLockPackages } from '../dependency-check/lockFileProduction.mjs';
 import { readWorkspaceManifests } from '../dependency-check/productionSetGuard.mjs';
 import { PLATFORM_PROPERTY, SBOM_PATH, assembleSbom, countsByKind, serialise } from './assembleSbom.mjs';
 import { LIBRARY_MANIFEST, contentTypeComponents, coreComponents } from './h5pComponents.mjs';
 import { COMPOSE_FILE, DOCKERFILE, dockerfileImages, scannerImage } from './imageComponents.mjs';
 import { incompleteNpmSet, productionPart } from './npmComponents.mjs';
+import { runNpmQuery, withLockFileCorrections } from './lockFileCorrections.mjs';
 
 const ROOT = fileURLToPath(new URL('../../', import.meta.url));
 
@@ -56,12 +62,15 @@ export function runNpmSbom(root) {
  * @param {string} root - The repository.
  * @param {object} npmBom - npm's CycloneDX document of the installed tree.
  * @param {string} platform - `<platform>-<arch>` of the installed tree.
+ * @param {object[]} [installed] - Every installed copy, as `npm query '*'` lists them (runNpmQuery). Without it
+ *   npm's document is taken as it is (lockFileCorrections.mjs), so the command always passes it.
  * @returns {{text?: string, bom?: object, problems: string[], extraneous: string[]}} The text and document, or the
  *   problems that stop it; `extraneous` lists installed packages the lockfile does not have (left out).
- * @throws {Error} When a pin file is missing or a pin in it cannot be read.
+ * @throws {Error} When a pin file or the lock file is missing, or a pin in it cannot be read.
  */
-export function buildSbom(root, npmBom, platform) {
-  const npm = productionPart(npmBom);
+export function buildSbom(root, npmBom, platform, installed = []) {
+  const corrected = withLockFileCorrections(npmBom, installed, readLockPackages(root));
+  const npm = productionPart(corrected);
   const problems = incompleteNpmSet(readWorkspaceManifests(root), npm.components);
   if (problems.length > 0) return { problems, extraneous: npm.extraneous };
   const readText = (file) => readFileSync(join(root, file), 'utf8');
@@ -71,7 +80,7 @@ export function buildSbom(root, npmBom, platform) {
     ...dockerfileImages(readText(DOCKERFILE)),
     scannerImage(readText(COMPOSE_FILE)),
   ];
-  const bom = assembleSbom({ npmBom, npm, added, platform });
+  const bom = assembleSbom({ npmBom: corrected, npm, added, platform });
   return { text: serialise(bom), bom, problems: [], extraneous: npm.extraneous };
 }
 
@@ -106,16 +115,18 @@ const platformOf = (text) => {
  * @param {object} [seams] - Replaceable parts, for the tests.
  * @param {string} [seams.root] - The repository.
  * @param {(root: string) => object} [seams.npmSbom] - Produces npm's document.
+ * @param {(root: string) => object[]} [seams.npmQuery] - Lists every installed copy.
  * @param {string} [seams.platform] - `<platform>-<arch>`.
  * @returns {number} The exit code.
  */
 export function main(argv, seams = {}) {
-  const { root = ROOT, npmSbom = runNpmSbom, platform = `${process.platform}-${process.arch}` } = seams;
+  const { root = ROOT, npmSbom = runNpmSbom, npmQuery = runNpmQuery } = seams;
+  const platform = seams.platform ?? `${process.platform}-${process.arch}`;
   const check = argv.includes('--check');
   const outArg = argv.find((a) => a.startsWith('--out='))?.slice('--out='.length);
   const out = outArg ? resolve(outArg) : join(root, SBOM_PATH);
   const shown = relative(root, out).startsWith('..') ? out : relative(root, out);
-  const { text, bom, problems, extraneous } = buildSbom(root, npmSbom(root), platform);
+  const { text, bom, problems, extraneous } = buildSbom(root, npmSbom(root), platform, npmQuery(root));
   if (extraneous.length > 0) {
     const names = extraneous.join(', ');
     console.warn(

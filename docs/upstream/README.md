@@ -123,5 +123,5 @@ Each draft says what it was checked against. To check again:
 - The barriers: `npm run test:a11y` (the register's entries print in every run) and the browser tests named in each
   draft.
 
-Before **2027-01-31**, HVL or the bachelor students choose how the `image-size` audit exceptions end: a Lumi release
+Before **2027-03-27** (the expiry, renewed on 2026-11-27, D-148), HVL or the bachelor students choose how the `image-size` audit exceptions end: a Lumi release
 (the release request), a reviewed Lumi commit pinned by a decision of its own, or a reviewed renewal (D-112).

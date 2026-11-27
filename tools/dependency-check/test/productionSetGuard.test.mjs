@@ -152,8 +152,9 @@ describe('[NFR-005] the workspaces come from the root manifest', () => {
 
 describe('[NFR-005] check:licences runs the guard first', () => {
   /** Runs a copy of checkLicences.mjs in a temporary repository whose `npm query '*'` prints the given entries. */
-  function runCheck(entries) {
+  function runCheck(entries, lockPackages = {}) {
     const root = tempTree({
+      'package-lock.json': { packages: lockPackages },
       'package.json': { ...rootManifest, workspaces: ['apps/*'] },
       'apps/server/package.json': manifests['apps/server/package.json'],
       'bin/npm': '#!/bin/sh\ncat "$(dirname "$0")/query.json"\n',
@@ -161,7 +162,7 @@ describe('[NFR-005] check:licences runs the guard first', () => {
     });
     chmodSync(join(root, 'bin/npm'), 0o755);
     mkdirSync(join(root, 'tools/dependency-check'), { recursive: true });
-    for (const file of ['checkLicences.mjs', 'productionSetGuard.mjs'])
+    for (const file of ['checkLicences.mjs', 'productionSetGuard.mjs', 'lockFileProduction.mjs'])
       copyFileSync(
         join(repoRoot, 'tools/dependency-check', file),
         join(root, 'tools/dependency-check', file),
@@ -184,5 +185,14 @@ describe('[NFR-005] check:licences runs the guard first', () => {
     expect(run.stderr).toBe('');
     expect(run.status).toBe(0);
     expect(run.stdout).toContain('✓ check:licences: 4 production packages (all 3 workspaces and declared');
+  });
+
+  it('[NFR-005] checks a copy npm calls dev when the lock file lists its folder as production (D-148)', () => {
+    const location = 'node_modules/left-behind';
+    const kept = entry('left-behind', { dev: true, license: 'BUSL-1.1', location });
+    const seen = [...complete.filter((e) => e.name !== '@hvl-interaktiv/web'), kept];
+    const run = runCheck(seen, { [location]: { version: '1.0.0', optional: true } });
+    expect(run.status).toBe(1);
+    expect(run.stderr).toContain('✗ left-behind@1.0.0: licence "BUSL-1.1" is not GPL-3.0-compatible');
   });
 });

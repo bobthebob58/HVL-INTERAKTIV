@@ -1,9 +1,9 @@
-# Design note: the Lumi path, before 2027-01-31
+# Design note: the Lumi path, before 2027-03-27
 
 | | |
 |---|---|
 | **Status** | Open. Lumi stays at `@lumieducation/h5p-server@10.0.4` (D-112); the release request is drafted for the owner |
-| **Deadline** | **2027-01-31**: the reviewed audit exceptions for `image-size` (D-030, R-08) expire, and `npm run check:audit`, and so CI, fails |
+| **Deadline** | **2027-03-27**: the reviewed audit exceptions for `image-size` (D-030, R-08) expire (renewed on 2026-11-27, D-148), and `npm run check:audit`, and so CI, fails |
 | **Decisions to read first** | D-003 (our own file security for CVE-2025-7062), D-022 (pinning a reviewed editor commit, the model for a server commit), D-030, D-081, D-112 and its amendment of 2026-11-05 |
 | **Drafts** | [docs/upstream/README.md](../upstream/README.md), in particular [lumi-release-request.md](../upstream/lumi-release-request.md) |
 | **Risk register** | R-08, R-09 in PROGRESS.md |
@@ -25,7 +25,7 @@ invariant, and `check:pins` accepts registry versions only.
 | **A reviewed Lumi commit, pinned** | A review of about 620 commits in D-022's manner; a build from source; `check:pins` and CLAUDE.md amended; the sanitiser, Redis-lock and ClamAV packages moved with it (`master` changed the malware-scanner interface) | Its own decision first; the full gate |
 | **A renewed exception** | A review of the two `image-size` advisories again (only authenticated uploads reach it; our magic-byte checks run first), a new expiry date | The exception's entry and R-08 updated; the next deadline written down |
 
-Recommended order: ask early in the term whether a release is coming (the draft is ready); if not by mid-January,
+Recommended order: ask early in the term whether a release is coming (the draft is ready); if not by early March,
 renew the exception with a short new expiry rather than rush a commit review. A commit pin is a good project of its own
 but not a deadline task.
 

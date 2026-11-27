@@ -88,7 +88,7 @@ Runtime dependencies are pinned to exact versions, and `npm run check:pins` chec
 `tools/dependency-check/checkPins.mjs`). `npm run check:lockfile` holds the lock file to the npm registry and SHA-512
 checksums and the install scripts to the reviewed list, and `npm run check:workflows` holds the workflows to
 commits and digests (D-145). The SBOM ([sbom.cdx.json](sbom.cdx.json)) lists the npm production packages
-(477, our five workspaces among them), H5P core and editor, the ten root content types and three container images
+(478, our five workspaces among them), H5P core and editor, the ten root content types and three container images
 (the `ubuntu` and `node` base images, and the local stack's `clamav`). It does **not** list the Ubuntu packages or
 the Chromium build in the image, nor the other 110 H5P libraries in the manifest (`tools/sbom/README.md`, «What the
 file does not list»).
@@ -96,7 +96,7 @@ file does not list»).
 | Component | Version or pin | What it does here | Evidence |
 |---|---|---|---|
 | Base image | `ubuntu:24.04` by digest `sha256:fe81560990fa…` | Every image stage | `deploy/Dockerfile:24`; D-110 (P3 amendment) |
-| Node.js | 24; the image copies it from `node:24-bookworm-slim` by digest `sha256:c86ecead9e55…` (v24.22.2) | Runtime; engines `>=24.0.0 <25` | `deploy/Dockerfile:22,25-29`; `package.json` `engines`; `docs/DECISIONS.md:3683-3687` |
+| Node.js | 24; the image copies it from `node:24-bookworm-slim` by digest `sha256:c86ecead9e55…` (v24.22.2) | Runtime; engines `>=24.0.0 <25` | `deploy/Dockerfile:22,25-29`; `package.json` `engines`; `docs/DECISIONS.md:3685-3689` |
 | tsx | 4.23.15 | Runs the server's TypeScript directly; there is no compile step | `deploy/Dockerfile:141`; `apps/server/package.json` |
 | Express | 5.3.0 | HTTP routing; `X-Powered-By` off | `apps/server/package.json`; `src/server/createApp.ts:159` |
 | Next.js, React | `next` 16.4.6, `react`/`react-dom` 19.3.1 | Web app, in the server process (`WEB_APP=prod`); image optimiser off | `apps/web/package.json`; `apps/web/next.config.mjs:23-24`; D-068, D-135 |
@@ -109,7 +109,7 @@ file does not list»).
 | openid-client | 6.8.8 | Feide OIDC client | `apps/server/package.json`; `src/auth/feide/FeideClient.ts` |
 | Prisma, pg | `@prisma/client`, `@prisma/adapter-pg`, `prisma` 7.10.1; `pg` 8.23.1 | Database access and migrations | `apps/server/package.json`; `package-lock.json` |
 | Other server packages | `redis` 4.7.1, `@aws-sdk/client-s3` 3.1155.0, `clamscan` 2.4.0, `pino` 10.4.0, `zod` 4.6.7, `jsdom` 26.1.0, `dompurify` 3.4.17 | Redis, S3, clamd client, logs, validation, SVG sanitising | `apps/server/package.json` |
-| playwright-core and Chromium | `playwright-core` 1.56.1; full Chromium build `chromium-1194` (141.0.7390.37), never the headless shell | Renders the mappe PDF (`MAPPE-004`) | `deploy/Dockerfile:70-75,119`; `PROGRESS.md:1495`; D-096 |
+| playwright-core and Chromium | `playwright-core` 1.56.1; full Chromium build `chromium-1194` (141.0.7390.37), never the headless shell | Renders the mappe PDF (`MAPPE-004`) | `deploy/Dockerfile:70-75,119`; `PROGRESS.md:1496`; D-096 |
 | tini, fonts, Chromium's system libraries | From Ubuntu's archive at build time, **versions not pinned** | PID 1; æ, ø and å in the PDF | `deploy/Dockerfile:107-112,140` |
 | Seccomp profile | Docker Engine 29.9.2's default profile (SHA-256 `785b24292643…`) with one rule added (D-144); the file's SHA-256 is `42127de905b5…` | Lets Chromium keep its sandbox as non-root | `deploy/seccomp/README.md`; `tools/deploy-check/seccompRules.mjs` |
 | Browser-side scripts | H5P core and content-type JavaScript, and our theme scripts including the xAPI bridge | Run in users' browsers, served from the app origin | `packages/hvl-h5p-theme/`; D-102; `src/http/h5pPageCsp.ts:90` |
@@ -185,7 +185,7 @@ the stage-1 server.
 **Egress when building, not on the server.** The image build fetches only from `archive.ubuntu.com`,
 `security.ubuntu.com`, `registry.npmjs.org` and `binaries.prisma.sh`, and in CI Playwright's download host for
 Chromium. It never fetches GitHub content: H5P core, editor and the content-type bundle come in as hash-checked build
-contexts (`docs/DECISIONS.md:3700-3708`; `deploy/Dockerfile:88-105`). The fetch tools that prepare those contexts need
+contexts (`docs/DECISIONS.md:3702-3710`; `deploy/Dockerfile:88-105`). The fetch tools that prepare those contexts need
 `github.com`, and the 23 library builds' `npm ci` needs `registry.npmjs.org` (`tools/h5p-libraries/README.md`;
 `docs/ops/docker.md:114-115`). Where HVL builds the image and which registry
 the server pulls it from: **(IT to fill in)**.
@@ -269,7 +269,7 @@ repository checks that it does **(IT to fill in)**.
 - **The image is not byte-reproducible.** Ubuntu packages (Chromium's libraries, fonts, `tini`) are not version-pinned,
   and Chromium's version and SHA-256 are printed by the smoke test, not compared with a pinned value
   (`deploy/Dockerfile:107-112`; `deploy/smoke/smokeChecks.sh:134-137`). Two builds show the effect: the same Chromium
-  version (141.0.7390.37) printed SHA-256 `dd794b4e…144a` in the development sandbox (`PROGRESS.md:1495`) and
+  version (141.0.7390.37) printed SHA-256 `dd794b4e…144a` in the development sandbox (`PROGRESS.md:1496`) and
   `85918a99…1a95` on GitHub's runner (logs of jobs 127722905949 and 127736690022).
 - **No image is published or signed.** No workflow pushes, signs or attests an image (searched `.github/` and
   `deploy/`; Q33). GitHub Actions are named by commit, with the version as a comment, and the gate's service images
@@ -281,9 +281,9 @@ repository checks that it does **(IT to fill in)**.
   headers, and the PDF printed with Chromium's sandbox seen in `/proc`. The workflow is on `main` since pull request
   #18 was merged and passed there (run 42205391749 on `38b1743`, run 42266303382 on `43c6673`); it still builds an
   image only to test it.
-- **Size.** The image was 2 777 MB when built in the development sandbox (`PROGRESS.md:1488`) and 1 994 MB when built
+- **Size.** The image was 2 777 MB when built in the development sandbox (`PROGRESS.md:1489`) and 1 994 MB when built
   on GitHub's runner (`docker.yml` runs 42166052745 and 42170423045); the repository does not record why they differ. A build needs
-  about 8 GB free disk at its peak (`docs/ops/docker.md:193-195`; the sandbox run's disk line, `PROGRESS.md:1495`).
+  about 8 GB free disk at its peak (`docs/ops/docker.md:193-195`; the sandbox run's disk line, `PROGRESS.md:1496`).
   clamd needs about 1 GB of memory (`docs/ops/clamav.md:205`).
 - **Never run the root `docker-compose.yml` on a server**: its PostgreSQL has a fixed development password and its
   Redis has none (`docs/ops/runbook.md:252-256`).

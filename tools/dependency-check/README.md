@@ -87,5 +87,11 @@ cause. An entry npm reports without a package name (a link to a folder outside t
 minimum count to keep up to date: the manifests are the expectation. To fix it, remove the stray link (or the
 stale install) and run `npm ci`.
 
+npm's `dev` flag describes the installed tree. A copy that no installed package needs counts as dev there, yet npm
+leaves such copies behind (what two optional packages skipped for the platform both depend on), and
+`npm prune --omit=dev` in the image build keeps one that `package-lock.json` lists without `dev`. So
+`lockFileProduction.mjs` also counts an installed copy as production when the lock file lists its folder as
+production; it only adds to the set (D-148). On 2026-11-27 that was `@emnapi/runtime@1.11.3`.
+
 The guard's tests (`test/productionSetGuard.test.mjs`) also run `checkLicences.mjs` against a fake `npm` that
 reports only the root package, and check that the guard reads the same manifests as `check:pins`.

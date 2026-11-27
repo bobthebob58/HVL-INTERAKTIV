@@ -8,9 +8,9 @@ traced to `SEC-007` (dependency hygiene), which does not itself ask for an SBOM.
 HVL IT ([`docs/assurance/`](../../docs/assurance/README.md)): a list of what the service is made of, with versions, pins
 and licences, that IT can feed to a scanner such as OWASP Dependency-Track or compare with advisories.
 
-| Kind | Count (2026-11-05) | Read from | Pinned by |
+| Kind | Count (2026-11-27) | Read from | Pinned by |
 |---|---|---|---|
-| npm packages a production install contains, our 5 workspaces among them | 477 | `npm sbom` of the installed tree, filtered (see below) | `package-lock.json`: version and SHA-512 integrity (472 have a hash; the 5 workspaces are folders) |
+| npm packages a production install contains, our 5 workspaces among them | 478 | `npm sbom` of the installed tree, corrected by the lock file and filtered (see below) | `package-lock.json`: version and SHA-512 integrity (473 have a hash; the 5 workspaces are folders) |
 | H5P core and H5P editor client files | 2 | `tools/h5p-core/fetchCoreClients.sh` | core: tag `1.28.0` at commit `2aeb0b83…`; editor: commit `ab2daa18…` (D-022); one SHA-256 per file in `docs/reference/h5p-core-1.28-seed-packages/` |
 | The ten authorable H5P content types | 10 | `tools/h5p-libraries/libraries.manifest.json`, at the roots in `resolveManifest.mjs` | repository, ref and commit per type (D-078) |
 | Container images | 3 | the `FROM` lines of `deploy/Dockerfile` (`ubuntu`, `node`) and the `clamav` service of `deploy/compose.app.yml` | sha256 digest |
@@ -43,13 +43,37 @@ Instead the command runs `npm sbom --sbom-format cyclonedx --sbom-type applicati
 `--include=optional` and `--include=peer` (and `--no-update-notifier`, so npm does not ask the registry for a newer
 npm), and keeps every component npm did not mark:
 
-- `cdx:npm:package:development`: npm sets it only when dev dependencies alone need a package. It is the flag
-  `npm query '*'` reports as `dev` and `check:licences` uses (D-071), so the SBOM and the licence check see the same
-  production set. A test compares the two. The counts differ only in how they count: `check:licences` reports 488
-  entries because it counts the root and every install location (6 packages, such as `mime-db@1.54.0`, sit in two to
-  four folders), while the SBOM lists each `name@version` once (477).
-- `cdx:npm:package:extraneous`: installed, but not in `package-lock.json`. The command names such packages; run
-  `npm ci`.
+- `cdx:npm:package:development`: npm sets it on an installed copy only when dev dependencies alone need it. It is
+  the flag `npm query '*'` reports as `dev` and `check:licences` uses (D-071), so the SBOM and the licence check see
+  the same production set. The counts differ only in how they count: `check:licences` reports 489 entries because it
+  counts the root and every install location (6 packages, such as `mime-db@1.54.0`, sit in two to four folders),
+  while the SBOM lists each `name@version` once (478).
+- `cdx:npm:package:extraneous`: npm sets it on a copy that no installed package needs. After the corrections below
+  it is left only on a package that is installed but not in `package-lock.json` (or there in another version). The
+  command names such packages; run `npm ci`.
+
+**Two corrections by the lock file (D-148).** npm's flags describe the installed tree. In two cases that is not what
+a production install keeps, and `lockFileCorrections.mjs` corrects npm's document for both before the filter:
+
+- npm writes one component per `name@version`: the first installed copy it meets, with that copy's flags, hash and
+  download address. When a dev tool carries its own copy of a package the server also uses in the same version, the
+  component says "development". It is then rewritten as npm writes it for the production copy: scope, address, hash
+  and edges. On 2026-11-27 this was `tslib@2.8.1`, which `@tailwindcss/oxide-wasm32-wasi` 4.3.5 bundles and the AWS
+  SDK uses.
+- npm calls a copy that no installed package needs extraneous and development. npm leaves such copies behind when
+  two optional packages are skipped for the platform and both depend on it, and `npm prune --omit=dev`, which the
+  image build runs, keeps one that the lock file lists without `dev`. Such a copy is listed
+  (`tools/dependency-check/lockFileProduction.mjs`, which `check:licences` uses too); one the lock file lists as dev
+  counts as development. On 2026-11-27 this was `@emnapi/runtime@1.11.3`: in the image, loaded by nothing.
+
+Both corrections read the lock file's entry for a copy's own folder, and only when it names the installed version:
+with an install that lags the lock file, nothing is taken from an entry for another version, and a production copy
+without its entry stops the command (run `npm ci`).
+
+On 2026-11-27 the AI author compared the list once with a production install made as the image build makes it
+(`npm ci`, then `npm prune --omit=dev`, in a folder with only the manifests and the lock file): the same 473 registry
+packages on both sides. No test repeats that install. The test of the real tree compares the list with the folders
+that the lock file lists without `dev` and that are installed.
 
 Like `check:licences`, it refuses (writing nothing) when the set lacks a workspace or a runtime dependency that a
 manifest declares (`productionSetGuard.mjs`, D-113). npm's data is kept as npm wrote it: licences, purls, hashes,
@@ -124,9 +148,10 @@ check is not automated and no human has repeated it: the schema is not in the re
 
 ## Tests
 
-`test/npmComponents.test.mjs`, `test/sourceComponents.test.mjs` and `test/buildSbom.test.mjs` (22 tests on
-2026-11-05), titled `[SEC-007]`:
+`test/npmComponents.test.mjs`, `test/lockFileCorrections.test.mjs`, `test/sourceComponents.test.mjs` and
+`test/buildSbom.test.mjs` (29 tests on 2026-11-27), titled `[SEC-007]`:
 the H5P and image components carry their pins; the same input gives the same bytes in any order; `--check` finds a
 stale, missing or other-platform file; a shrunken npm set is refused; npm components keep npm's licences and purls.
 One test runs the real `npm sbom` (with `npm_config_omit=dev` set, as `NODE_ENV=production` would) and `npm query '*'`
-and checks that the npm part is exactly the production set the licence check sees.
+and checks that the npm part is exactly the folders the lock file lists without `dev` and that are installed, with
+every package `npm query` counts as production among them.

@@ -1,6 +1,7 @@
 /**
  * Tests for the Feide relying party against oauth2-mock-server: the authorisation request, the code exchange with
- * its checks, client authentication, logout and recovery from a discovery failure.
+ * its checks (an answer without an ID token among them), client authentication, logout and recovery from a
+ * discovery failure.
  *
  * Spec: AUTH-001, AUTH-003, AUTH-004
  */
@@ -92,6 +93,26 @@ describe('[AUTH-001] Feide relying party', () => {
     const second = checks();
     const callback2 = await callbackFor(await client.authorizationUrl(second));
     await expect(client.completeLogin(callback2, { ...second, nonce: 'other' })).rejects.toThrow();
+  });
+
+  it('[AUTH-001] refuses an answer from the token endpoint that holds no ID token', async () => {
+    // Arrange: the token endpoint leaves the ID token out of its next answer
+    const client = new FeideClient(settings);
+    const login = checks();
+    let taken = false;
+    const leaveOut = (response: { body: Record<string, unknown> }): void => {
+      taken = 'id_token' in response.body;
+      delete response.body.id_token;
+    };
+    server.service.once(Events.BeforeResponse, leaveOut);
+    // Act
+    const callback = await callbackFor(await client.authorizationUrl(login));
+    const refusal = await client.completeLogin(callback, login).catch((error: unknown) => error);
+    server.service.off(Events.BeforeResponse, leaveOut);
+    // Assert: no login without the signed statement of who logged in, and refused for that reason
+    expect(taken).toBe(true);
+    expect(refusal).toBeInstanceOf(Error);
+    expect(String((refusal as { cause?: unknown }).cause)).toMatch(/id_token/);
   });
 
   it('[AUTH-003] builds the end-session URL with id_token_hint and the registered logout redirect', async () => {

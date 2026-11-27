@@ -16,7 +16,7 @@ what is done, what is verified, and what is blocked.
 | S4+ | Whole-code-base simplification pass (owner decision, 2026-10-24) | — | ✅ Done (2026-10-25): 59 changes, 569 lines shorter, every test kept, S4 gate green again; a second round is the owner's call |
 | S5 | Læringsdesign studio, patterns, planner, pedagogisk mappe export | 04; 00 S5 rows | ✅ Gate passed (2026-10-30); the ALU and pilot review (Q17), the bank consent text and the manual PDF check open; the Canvas side in S6 |
 | S6 | xAPI → AGS grade bridge, insight, privacy jobs, Docker, conformance report | 02 §4–§8; 05; 00 §3 (journeys J1–J5), §6; 01 `H5P-009`, `H5P-010`, `SEC-004`, `SEC-006`; 03 `UD-003`, §6 (`UD-040`); 04 `MAPPE-003`, `MAPPE-004` (D-101) | ✅ Done (gate passed 2026-11-06; started 2026-10-30; D-101…D-116) |
-| SR | Security repairs after the S6 gate: 31 steps, each with tests, a gate run and a decision entry | The spec a step names | ✅ Done (2026-11-20 to 2026-11-26; D-117…D-147; session log, steps 1–31); open: HVL IT's and the owner's questions Q32, Q33 and Q34, with the earlier ones |
+| SR | Security repairs after the S6 gate: 32 steps, each with tests, a gate run and a decision entry | The spec a step names | ✅ Done (2026-11-20 to 2026-11-27; D-117…D-148; session log, steps 1–32); open: HVL IT's and the owner's questions Q32, Q33 and Q34, with the earlier ones |
 
 Legend: ⬜ not started · 🟨 in progress · ✅ done (gate passed, output pasted below) · ⛔ blocked
 
@@ -791,7 +791,7 @@ under the step that does it):
         review and pin a Lumi commit built from source as D-022 pins the editor (its own decision: CLAUDE.md names
         10.0.4; the full gate), then remove the adapters it makes unnecessary; report our fixes and the D-080 barriers
         upstream to Lumi and H5P. Decided in D-112: Lumi stays at 10.0.4 in S6; the release request, the Lumi issues
-        and the H5P barrier reports are drafted in `docs/upstream/` for the owner to file; before 2027-01-31 HVL or
+        and the H5P barrier reports are drafted in `docs/upstream/` for the owner to file; before 2027-03-27 (D-148) HVL or
         the students choose how the `image-size` exceptions end. **Drafted:** [docs/upstream/](docs/upstream/README.md)
         holds the Lumi release request, two Lumi bugs (`deleteAllContentUserDataByUser`, `alterLibraryLanguageFile`),
         a conditional Core 1.28 and new-Hub backport, eight small Lumi gaps, 15 H5P reports (14 accessibility
@@ -799,7 +799,7 @@ under the step that does it):
         integration, and QuestionSet's retry, Q20), and drafts for clamscan and ltijs; the two security reports
         (one to H5P Group, one to Lumi) are held outside the public repository for the
         owner to send privately (D-112's amendment). Nothing is filed; [lumi-path.md](docs/handoff/lumi-path.md) has
-        the three choices before 2027-01-31
+        the three choices before 2027-03-27
   - [x] Problem reporting for the pilot (owner decision 2026-10-24): a short tester guide in Nynorsk in `docs/` and
         GitHub issue templates in `.github/ISSUE_TEMPLATE/` (a fault; an accessibility barrier) asking for the steps,
         what was expected and what happened, device, browser, assistive technology and zoom, the activity type or
@@ -836,7 +836,7 @@ under the step that does it):
     the seam's first run against ALU's test Canvas and real Feide with the Canvas acceptance checklist
     ([canvas-acceptance.md](docs/handoff/canvas-acceptance.md)); the Canvas side of the studio; `LTI-009`;
     `INS-004`; insight's freshness (Q24); the research export (Q25, after the DPO); the simplification check if S6
-    does not reach it; the Lumi path before 2027-01-31; triage and fixes of the pilot's issues; the overlay's
+    does not reach it; the Lumi path before 2027-03-27; triage and fixes of the pilot's issues; the overlay's
     remaining English in `nn` and `nb` (editor labels, `H5PEditor.*` strings, less common sub-content) and keeping
     its entries current; the upstream links once the owner has filed the drafts; and, among the smaller items,
     narrowing or retiring the cookie-authenticated `/h5p/content/…` route (D-110)
@@ -1005,8 +1005,9 @@ under the step that does it):
 | R-04 | Hub registration at `hub-api.h5p.org/v1/sites` fails (HTTP 405 reports in 2026) | Medium | Low | Runtime does not depend on the Hub; offline seeding (`H5P-003`) |
 | R-05 | A session runs out of usage quota mid-milestone | Medium | Low | One milestone per session; commit early; update this file before stopping |
 | R-06 | Upstream H5P accessibility barriers | High | Medium | Theme fixes where possible; report upstream; document in `UD-040` |
-| R-08 | `image-size` (via h5p-server) has two unfixed DoS advisories; accepted until 2027-01-31 (D-030) | Low | Medium | Only reachable through authenticated uploads; `SEC-002` sniffing in S2; `check:audit` fails at expiry |
-| R-09 | Lumi's npm releases lag its repository: none since 10.0.4 (2025-03-08), while `master` carries file-security work we would want (D-081) | High | Medium | Our own file security (D-003) and adapters in our code; S6 asks for a release or pins a reviewed commit (D-081); the revisit triggers in D-081. The release request is drafted for the owner to file (`docs/upstream/lumi-release-request.md`, D-112); the choice before 2027-01-31 is in `docs/handoff/lumi-path.md` |
+| R-08 | `image-size` (via h5p-server) has two unfixed DoS advisories; accepted until 2027-03-27 (D-030, renewed by D-148) | Low | Medium | Only reachable through authenticated uploads; `SEC-002` sniffing in S2; `check:audit` fails at expiry |
+| R-09 | Lumi's npm releases lag its repository: none since 10.0.4 (2025-03-08), while `master` carries file-security work we would want (D-081) | High | Medium | Our own file security (D-003) and adapters in our code; S6 asks for a release or pins a reviewed commit (D-081); the revisit triggers in D-081. The release request is drafted for the owner to file (`docs/upstream/lumi-release-request.md`, D-112); the choice before 2027-03-27 is in `docs/handoff/lumi-path.md` |
+| R-10 | The image is built on Ubuntu 24.04, whose security support ends in 2029; Dependabot proposes no other Ubuntu version, and the pinned Playwright lists Ubuntu up to 24.04 (D-148) | Low | Medium | Fresh digests of 24.04 come monthly; decide the move to a later long-term Ubuntu together with a Playwright update, and look at it again by 2028-04-30 at the latest |
 
 ## Session log
 
@@ -3332,4 +3333,69 @@ Append one entry per session: date, session, what was done, gate output, and any
   $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
   $ node tools/spec-site/buildSpecSite.mjs --check     up to date
   $ npx vitest run --project tools                     586 passed (78 files)
+  ```
+
+- **2026-11-27 · Security repairs, step 32 (D-148)** — Dependabot's first proposals after D-145 failed CI and were
+  closed by the owner; their updates were read and taken by hand, without the two that need a step of their own.
+  - 22 minor and patch updates (SEC-007): exact pins in the three manifests, the lock file from Dependabot's own
+    resolution with playwright-core kept at 1.56.1 (949 registry packages, 954 before; 108 with a new version, 37
+    of them in the running server), and the SBOM. Held back: playwright-core (its Chromium, the image and the
+    cookie tests go together) and `@axe-core/playwright` (axe-core 4.14.1 turns on a rule for WCAG 2.5.3 that
+    fails 14 of 563 accessibility tests on two of H5P's controls).
+  - A body that ends inside a part nobody reads is an ordinary 400 (SEC-005): `readMultipart` listens for the
+    error of a file it discards, and `@fastify/busboy` 3.2.6 does so for the parts it skips itself. Test:
+    `multipartUploadCutOff.test.ts` (four bodies, each sent in two pieces; two of them reached the process's fault
+    handler before this step).
+  - Two tests pin what the new versions must not change: `svgLinkAddresses.test.ts` (a link in an uploaded SVG
+    points only inside the drawing) and one more in `FeideClient.test.ts` (an answer without an ID token is
+    refused, for that reason).
+  - Dependabot (`.github/dependabot.yml`): playwright-core in a group of its own; no other `ubuntu` version is
+    proposed. `ciDependencyGates.test.mjs` holds both. Risk R-10 has the review date for the base image.
+  - The two `image-size` exceptions were read again and run until 2027-03-27 (amends D-030; risk R-08). The
+    documents that named 2027-01-31 follow.
+  - The gate found a fault of this step: the regenerated SBOM had lost `tslib` 2.8.1, which the server loads
+    (the SBOM's own test of the real tree failed), and it had 476 npm packages where 477 were listed before, which
+    went unnoticed when the file was written. The cause is in how npm describes the installed tree, in two ways
+    (D-148): one component per name and version, by the first copy npm meets, and a copy that no installed package
+    needs is called extraneous although a production install keeps it. Now the SBOM and `check:licences` go by
+    what a production install keeps (SEC-007, NFR-005): `tools/sbom/lockFileCorrections.mjs` and
+    `tools/dependency-check/lockFileProduction.mjs`, with tests of both rules and of the real tree. The SBOM lists
+    478 npm packages: `tslib` again, and `@emnapi/runtime` 1.11.3, which npm now leaves in the image and nothing
+    loads. A production install made in a scratch folder, as the image build makes it, holds the same 473 registry
+    packages. The tools suite was run again after the repair; the other suites do not read these files.
+  - No page looks different: the built stylesheet changes in two rules, and the five public pages are pixel for
+    pixel the same in `nn` at 1280 and 390 px, compared from a build without Next.js's build cache. Gate output:
+
+  ```
+  $ npm run build                                      exit 0
+  $ HVLI_DOCKER_SANDBOX=1 bash deploy/smoke/dockerSmoke.sh   passed in 440 s (image built from this lock file)
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run lint:css                                   exit 0
+  $ npm run doc:lint && npm run check:filesize         11 checks passed; file-size passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run privacy:dpia-check                         13 sections, the developer key and the residuals agree
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins && npm run check:licences       every version pinned; 489 production packages compatible
+  $ npm run check:lockfile                             949 packages from the registry with sha512; 4 install scripts reviewed
+  $ npm run check:workflows                            3 workflows: actions by commit, images by digest
+  $ npm run check:audit                                2 high/critical advisories, both covered by reviewed exceptions
+  $ npm run sbom -- --check                            current: 478 npm packages, 12 H5P components, 3 images
+  $ npm run content:check && npm run tokens:check      exit 0
+  $ node tools/spec-site/buildSpecSite.mjs --check     up to date
+  $ npm run docs:api                                   exit 0
+  $ npm run a11y:report -- --check                     exit 0
+  $ npx vitest run --project web                       644 passed (100 files)
+  $ npx vitest run --project api-contract              123 passed (15 files)
+  $ npx vitest run --project tools                     599 passed (80 files); in the gate's own run, before
+      the repair above, 586 passed and 1 failed: the SBOM's test of the real tree
+  $ npx vitest run --project design-tokens             156 passed
+  $ npx vitest run --project hvl-h5p-theme             206 passed
+  $ LIVE_TARGET=mock npm run test:live                 36 passed
+  $ npm run test:a11y                                  563 passed (18 files)
+  $ npm run test:e2e                                   36 passed, 1 skipped; 1 file failed: learnerDataRights
+      (needs the privileged database, like DATA-010's tests)
+  $ npx vitest run --project server                    27154 passed, 31 skipped; 1 failed in 4 files: a
+      privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
+      MAPPE-004)
   ```

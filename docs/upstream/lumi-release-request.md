@@ -49,7 +49,7 @@ Read at commit 493cd3e:
    other than 200.
 3. **`image-size`.** `master` depends on `probe-image-size` instead of `image-size` 1.x. Every `image-size` version
    up to 2.0.2 is affected by GHSA-5p2g-fcmc-qvqq and GHSA-w3rx-r6r6-pgpr, and 10.0.4 cannot take the fixed 2.0.3
-   (its API changed). We accept these two advisories in our audit until **2027-01-31**; a release would end that.
+   (its API changed). We accept these two advisories in our audit until **2027-03-27**; a release would end that.
 
 ### What a release would let us remove
 
