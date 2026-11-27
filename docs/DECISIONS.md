@@ -6653,3 +6653,68 @@ loading of one spec per session are kept.
   alerts and code scanning for the repository (`SECURITY.md`, ROS-09); the first code-scanning results are read
   in the next step. No line reference moved: the edits keep each file's line count, and this entry and step 33
   stand at the end of their files. The status overview counts 33 steps.
+
+### D-150 · Security repairs, step 34: the first results of GitHub's code scanning, a ceiling on the Feide login, and the Ubuntu base image of November
+- **Context:** The owner turned on GitHub's code scanning (CodeQL in its default setup) on 2026-11-27. Its first
+  run on `main` lists 36 findings, each with the severity its query carries, "High": 15 «Missing rate limiting»,
+  9 «Bad HTML filtering regexp», 8 «Incomplete string escaping or encoding» and 4 «Incomplete multi-character
+  sanitization». 12 are in the running server, 3 in the build tools, 17 in tests and their support files, and 4
+  in a copied library (`tools/spec-site/vendor/marked.esm.js`, marked 12.0.2). Each was read against the code it
+  names. None is a weakness that can be used. One names a limit the risk list already had (ROS-07): the Feide
+  login routes had no ceiling of their own, where ltijs's routes got one in D-141.
+- **Decision — a ceiling on the Feide login (AUTH-001, NFR-006).** One network address may send 4 000 requests
+  a minute to `/auth/feide/login` and `/auth/feide/callback` together: 2 000 logins of two requests each, far
+  above what a campus behind one address sends when a lecture starts. Past that the answer is the portal's
+  friendly page with 429 and `Retry-After`, before a login is stored or a callback is looked at. The counting is
+  D-141's, now in one module for both groups of routes (`src/http/addressRequestCeiling.ts`): a fixed minute in
+  Redis, the address only as its keyed fingerprint, and a request that goes ahead, with one log line a minute,
+  when Redis cannot be reached. It is a backstop: it bounds what one address can make the server do, and it is
+  no defence against a flood, which is the reverse proxy's (threat model T-111).
+- **Decision — three lines in the tools (UD-040, DOC-004, NFR-001).** The accessibility report and the
+  traceability matrix escaped `|` in a table cell but not `\`; both escape the two now. The load tool's reader
+  of a page's scripts and stylesheets takes a tag name in any letter case. All three only ever met text of this
+  repository; the change makes the lines right, and the scanner's findings on them end.
+- **Decision — no change, for these reasons:**
+  - **Eight routes without a limit of their own.** `http/api/contentListRoutes.ts` (a signed-in person's own
+    list) and three routes of `learningDesign/http/collaborationRoutes.ts` (list, add and remove a co-author)
+    are small, bounded requests of a signed-in author; limits per person exist where the person chooses how much
+    work the server does (D-120, D-128, D-090). `http/routes/signedUploadRoutes.ts` and
+    `http/routes/signedFileRoutes.ts` send a file behind a signed, expiring grant, and two routes of
+    `http/routes/staticRoutes.ts` send the pages' own scripts and theme files from two fixed lists. Serving
+    files to many requests is the proxy's to limit (T-111).
+  - **Two readers of blanks** (`insight/content/gapSolutions.ts`, `learningDesign/safeEditing/answerMarkup.ts`)
+    remove simple tags inside a blank once. That is how H5P.Blanks 1.14 reads a blank, and the blanks must be
+    numbered as the library numbers them. Neither is a cleaner of markup: the result is compared, or shown as
+    text by a page that writes no HTML of its own (D-068). Each place now says so.
+  - **17 findings in tests and their support files.** Patterns that read our own test pages, escape our own
+    test data, or build small test servers, and never meet text from outside the test.
+  - **4 findings in the copied library.** marked 12.0.2 turns this repository's own Markdown into the
+    specification website at build time (`tools/spec-site/markdownRenderer.mjs`); nothing of it runs in the
+    server or the web app. A newer copy is a tool update of its own.
+- **Decision — a finding that needs no change is closed on GitHub by dismissal with its reason, by the owner.**
+  The scanner stays in its default setup. A settings file that leaves tests and the library out would need a
+  workflow of our own with permission to write security events, which `check:workflows` refuses (tokens that
+  only read, D-145), and it would hide later findings in those folders. The two findings on the Feide routes
+  stay listed after the repair: the query knows a few limiter libraries by name and not a middleware of our
+  own. They are dismissed as false positives, with this entry as the reason.
+- **Decision — the Ubuntu base image is taken by hand (SEC-007, amends D-148).** Dependabot's monthly pull
+  request for a new digest of `ubuntu:24.04` changes the Dockerfile alone and passes CI, but the SBOM and the
+  architecture paper name the digest too, and CI does not run the SBOM's check. The digest of 2026-11
+  (`sha256:562111b8…`) is taken with all three, and the Docker smoke test ran on the image built from it. A
+  digest proposal is taken this way until the SBOM's check runs in CI.
+- **Residual:** the two ceilings are far above real use on purpose, so they do not stop a slow flood or one from
+  many addresses (T-111, the question to HVL IT about the proxy). The scanner's settings live in GitHub, not in
+  the repository, and no check holds them (Q34). A dismissed finding returns only if its code changes.
+- **Verified:** `feideLoginCeiling.int.test.ts` (5: the number; three logins pass and the next two get the page,
+  with no login stored; login and callback share the count, and a callback past it writes no audit row; the
+  address is never a key; Redis unreachable) failed before the routes ran the ceiling, with five logins
+  accepted, and passes after. `launchRequestCeiling.int.test.ts` passes unchanged on the shared module. The
+  three tool tests (`renderSections.test.mjs`, one each in `specTrace.test.mjs` and `playerPages.test.mjs`) fail
+  on the old lines and pass on the new. The full gate and the Docker smoke test ran; step 34 in `PROGRESS.md`
+  has the output.
+- **Consequences:** the risk list (ROS-07) and the threat model (T-111 and its summary row) say what the app
+  limits itself and what is left to the proxy; the data inventory names the new counter beside the first; the
+  runbook and the server's README say that both ceilings count by the address `TRUST_PROXY` gives; spec 02's
+  table lists the new files under `AUTH-001`. Q34 and the architecture paper say that code scanning is on.
+  No line reference moved: the edits keep each file's line count, and this entry and step 34 stand at the end
+  of their files. The status overview counts 34 steps.

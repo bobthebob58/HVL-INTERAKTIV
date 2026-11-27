@@ -281,7 +281,7 @@ asynchronous and synchronous teaching, it is out of scope.</p>
 <tr>
 <td>S6</td><td>xAPI → AGS grade bridge, insight, privacy jobs, Docker, conformance report</td><td>02 §4–§8; 05; 00 §3 (journeys J1–J5), §6; 01 <a class="req-ref" href="#r-H5P-009"><code>H5P-009</code></a>, <a class="req-ref" href="#r-H5P-010"><code>H5P-010</code></a>, <a class="req-ref" href="#r-SEC-004"><code>SEC-004</code></a>, <a class="req-ref" href="#r-SEC-006"><code>SEC-006</code></a>; 03 <a class="req-ref" href="#r-UD-003"><code>UD-003</code></a>, §6 (<a class="req-ref" href="#r-UD-040"><code>UD-040</code></a>); 04 <a class="req-ref" href="#r-MAPPE-003"><code>MAPPE-003</code></a>, <a class="req-ref" href="#r-MAPPE-004"><code>MAPPE-004</code></a> (D-101)</td><td>✅ Done (gate passed 2026-11-06; started 2026-10-30; D-101…D-116)</td></tr>
 <tr>
-<td>SR</td><td>Security repairs after the S6 gate: 33 steps, each with tests, a gate run and a decision entry</td><td>The spec a step names</td><td>✅ Done (2026-11-20 to 2026-11-27; D-117…D-149; session log, steps 1–33); open: HVL IT&#39;s and the owner&#39;s questions Q32, Q33 and Q34, with the earlier ones</td></tr>
+<td>SR</td><td>Security repairs after the S6 gate: 34 steps, each with tests, a gate run and a decision entry</td><td>The spec a step names</td><td>✅ Done (2026-11-20 to 2026-11-27; D-117…D-150; session log, steps 1–34); open: HVL IT&#39;s and the owner&#39;s questions Q32, Q33 and Q34, with the earlier ones</td></tr>
 </tbody></table></div>
 
 <p class="more"><a href="#progress">Open the build tracker</a> · <a href="#evaluator-guide--5-session-gates">See each session's pass/fail gate</a></p>
@@ -5109,7 +5109,7 @@ page → the error page. <code>server/main.ts</code> (<code>npm start</code>) sy
 <div class="table-wrap" role="region" aria-label="Table 7, 8. Code map (S3)" tabindex="0"><table><thead><tr>
 <th scope="col">ID</th><th scope="col">Implemented in</th><th scope="col">Proved by</th><th scope="col">S3 scope and open items</th></tr>
 </thead><tbody><tr>
-<td><a class="req-ref" href="#r-AUTH-001"><code>AUTH-001</code></a></td><td><code>auth/feide/FeideClient.ts</code> (discovery, <code>FEIDE_SCOPE</code>, PKCE <code>S256</code>, <code>client_secret_post</code>, ID-token signature check with <code>enableNonRepudiationChecks</code>, D-054); <code>auth/feide/loginTransactions.ts</code> (state, nonce and PKCE verifier bound to the browser by the <code>__Host-hvli_login</code> cookie, D-057); <code>auth/feide/feideLoginRoutes.ts</code>; <code>auth/feide/completeFeideLogin.ts</code>; <code>auth/identity/AccountResolver.ts</code>; <code>auth/audit/AuthAuditRecorder.ts</code>; <code>config/httpsRules.ts</code> (https issuer in production and, off a local address, in every mode)</td><td><code>test/auth/feide/feideLogin.int.test.ts</code> (full login against the mock Feide; wrong <code>iss</code>, <code>aud</code> or <code>nonce</code>, expired <code>exp</code>, a key outside Feide&#39;s JWKS, a missing login cookie); <code>test/auth/feide/FeideClient.test.ts</code>; <code>test/auth/feide/loginTransactions.int.test.ts</code>; <code>test/auth/upstream/openidClientMock.test.ts</code>; <code>test/auth/identity/AccountResolver.int.test.ts</code>; <code>test/config/productionChecks.test.ts</code></td><td>Mock Feide in <code>tools/mock-platform</code> (D-049). HVL&#39;s client ID, secret and realm are still open (Q3).</td></tr>
+<td><a class="req-ref" href="#r-AUTH-001"><code>AUTH-001</code></a></td><td><code>auth/feide/FeideClient.ts</code> (discovery, <code>FEIDE_SCOPE</code>, PKCE <code>S256</code>, <code>client_secret_post</code>, ID-token signature check with <code>enableNonRepudiationChecks</code>, D-054); <code>auth/feide/loginTransactions.ts</code> (state, nonce and PKCE verifier bound to the browser by the <code>__Host-hvli_login</code> cookie, D-057); <code>auth/feide/feideLoginRoutes.ts</code>; <code>auth/feide/loginRequestCeiling.ts</code> on <code>http/addressRequestCeiling.ts</code> (4 000 requests a minute per network address to the login and the callback together, D-150); <code>auth/feide/completeFeideLogin.ts</code>; <code>auth/identity/AccountResolver.ts</code>; <code>auth/audit/AuthAuditRecorder.ts</code>; <code>config/httpsRules.ts</code> (https issuer in production and, off a local address, in every mode)</td><td><code>test/auth/feide/feideLogin.int.test.ts</code> (full login against the mock Feide; wrong <code>iss</code>, <code>aud</code> or <code>nonce</code>, expired <code>exp</code>, a key outside Feide&#39;s JWKS, a missing login cookie); <code>test/auth/feide/FeideClient.test.ts</code>; <code>test/auth/feide/feideLoginCeiling.int.test.ts</code>; <code>test/auth/feide/loginTransactions.int.test.ts</code>; <code>test/auth/upstream/openidClientMock.test.ts</code>; <code>test/auth/identity/AccountResolver.int.test.ts</code>; <code>test/config/productionChecks.test.ts</code></td><td>Mock Feide in <code>tools/mock-platform</code> (D-049). HVL&#39;s client ID, secret and realm are still open (Q3).</td></tr>
 <tr>
 <td><a class="req-ref" href="#r-AUTH-002"><code>AUTH-002</code></a></td><td><code>auth/feide/feideGroups.ts</code> (<code>GET &lt;FEIDE_GROUPS_API_URL&gt;/groups/me/groups</code>; any failure is a 503 page, D-054); <code>auth/feide/FeideRoleMapper.ts</code> (the role table as D-059 reads it); <code>auth/feide/feideClaims.ts</code> (the Feide ID); <code>auth/identity/feideId.ts</code> and <code>auth/identity/asciiText.ts</code> (the one Feide ID rule, ASCII folding only, D-142); <code>config/envParsers.ts</code> (<code>ALLOWED_FEIDE_ORGS</code>, <code>ADMIN_FEIDE_IDS</code>, <code>AUTHOR_COURSE_GROUPS</code>); <code>auth/Principal.ts</code></td><td><code>test/auth/feide/FeideRoleMapper.test.ts</code> (every row, including <code>student</code> with <code>employee</code>); <code>test/auth/feide/FeideRoleMapper.validity.test.ts</code>; <code>test/auth/feide/feideGroups.test.ts</code>; <code>test/auth/feide/feideClaims.test.ts</code>; <code>test/auth/feide/feideLogin.int.test.ts</code>; <code>test/auth/Principal.test.ts</code>; <code>test/config/envParsers.test.ts</code>; <code>test/auth/identity/feideId.test.ts</code>; <code>test/auth/identity/asciiText.test.ts</code></td><td>D-059: <code>admin</code> only for an HVL member; a course group matches exactly or as a prefix followed by <code>:</code>, and only while the membership is valid; student authors share <code>private</code> only (Q12). Realm <code>hvl.no</code> and HVL&#39;s FS groups still <em>(verify)</em>.</td></tr>
 <tr>
@@ -14083,6 +14083,74 @@ alerts and code scanning for the repository (<code>SECURITY.md</code>, ROS-09); 
 in the next step. No line reference moved: the edits keep each file&#39;s line count, and this entry and step 33
 stand at the end of their files. The status overview counts 33 steps.</li>
 </ul>
+<h3 id="decisions--d-150--security-repairs-step-34-the-first-results-of-githubs-code-scanning-a-ceiling-on-the-feide-login-and-the-ubuntu-base-image-of-november" tabindex="-1">D-150 · Security repairs, step 34: the first results of GitHub&#39;s code scanning, a ceiling on the Feide login, and the Ubuntu base image of November</h3>
+<ul>
+<li><strong>Context:</strong> The owner turned on GitHub&#39;s code scanning (CodeQL in its default setup) on 2026-11-27. Its first
+run on <code>main</code> lists 36 findings, each with the severity its query carries, &quot;High&quot;: 15 «Missing rate limiting»,
+9 «Bad HTML filtering regexp», 8 «Incomplete string escaping or encoding» and 4 «Incomplete multi-character
+sanitization». 12 are in the running server, 3 in the build tools, 17 in tests and their support files, and 4
+in a copied library (<code>tools/spec-site/vendor/marked.esm.js</code>, marked 12.0.2). Each was read against the code it
+names. None is a weakness that can be used. One names a limit the risk list already had (ROS-07): the Feide
+login routes had no ceiling of their own, where ltijs&#39;s routes got one in D-141.</li>
+<li><strong>Decision — a ceiling on the Feide login (AUTH-001, NFR-006).</strong> One network address may send 4 000 requests
+a minute to <code>/auth/feide/login</code> and <code>/auth/feide/callback</code> together: 2 000 logins of two requests each, far
+above what a campus behind one address sends when a lecture starts. Past that the answer is the portal&#39;s
+friendly page with 429 and <code>Retry-After</code>, before a login is stored or a callback is looked at. The counting is
+D-141&#39;s, now in one module for both groups of routes (<code>src/http/addressRequestCeiling.ts</code>): a fixed minute in
+Redis, the address only as its keyed fingerprint, and a request that goes ahead, with one log line a minute,
+when Redis cannot be reached. It is a backstop: it bounds what one address can make the server do, and it is
+no defence against a flood, which is the reverse proxy&#39;s (threat model T-111).</li>
+<li><strong>Decision — three lines in the tools (UD-040, DOC-004, NFR-001).</strong> The accessibility report and the
+traceability matrix escaped <code>|</code> in a table cell but not <code>\</code>; both escape the two now. The load tool&#39;s reader
+of a page&#39;s scripts and stylesheets takes a tag name in any letter case. All three only ever met text of this
+repository; the change makes the lines right, and the scanner&#39;s findings on them end.</li>
+<li><strong>Decision — no change, for these reasons:</strong><ul>
+<li><strong>Eight routes without a limit of their own.</strong> <code>http/api/contentListRoutes.ts</code> (a signed-in person&#39;s own
+list) and three routes of <code>learningDesign/http/collaborationRoutes.ts</code> (list, add and remove a co-author)
+are small, bounded requests of a signed-in author; limits per person exist where the person chooses how much
+work the server does (D-120, D-128, D-090). <code>http/routes/signedUploadRoutes.ts</code> and
+<code>http/routes/signedFileRoutes.ts</code> send a file behind a signed, expiring grant, and two routes of
+<code>http/routes/staticRoutes.ts</code> send the pages&#39; own scripts and theme files from two fixed lists. Serving
+files to many requests is the proxy&#39;s to limit (T-111).</li>
+<li><strong>Two readers of blanks</strong> (<code>insight/content/gapSolutions.ts</code>, <code>learningDesign/safeEditing/answerMarkup.ts</code>)
+remove simple tags inside a blank once. That is how H5P.Blanks 1.14 reads a blank, and the blanks must be
+numbered as the library numbers them. Neither is a cleaner of markup: the result is compared, or shown as
+text by a page that writes no HTML of its own (D-068). Each place now says so.</li>
+<li><strong>17 findings in tests and their support files.</strong> Patterns that read our own test pages, escape our own
+test data, or build small test servers, and never meet text from outside the test.</li>
+<li><strong>4 findings in the copied library.</strong> marked 12.0.2 turns this repository&#39;s own Markdown into the
+specification website at build time (<code>tools/spec-site/markdownRenderer.mjs</code>); nothing of it runs in the
+server or the web app. A newer copy is a tool update of its own.</li>
+</ul>
+</li>
+<li><strong>Decision — a finding that needs no change is closed on GitHub by dismissal with its reason, by the owner.</strong>
+The scanner stays in its default setup. A settings file that leaves tests and the library out would need a
+workflow of our own with permission to write security events, which <code>check:workflows</code> refuses (tokens that
+only read, D-145), and it would hide later findings in those folders. The two findings on the Feide routes
+stay listed after the repair: the query knows a few limiter libraries by name and not a middleware of our
+own. They are dismissed as false positives, with this entry as the reason.</li>
+<li><strong>Decision — the Ubuntu base image is taken by hand (SEC-007, amends D-148).</strong> Dependabot&#39;s monthly pull
+request for a new digest of <code>ubuntu:24.04</code> changes the Dockerfile alone and passes CI, but the SBOM and the
+architecture paper name the digest too, and CI does not run the SBOM&#39;s check. The digest of 2026-11
+(<code>sha256:562111b8…</code>) is taken with all three, and the Docker smoke test ran on the image built from it. A
+digest proposal is taken this way until the SBOM&#39;s check runs in CI.</li>
+<li><strong>Residual:</strong> the two ceilings are far above real use on purpose, so they do not stop a slow flood or one from
+many addresses (T-111, the question to HVL IT about the proxy). The scanner&#39;s settings live in GitHub, not in
+the repository, and no check holds them (Q34). A dismissed finding returns only if its code changes.</li>
+<li><strong>Verified:</strong> <code>feideLoginCeiling.int.test.ts</code> (5: the number; three logins pass and the next two get the page,
+with no login stored; login and callback share the count, and a callback past it writes no audit row; the
+address is never a key; Redis unreachable) failed before the routes ran the ceiling, with five logins
+accepted, and passes after. <code>launchRequestCeiling.int.test.ts</code> passes unchanged on the shared module. The
+three tool tests (<code>renderSections.test.mjs</code>, one each in <code>specTrace.test.mjs</code> and <code>playerPages.test.mjs</code>) fail
+on the old lines and pass on the new. The full gate and the Docker smoke test ran; step 34 in <code>PROGRESS.md</code>
+has the output.</li>
+<li><strong>Consequences:</strong> the risk list (ROS-07) and the threat model (T-111 and its summary row) say what the app
+limits itself and what is left to the proxy; the data inventory names the new counter beside the first; the
+runbook and the server&#39;s README say that both ceilings count by the address <code>TRUST_PROXY</code> gives; spec 02&#39;s
+table lists the new files under <a class="req-ref" href="#r-AUTH-001"><code>AUTH-001</code></a>. Q34 and the architecture paper say that code scanning is on.
+No line reference moved: the edits keep each file&#39;s line count, and this entry and step 34 stand at the end
+of their files. The status overview counts 34 steps.</li>
+</ul>
 
 </section>
 <section class="view doc" id="progress" aria-labelledby="progress-h">
@@ -14110,7 +14178,7 @@ what is done, what is verified, and what is blocked.</p>
 <tr>
 <td>S6</td><td>xAPI → AGS grade bridge, insight, privacy jobs, Docker, conformance report</td><td>02 §4–§8; 05; 00 §3 (journeys J1–J5), §6; 01 <a class="req-ref" href="#r-H5P-009"><code>H5P-009</code></a>, <a class="req-ref" href="#r-H5P-010"><code>H5P-010</code></a>, <a class="req-ref" href="#r-SEC-004"><code>SEC-004</code></a>, <a class="req-ref" href="#r-SEC-006"><code>SEC-006</code></a>; 03 <a class="req-ref" href="#r-UD-003"><code>UD-003</code></a>, §6 (<a class="req-ref" href="#r-UD-040"><code>UD-040</code></a>); 04 <a class="req-ref" href="#r-MAPPE-003"><code>MAPPE-003</code></a>, <a class="req-ref" href="#r-MAPPE-004"><code>MAPPE-004</code></a> (D-101)</td><td>✅ Done (gate passed 2026-11-06; started 2026-10-30; D-101…D-116)</td></tr>
 <tr>
-<td>SR</td><td>Security repairs after the S6 gate: 33 steps, each with tests, a gate run and a decision entry</td><td>The spec a step names</td><td>✅ Done (2026-11-20 to 2026-11-27; D-117…D-149; session log, steps 1–33); open: HVL IT&#39;s and the owner&#39;s questions Q32, Q33 and Q34, with the earlier ones</td></tr>
+<td>SR</td><td>Security repairs after the S6 gate: 34 steps, each with tests, a gate run and a decision entry</td><td>The spec a step names</td><td>✅ Done (2026-11-20 to 2026-11-27; D-117…D-150; session log, steps 1–34); open: HVL IT&#39;s and the owner&#39;s questions Q32, Q33 and Q34, with the earlier ones</td></tr>
 </tbody></table></div>
 <p>Legend: ⬜ not started · 🟨 in progress · ✅ done (gate passed, output pasted below) · ⛔ blocked</p>
 <hr>
@@ -15216,7 +15284,7 @@ log, «2026-11-06 · S6 gate»)</li>
 <tr>
 <td>Q33</td><td>Where is the production image built, and is it signed there? No workflow publishes, signs or attests an image: <code>docker.yml</code> builds it only to test it. Decide the place (HVL&#39;s own pipeline or registry), whether the image is signed and carries a statement of the commit it was built from, and who checks both at deployment (threat model T-92, ROS-21; D-145)</td><td>HVL IT</td><td>Nothing in the code; the production deployment</td></tr>
 <tr>
-<td>Q34</td><td>A secret scan of the repository. The owner switched on GitHub&#39;s secret scanning and push protection on 2026-11-27, with private vulnerability reporting and Dependabot alerts (the repository&#39;s Advanced Security settings; no check holds them); CI runs no scanner of its own (D-145). Open: name the scan HVL IT uses once the code lives with HVL</td><td>HVL IT</td><td>Nothing</td></tr>
+<td>Q34</td><td>A secret scan of the repository. The owner switched on GitHub&#39;s secret scanning and push protection on 2026-11-27, with private vulnerability reporting, Dependabot alerts and code scanning (CodeQL, default setup; D-150) (the repository&#39;s Advanced Security settings; no check holds them); CI runs no scanner of its own (D-145). Open: name the scan HVL IT uses once the code lives with HVL</td><td>HVL IT</td><td>Nothing</td></tr>
 </tbody></table></div>
 <h3 id="progress--risk-register" tabindex="-1">Risk register</h3>
 <div class="table-wrap" role="region" aria-label="Table 4, Risk register" tabindex="0"><table><thead><tr>

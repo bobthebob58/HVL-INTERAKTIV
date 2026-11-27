@@ -267,7 +267,7 @@ gradebook. Its claim bug was found only by a full test run (`PROGRESS.md`, S6 st
       (`auth/session/csrfToken.ts:109`).
 - [ ] After login, the app redirects to local paths only (`auth/returnTo.ts`).
 - [ ] Learners' names and e-mail addresses are dropped at login (`AUTH-004`).
-- [ ] Decide whether login and launch need a rate limit at the proxy: the app has none (ROS-07).
+- [ ] Decide whether login and launch need a rate limit at the proxy: the app has only a backstop per address (ROS-07).
 
 **Tests that claim it:** `test/auth/feide/FeideClient.test.ts`, `feideLogin.int.test.ts`,
 `loginTransactions.int.test.ts`, `test/auth/session/csrfToken.test.ts`, `SessionStore.int.test.ts`,
@@ -402,8 +402,8 @@ tools, but it is a one-term student project and does not replace IT's security r
 
 **Known open items** that reviewers should judge rather than report as new (each is recorded): CVE-2025-7062 in Lumi
 10.0.4 (D-003); the editor's files on the app origin and the cookie routes (D-110); scores computed in the browser
-(limitation 1 in `docs/EVALUATOR-GUIDE.md` §6); tokens in some URLs, so the proxy must not log query strings (limitation 9); no rate
-limit on login and launch in the app (ROS-07); the residuals R1–R41 in `docs/privacy/DPIA-INPUT.md` §12.
+(limitation 1 in `docs/EVALUATOR-GUIDE.md` §6); tokens in some URLs, so the proxy must not log query strings (limitation 9); only a
+backstop ceiling on login and launch in the app (ROS-07); the residuals R1–R41 in `docs/privacy/DPIA-INPUT.md` §12.
 
 ## 5. How to report findings
 

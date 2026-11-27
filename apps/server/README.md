@@ -558,7 +558,7 @@ fails if the two disagree. Summary:
 | `NODE_ENV`, `LOG_LEVEL` | no | Runtime mode and log level |
 | `PUBLIC_BASE_URL` | no | The public origin (no path): Feide redirect URI `<origin>/auth/feide/callback`, logout return `<origin>/auth/logged-out`, Deep Linking item URLs, HSTS when https |
 | `PORT` | no | The port the server listens on (default 3000) |
-| `TRUST_PROXY` | no | How many reverse proxies' `X-Forwarded-*` headers are trusted (0–5, default 0); never more than really run. The LTI request ceiling and the audit's address hash count by the client address this gives (D-141) |
+| `TRUST_PROXY` | no | How many reverse proxies' `X-Forwarded-*` headers are trusted (0–5, default 0); never more than really run. The LTI and Feide login request ceilings and the audit's address hash count by the client address this gives (D-141, D-150) |
 | `CANVAS_ORIGINS` | no | Origins that may frame the LTI pages (`frame-ancestors`, comma-separated); empty: no framing |
 | `EXTERNAL_MEDIA_ORIGINS` | no | Origins H5P content may load outside media from (e.g. Panopto); never YouTube. A Panopto site (`*.panopto.com`, `*.panopto.eu`) also allows Panopto's embed API script (that one file on `developers.panopto.com`), which H5P.Video needs (D-070) |
 | `CAPTIONED_MEDIA_ORIGINS` | no | Origins whose videos are captioned by policy (e.g. HVL's Panopto); V-VID-CAPTIONS accepts their videos without a text track of their own (D-073) |

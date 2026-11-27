@@ -385,6 +385,6 @@ HVL facts this document needs **(IT to fill in)**:
 Known technical gaps from the repository, for the [threat model](threat-model.md) and the
 [ROS-analyse](ros-analyse.md): CVE-2025-7062 unpatched upstream (D-003); editor files on the app origin (D-110);
 `/healthz` without S3 or clamd; no server-side egress test; unpinned Ubuntu packages and Chromium hash;
-no image signing (Q33); the only secret scan is GitHub's own, switched on in the owner's settings on 2026-11-27 (Q34); the bundle hash list not committed; the build-secret scan is a heuristic; the LTI tool key pair has no rotation procedure; the
+no image signing (Q33); the only secret scan is GitHub's own, switched on in the owner's settings on 2026-11-27 (Q34), and so is the only static code scan, GitHub's code scanning in its default setup (D-150); the bundle hash list not committed; the build-secret scan is a heuristic; the LTI tool key pair has no rotation procedure; the
 container hardening is in the local compose file only; the SBOM leaves out Ubuntu packages, Chromium and 110 H5P
 libraries.
