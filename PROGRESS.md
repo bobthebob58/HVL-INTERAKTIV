@@ -3576,3 +3576,48 @@ Append one entry per session: date, session, what was done, gate output, and any
   - Noted and not changed: in H5P's video dialog the texts are partly Bokmål (the editor's own texts fall back
     from Nynorsk), and its heading invites a YouTube link while HVL's field text says such links cannot be played
     here; a wording question for the language advisers.
+  - The gate's run found two things this step's own changes had left behind; both were corrected after it. A
+    browser test of the answer prefixes pressed a question button by the old start of its name, where the word
+    the button shows now stands first; it passes on its own since. And the Evaluator Guide's row for
+    `npm run test:e2e` did not name the two new browser tests, which DOC-004's test holds it to. The
+    accessibility run is recorded in the conformance report as it ran, on commit `dd77f6512636` with axe-core
+    4.14.1: 563 tests and 179 scans, none of them with a finding of the rule for 2.5.3. The elements axe leaves
+    for a contrast review by hand are 1 450 in 125 scans (791 in 120 at the run of 2026-11-05, with 4.13.0 and
+    fewer views); the suite fails on none of them, now as then. Gate output:
+
+  ```
+  $ npm run build                                      exit 0
+  $ HVLI_DOCKER_SANDBOX=1 bash deploy/smoke/dockerSmoke.sh   passed in 250 s (the PDF printed as uid 10001 with
+      the sandbox seen in /proc)
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run lint:css                                   exit 0
+  $ npm run doc:lint && npm run check:filesize         11 checks passed; file-size passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run privacy:dpia-check                         13 sections, the developer key and the residuals agree
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins && npm run check:licences       every version pinned; 489 production packages compatible
+  $ npm run check:lockfile                             949 packages from the registry with sha512; 4 install scripts reviewed
+  $ npm run check:workflows                            3 workflows: actions by commit, images by digest
+  $ npm run check:audit                                2 high/critical advisories, both covered by reviewed exceptions
+  $ npm run sbom -- --check                            current: 478 npm packages, 12 H5P components, 3 images
+  $ npm run content:check && npm run tokens:check      exit 0 (the site icon included)
+  $ node tools/spec-site/buildSpecSite.mjs --check     up to date
+  $ node tools/deploy-check/checkDeployFiles.mjs       exit 0
+  $ npm run docs:api                                   exit 0
+  $ npm run a11y:report -- --check                     exit 0
+  $ npx vitest run --project web                       655 passed (102 files)
+  $ npx vitest run --project api-contract              123 passed (15 files)
+  $ npx vitest run --project tools                     604 passed (81 files); 603 and 1 failed in the gate's own
+      run, before the guide's row named the two new browser tests
+  $ npx vitest run --project design-tokens             162 passed
+  $ npx vitest run --project hvl-h5p-theme             217 passed
+  $ LIVE_TARGET=mock npm run test:live                 36 passed
+  $ npm run test:a11y                                  563 passed (18 files), with axe-core 4.14.1
+  $ npm run test:e2e                                   38 passed, 1 skipped; 1 file failed: learnerDataRights
+      (needs the privileged database, like DATA-010's tests)
+  $ npx vitest run --project server                    27171 passed, 31 skipped; 2 failed in 5 files: a
+      privileged database (three files) and the seccomp PDF sandbox, limits of this container (DATA-010,
+      MAPPE-004), and the answer-prefix test above, which passed on its own after its correction (3 of 3 in
+      its file)
+  ```

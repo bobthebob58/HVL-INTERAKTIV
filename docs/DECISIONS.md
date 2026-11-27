@@ -6823,13 +6823,13 @@ loading of one spec per session are kept.
   view's numbers, the answer key, the video interaction and its count) failed on the old catalogue;
   `packages/hvl-h5p-theme/test/xapiSingleChoiceSet.test.ts` (5: the stored index, a statement of another library
   left alone, no answer without the record, nothing changed, the bridge with the raising instance) failed before
-  the correction existed. `a11yRepairsLabelInName.test.ts` (5; four failed on the old script), and the
+  the correction existed. `a11yRepairsLabelInName.test.ts` (6; five failed before their repair), and the
   accessibility suite with the newer scanner: 14 of 563 tests failed for the one rule before the repairs, none
   after. `packages/design-tokens/test/siteIcon.test.ts` (6) and the browser test of the icon in
   `test/web/webPages.browser.int.test.ts`, which found no icon link on the old build. The language marks:
-  `apps/web/test/features/insight/InsightQuotedLanguage.test.tsx` (5) and `quotedText.test.tsx` (3); three
-  failed before, and the two that passed guard what must stay unmarked. The three journey tests above. The full
-  gate and the Docker smoke test ran; step 35 in `PROGRESS.md` has the output.
+  `apps/web/test/features/insight/InsightQuotedLanguage.test.tsx` (5) and `quotedText.test.tsx` (6); of the
+  five, three failed before, and the two that passed guard what must stay unmarked. The three journey tests
+  above. The full gate and the Docker smoke test ran; step 35 in `PROGRESS.md` has the output.
 - **Consequences:** `CLAUDE.md` §2 names the bridge's four scripts, and the theme's README and the tests that
   list them follow. Three report drafts are added to `docs/upstream/` (the set's statement; the slide-menu
   button's name; a question button's name and MultiChoice's untranslated labels). The READMEs of the design

@@ -1,14 +1,14 @@
 {
   "format": 2,
   "command": "npm run test:a11y",
-  "date": "2026-11-05",
-  "commit": "f5fa12bf67fd21ef62b0846cf46636a057df7e8a",
+  "date": "2026-11-27",
+  "commit": "dd77f65126369a79178bcae6fdf4e48f2d67ee7b",
   "worktree": "clean",
-  "axeCore": "4.13.0",
+  "axeCore": "4.14.1",
   "totals": {
     "files": 18,
     "failedFiles": 0,
-    "passed": 558,
+    "passed": 563,
     "failed": 0,
     "skipped": 0
   },
@@ -84,6 +84,7 @@
     "axeInsight.a11y.test.ts": [
       {"group":"[UD-030] axe on the Innsikt tab","title":"[INS-003][UD-030] print: while the list is printed, only the list and its heading show, without buttons or violations","status":"passed"},
       {"group":"[UD-030] axe on the Innsikt tab","title":"[UD-006][INS-003] keyboard: Tab reaches «Ta opp i samlinga», Space adds it and it is said, the list opens for projecting and Escape returns focus","status":"passed"},
+      {"group":"[UD-030] axe on the Innsikt tab","title":"[UD-030][INS-001] the tab for a period with more answers than one view covers says so, keeps the choices and has no serious or critical violation","status":"passed"},
       {"group":"[UD-030] axe on the Innsikt tab › forced colours","title":"[UD-030][INS-008] the Canvas page’s Innsikt tab has no serious or critical violation","status":"passed"},
       {"group":"[UD-030] axe on the Innsikt tab › forced colours","title":"[UD-030][INS-008] the portal’s Innsikt tab, with a question on the list, has no serious or critical violation","status":"passed"},
       {"group":"[UD-030] axe on the Innsikt tab › forced colours","title":"[UD-030][PROD-010] the portal’s Innsikt tab for a period shortened to 1 August has no serious or critical violation","status":"passed"},
@@ -103,6 +104,7 @@
       {"group":"[UD-030] axe on the server-rendered pages › forced colours","title":"[UD-030] the Canvas page without an ltik has no serious or critical violation","status":"passed"},
       {"group":"[UD-030] axe on the server-rendered pages › forced colours","title":"[UD-030] the Deep Linking picker with its formative notice has no serious or critical violation","status":"passed"},
       {"group":"[UD-030] axe on the server-rendered pages › forced colours","title":"[UD-030] the picker without an ltik has no serious or critical violation","status":"passed"},
+      {"group":"[UD-030] axe on the server-rendered pages › forced colours","title":"[UD-030] the sign-in page a login opened from another site gets has no serious or critical violation","status":"passed"},
       {"group":"[UD-030] axe on the server-rendered pages › forced colours","title":"[UD-030] the signed-out page has no serious or critical violation","status":"passed"},
       {"group":"[UD-030] axe on the server-rendered pages › forced colours","title":"[UD-030][LTI-012] the Deep Linking picker with an activity that sends no score has no serious or critical violation","status":"passed"},
       {"group":"[UD-030] axe on the server-rendered pages › light","title":"[UD-030] the \"not available\" answer to a launch of a draft has no serious or critical violation","status":"passed"},
@@ -112,6 +114,7 @@
       {"group":"[UD-030] axe on the server-rendered pages › light","title":"[UD-030] the Canvas page without an ltik has no serious or critical violation","status":"passed"},
       {"group":"[UD-030] axe on the server-rendered pages › light","title":"[UD-030] the Deep Linking picker with its formative notice has no serious or critical violation","status":"passed"},
       {"group":"[UD-030] axe on the server-rendered pages › light","title":"[UD-030] the picker without an ltik has no serious or critical violation","status":"passed"},
+      {"group":"[UD-030] axe on the server-rendered pages › light","title":"[UD-030] the sign-in page a login opened from another site gets has no serious or critical violation","status":"passed"},
       {"group":"[UD-030] axe on the server-rendered pages › light","title":"[UD-030] the signed-out page has no serious or critical violation","status":"passed"},
       {"group":"[UD-030] axe on the server-rendered pages › light","title":"[UD-030][LTI-012] the Deep Linking picker with an activity that sends no score has no serious or critical violation","status":"passed"}
     ],
@@ -122,6 +125,7 @@
       {"group":"[UD-030] axe on the læringsdesign studio › forced colours","title":"[UD-030][PED-010][PROD-001] signed in: a pattern page with its create form has no serious or critical violation","status":"passed"},
       {"group":"[UD-030] axe on the læringsdesign studio › forced colours","title":"[UD-030][PED-030] signed in: an activity’s Læringsdesign tab has no serious or critical violation","status":"passed"},
       {"group":"[UD-030] axe on the læringsdesign studio › forced colours","title":"[UD-030][PED-031] signed in: the planner of a course with gaps has no serious or critical violation","status":"passed"},
+      {"group":"[UD-030] axe on the læringsdesign studio › forced colours","title":"[UD-030][PED-031] signed in: the planner of a course with more activities than it shows has no serious or critical violation","status":"passed"},
       {"group":"[UD-030] axe on the læringsdesign studio › forced colours","title":"[UD-030][PROD-007] signed in: a copy’s page with its attribution sign has only recorded upstream problems","status":"passed"},
       {"group":"[UD-030] axe on the læringsdesign studio › forced colours","title":"[UD-030][PROD-007] signed in: an activity’s Deling tab has no serious or critical violation","status":"passed"},
       {"group":"[UD-030] axe on the læringsdesign studio › forced colours","title":"[UD-030][PROD-007] signed in: the content bank with entries has no serious or critical violation","status":"passed"},
@@ -130,6 +134,7 @@
       {"group":"[UD-030] axe on the læringsdesign studio › light","title":"[UD-030][PED-010][PROD-001] signed in: a pattern page with its create form has no serious or critical violation","status":"passed"},
       {"group":"[UD-030] axe on the læringsdesign studio › light","title":"[UD-030][PED-030] signed in: an activity’s Læringsdesign tab has no serious or critical violation","status":"passed"},
       {"group":"[UD-030] axe on the læringsdesign studio › light","title":"[UD-030][PED-031] signed in: the planner of a course with gaps has no serious or critical violation","status":"passed"},
+      {"group":"[UD-030] axe on the læringsdesign studio › light","title":"[UD-030][PED-031] signed in: the planner of a course with more activities than it shows has no serious or critical violation","status":"passed"},
       {"group":"[UD-030] axe on the læringsdesign studio › light","title":"[UD-030][PROD-007] signed in: a copy’s page with its attribution sign has only recorded upstream problems","status":"passed"},
       {"group":"[UD-030] axe on the læringsdesign studio › light","title":"[UD-030][PROD-007] signed in: an activity’s Deling tab has no serious or critical violation","status":"passed"},
       {"group":"[UD-030] axe on the læringsdesign studio › light","title":"[UD-030][PROD-007] signed in: the content bank with entries has no serious or critical violation","status":"passed"}
@@ -610,7 +615,7 @@
     ]
   },
   "axe": {
-    "scans": 173,
+    "scans": 179,
     "labels": [
       {"label":"forced colours, /h5p/edit/<id> in a frame","scans":1},
       {"label":"forced colours, /h5p/play/<id> in a frame","scans":1},
@@ -660,6 +665,7 @@
       {"label":"forced colours, signed in: /mappe","scans":1},
       {"label":"forced colours, signed in: /mappe (with a word count)","scans":1},
       {"label":"forced colours, signed in: /personvern","scans":1},
+      {"label":"forced colours, signed in: the planner with its note","scans":1},
       {"label":"forced colours, signed in: the publish dialog","scans":1},
       {"label":"forced colours, signed out: /","scans":1},
       {"label":"forced colours, signed out: /aktivitet/<id>","scans":1},
@@ -692,6 +698,7 @@
       {"label":"forced colours, the editor of H5P.QuestionSet made in Nynorsk","scans":1},
       {"label":"forced colours, the picker without an ltik","scans":1},
       {"label":"forced colours, the save choice dialog","scans":1},
+      {"label":"forced colours, the sign-in page","scans":1},
       {"label":"forced colours, the signed-out page","scans":1},
       {"label":"forced colours: /aktivitet/[id] Innsikt","scans":1},
       {"label":"forced colours: /aktivitet/[id] Innsikt, shortened period","scans":1},
@@ -746,6 +753,7 @@
       {"label":"light, signed in: /mappe","scans":1},
       {"label":"light, signed in: /mappe (with a word count)","scans":1},
       {"label":"light, signed in: /personvern","scans":1},
+      {"label":"light, signed in: the planner with its note","scans":1},
       {"label":"light, signed in: the publish dialog","scans":1},
       {"label":"light, signed out: /","scans":1},
       {"label":"light, signed out: /aktivitet/<id>","scans":1},
@@ -778,13 +786,16 @@
       {"label":"light, the editor of H5P.QuestionSet made in Nynorsk","scans":1},
       {"label":"light, the picker without an ltik","scans":1},
       {"label":"light, the save choice dialog","scans":1},
+      {"label":"light, the sign-in page","scans":1},
       {"label":"light, the signed-out page","scans":1},
       {"label":"light: /aktivitet/[id] Innsikt","scans":1},
+      {"label":"light: /aktivitet/[id] Innsikt, a period over the limit","scans":1},
       {"label":"light: /aktivitet/[id] Innsikt, shortened period","scans":1},
       {"label":"light: /aktivitet/[id] Poeng til Canvas","scans":1},
       {"label":"light: /app/play Innsikt","scans":1},
       {"label":"light: /app/play Poeng til Canvas","scans":1},
-      {"label":"print: the «Ta opp i samlinga» list","scans":1}
+      {"label":"print: the «Ta opp i samlinga» list","scans":1},
+      {"label":"the question before «Fjern meg»","scans":1}
     ],
     "blocking": [
       {"rule":"color-contrast","impact":"serious","elements":2,"scans":2},
@@ -795,7 +806,7 @@
       {"rule":"aria-allowed-attr","impact":"critical","elements":36,"scans":4},
       {"rule":"aria-prohibited-attr","impact":"serious","elements":12,"scans":4},
       {"rule":"aria-valid-attr-value","impact":"critical","elements":6,"scans":6},
-      {"rule":"color-contrast","impact":"serious","elements":791,"scans":120},
+      {"rule":"color-contrast","impact":"serious","elements":1450,"scans":125},
       {"rule":"form-field-multiple-labels","impact":"moderate","elements":2,"scans":2},
       {"rule":"video-caption","impact":"critical","elements":4,"scans":4}
     ]
