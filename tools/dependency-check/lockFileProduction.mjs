@@ -9,11 +9,14 @@
  *      by the lock file and keeps such a copy when the lock file lists it without `dev`. On 2026-11-27 that was
  *      @emnapi/runtime 1.11.3, wanted by @img/sharp-wasm32 and by rolldown's wasm32 binding: in the image, and seen
  *      by neither check (D-148).
+ *      UPSTREAM: https://github.com/npm/cli/blob/v11.19.1/workspaces/arborist/lib/node.js (`shouldOmit`: with
+ *      `--omit=dev` only a package marked `dev` goes; optional, peer and dev-or-optional ones stay).
  * Spec: NFR-005, SEC-007
  * Invariants:
  *   - Only adds: an entry npm does not mark dev is returned as it is, so the production set never shrinks.
- *   - An entry npm marks dev becomes production only when the lock file has its folder without `dev` and without
- *     `extraneous`. A folder the lock file lacks stays dev.
+ *   - An entry npm marks dev becomes production only when the lock file has its folder, in the installed version,
+ *     without `dev` and without `extraneous`. A folder the lock file lacks, or lists in another version (an install
+ *     that lags the lock file), stays dev.
  *   - Reads package-lock.json; runs nothing.
  * Collaborators: ./checkLicences.mjs, ../sbom/buildSbom.mjs, package-lock.json (check:lockfile holds its form).
  * Tests: tools/dependency-check/test/lockFileProduction.test.mjs,
@@ -36,6 +39,18 @@ export function readLockPackages(root) {
 }
 
 /**
+ * Finds the lock file's entry for an installed copy: its folder, in the installed version.
+ * @param {{location?: string, version?: string}} entry - One entry from `npm query '*'`.
+ * @param {Record<string, {version?: string}>} lockPackages - The lock file's `packages` (readLockPackages).
+ * @returns {object | undefined} The entry; undefined when the lock file lacks the folder or lists another version.
+ */
+export function lockEntryOf(entry, lockPackages) {
+  if (typeof entry.location !== 'string' || !Object.hasOwn(lockPackages, entry.location)) return undefined;
+  const locked = lockPackages[entry.location];
+  return locked.version === entry.version ? locked : undefined;
+}
+
+/**
  * Says whether a production install keeps the folder a lock-file entry describes.
  * @param {{dev?: boolean, extraneous?: boolean} | undefined} locked - The entry; undefined when the file lacks it.
  * @returns {boolean} True when the lock file lists it, and neither as dev nor as extraneous.
@@ -45,15 +60,13 @@ export const keptByProductionInstall = (locked) =>
 
 /**
  * Gives every installed copy that npm marks dev, but that the lock file lists as production, the production flag.
- * @param {{location?: string, dev?: boolean}[]} entries - Every entry from `npm query '*'`.
+ * @param {{location?: string, version?: string, dev?: boolean}[]} entries - Every entry from `npm query '*'`.
  * @param {Record<string, object>} lockPackages - The lock file's `packages` (readLockPackages).
  * @returns {object[]} The entries; a changed one is a copy with `dev: false`.
  */
 export function withLockFileProduction(entries, lockPackages) {
-  const locked = (entry) =>
-    Object.hasOwn(lockPackages, entry.location) ? lockPackages[entry.location] : undefined;
   return entries.map((entry) =>
-    entry.dev === true && typeof entry.location === 'string' && keptByProductionInstall(locked(entry))
+    entry.dev === true && keptByProductionInstall(lockEntryOf(entry, lockPackages))
       ? { ...entry, dev: false }
       : entry,
   );

@@ -21,10 +21,13 @@
  *   - Only a component npm marked development or extraneous is changed. With an installed production copy of the
  *     same name and version, it is rewritten as npm writes that copy: scope, download address, hash and the bundled
  *     flag from the copy's entry in package-lock.json, the address first among the references, keys in npm's order,
- *     and the copy's own edges from the installed tree. Without one, it only loses the extraneous flag when the lock
- *     file lists an installed copy of it, and stays development.
- *   - A production copy that package-lock.json lacks, or whose integrity value is not one sha512 value, is refused
- *     (check:lockfile holds the lock file to that form).
+ *     and the copy's own edges from the installed tree. With several production copies the first in npm's order is
+ *     taken, as npm itself takes the first. An edge to one of our workspaces is not followed: no registry package
+ *     depends on one. Without a production copy, the component only loses the extraneous flag, and stays
+ *     development, when the lock file lists every installed copy of it.
+ *   - The lock file's entry for a copy is the one for its folder in the installed version. A production copy
+ *     without such an entry (an install that lags the lock file), or whose integrity value is not one sha512 value,
+ *     is refused (check:lockfile holds the lock file to that form).
  *   - `runNpmQuery` runs `npm query --no-update-notifier` on the installed tree; it contacts no server. The rest
  *     only reads its arguments.
  * Collaborators: ./buildSbom.mjs (calls this before npmComponents.mjs filters), ./npmComponents.mjs (npm's flags),
@@ -32,7 +35,7 @@
  * Tests: tools/sbom/test/lockFileCorrections.test.mjs, tools/sbom/test/buildSbom.test.mjs (the real npm sbom)
  */
 import { execFileSync } from 'node:child_process';
-import { withLockFileProduction } from '../dependency-check/lockFileProduction.mjs';
+import { lockEntryOf, withLockFileProduction } from '../dependency-check/lockFileProduction.mjs';
 import { DEVELOPMENT, EXTRANEOUS } from './npmComponents.mjs';
 
 /** npm's property for a copy that sits inside another package's bundle. */
@@ -70,7 +73,7 @@ function hashesOf(integrity, location) {
 
 /** The component as npm writes it for the copy that `locked` describes, keys in npm's order. */
 function asCopy(component, locked, location) {
-  if (!locked) throw new Error(`package-lock.json lacks ${location}, which is installed (run npm ci)`);
+  if (!locked) throw new Error(`package-lock.json lacks ${location} in the installed version (run npm ci)`);
   const kept = Object.entries(component).filter(([key]) => key !== 'hashes' && key !== 'licenses');
   const properties = without(component, [...NOT_PRODUCTION, BUNDLED]);
   const references = (component.externalReferences ?? []).filter((r) => r.type !== 'distribution');
@@ -96,16 +99,17 @@ function asCopy(component, locked, location) {
  *   installed copy (`npm query '*'`); an empty list corrects nothing.
  * @param {Record<string, object>} lockPackages - The lock file's `packages`: folder → entry.
  * @returns {object} The document; the same object when nothing needed correcting.
- * @throws {Error} When package-lock.json lacks a production copy, or its integrity value is not one sha512 value.
+ * @throws {Error} When package-lock.json lacks a production copy in the installed version, or its integrity value
+ *   is not one sha512 value.
  */
 export function withLockFileCorrections(npmBom, installed, lockPackages) {
-  const inLockFile = (location) => Object.hasOwn(lockPackages, location);
   const byLocation = new Map(installed.map((copy) => [copy.location, copy]));
   const production = new Map();
   const listed = new Set();
+  const unlisted = new Set();
   for (const copy of withLockFileProduction(installed, lockPackages)) {
     if (!copy.location?.includes('node_modules/')) continue;
-    if (inLockFile(copy.location)) listed.add(refOf(copy));
+    (lockEntryOf(copy, lockPackages) ? listed : unlisted).add(refOf(copy));
     if (copy.dev !== true && !production.has(refOf(copy))) production.set(refOf(copy), copy);
   }
   const rewritten = new Map();
@@ -113,15 +117,12 @@ export function withLockFileCorrections(npmBom, installed, lockPackages) {
     const ref = component['bom-ref'];
     if (!marked(component, NOT_PRODUCTION)) return component;
     const copy = production.get(ref);
-    if (!copy && !(marked(component, [EXTRANEOUS]) && listed.has(ref))) return component;
+    const everyCopyListed = listed.has(ref) && !unlisted.has(ref);
+    if (!copy && !(marked(component, [EXTRANEOUS]) && everyCopyListed)) return component;
     rewritten.set(ref, copy);
     if (!copy)
       return { ...component, properties: [flag(DEVELOPMENT), ...without(component, NOT_PRODUCTION)] };
-    return asCopy(
-      component,
-      inLockFile(copy.location) ? lockPackages[copy.location] : undefined,
-      copy.location,
-    );
+    return asCopy(component, lockEntryOf(copy, lockPackages), copy.location);
   });
   if (rewritten.size === 0) return npmBom;
   const edgesOf = (copy) => [

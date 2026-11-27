@@ -191,7 +191,7 @@ describe('[NFR-005] check:licences runs the guard first', () => {
     const location = 'node_modules/left-behind';
     const kept = entry('left-behind', { dev: true, license: 'BUSL-1.1', location });
     const seen = [...complete.filter((e) => e.name !== '@hvl-interaktiv/web'), kept];
-    const run = runCheck(seen, { [location]: { optional: true } });
+    const run = runCheck(seen, { [location]: { version: '1.0.0', optional: true } });
     expect(run.status).toBe(1);
     expect(run.stderr).toContain('✗ left-behind@1.0.0: licence "BUSL-1.1" is not GPL-3.0-compatible');
   });

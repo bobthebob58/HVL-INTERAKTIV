@@ -48,8 +48,9 @@ npm), and keeps every component npm did not mark:
   the same production set. The counts differ only in how they count: `check:licences` reports 489 entries because it
   counts the root and every install location (6 packages, such as `mime-db@1.54.0`, sit in two to four folders),
   while the SBOM lists each `name@version` once (478).
-- `cdx:npm:package:extraneous`: installed, but not in `package-lock.json`. The command names such packages; run
-  `npm ci`.
+- `cdx:npm:package:extraneous`: npm sets it on a copy that no installed package needs. After the corrections below
+  it is left only on a package that is installed but not in `package-lock.json` (or there in another version). The
+  command names such packages; run `npm ci`.
 
 **Two corrections by the lock file (D-148).** npm's flags describe the installed tree. In two cases that is not what
 a production install keeps, and `lockFileCorrections.mjs` corrects npm's document for both before the filter:
@@ -64,6 +65,10 @@ a production install keeps, and `lockFileCorrections.mjs` corrects npm's documen
   image build runs, keeps one that the lock file lists without `dev`. Such a copy is listed
   (`tools/dependency-check/lockFileProduction.mjs`, which `check:licences` uses too); one the lock file lists as dev
   counts as development. On 2026-11-27 this was `@emnapi/runtime@1.11.3`: in the image, loaded by nothing.
+
+Both corrections read the lock file's entry for a copy's own folder, and only when it names the installed version:
+with an install that lags the lock file, nothing is taken from an entry for another version, and a production copy
+without its entry stops the command (run `npm ci`).
 
 On 2026-11-27 the AI author compared the list once with a production install made as the image build makes it
 (`npm ci`, then `npm prune --omit=dev`, in a folder with only the manifests and the lock file): the same 473 registry
@@ -144,7 +149,7 @@ check is not automated and no human has repeated it: the schema is not in the re
 ## Tests
 
 `test/npmComponents.test.mjs`, `test/lockFileCorrections.test.mjs`, `test/sourceComponents.test.mjs` and
-`test/buildSbom.test.mjs` (28 tests on 2026-11-27), titled `[SEC-007]`:
+`test/buildSbom.test.mjs` (29 tests on 2026-11-27), titled `[SEC-007]`:
 the H5P and image components carry their pins; the same input gives the same bytes in any order; `--check` finds a
 stale, missing or other-platform file; a shrunken npm set is refused; npm components keep npm's licences and purls.
 One test runs the real `npm sbom` (with `npm_config_omit=dev` set, as `NODE_ENV=production` would) and `npm query '*'`

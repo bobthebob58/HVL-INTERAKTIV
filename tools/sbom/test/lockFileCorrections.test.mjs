@@ -45,13 +45,15 @@ const INSTALLED = [
   copy('helper', '2.8.1', BUNDLED_COPY, { dev: true, to: ['node_modules/vitest'] }),
   copy('esprima', '1.2.5', 'node_modules/esprima'),
   copy('express', '5.3.0', 'node_modules/express', { to: ['node_modules/helper'] }),
-  copy('helper', '2.8.1', 'node_modules/helper', { to: ['node_modules/esprima', 'node_modules/absent'] }),
+  copy('helper', '2.8.1', 'node_modules/helper', {
+    to: ['node_modules/esprima', 'node_modules/esprima', 'node_modules/absent'],
+  }),
   copy('vitest', '5.0.5', 'node_modules/vitest', { dev: true }),
 ];
 const lockWith = (helper) => ({
-  [BUNDLED_COPY]: { dev: true, inBundle: true },
-  'node_modules/vitest': { dev: true },
-  ...(helper ? { 'node_modules/helper': helper } : {}),
+  [BUNDLED_COPY]: { version: '2.8.1', dev: true, inBundle: true },
+  'node_modules/vitest': { version: '5.0.5', dev: true },
+  ...(helper ? { 'node_modules/helper': { version: '2.8.1', ...helper } } : {}),
 });
 const helperIn = (bom) => bom.components.find((c) => c.name === 'helper');
 
@@ -93,6 +95,12 @@ describe('[SEC-007] a runtime package that npm describes by another copy', () =>
     expect(helperIn(corrected)).toMatchObject({ scope: 'optional', properties: [flag(BUNDLED)] });
     expect(helperIn(corrected).externalReferences).toEqual([VCS]);
     expect(helperIn(corrected).hashes).toBeUndefined();
+    const either = withLockFileCorrections(
+      bomWithBundledCopyFirst(),
+      INSTALLED,
+      lockWith({ devOptional: true }),
+    );
+    expect(helperIn(either)).toMatchObject({ scope: 'optional', properties: [] });
   });
 
   it('[SEC-007] lists a copy npm calls extraneous when the lock file lists its folder as production', () => {
@@ -120,6 +128,18 @@ describe('[SEC-007] a runtime package that npm describes by another copy', () =>
     expect(part.extraneous).toEqual(['left-pad@1.3.0']);
   });
 
+  it('[SEC-007] keeps the extraneous flag while one installed copy sits in a folder the lock file lacks', () => {
+    // Arrange: besides the dev tool's copy, a stray copy that the lock file does not list
+    const npmBom = bomWith([flag(DEVELOPMENT), flag(EXTRANEOUS)]);
+    const stray = copy('helper', '2.8.1', 'node_modules/stray/node_modules/helper', { dev: true });
+    const withStray = [...INSTALLED.filter((c) => c.location !== 'node_modules/helper'), stray];
+    // Act
+    const corrected = withLockFileCorrections(npmBom, withStray, lockWith(undefined));
+    // Assert: unchanged, so the command still names the package and says to run npm ci
+    expect(corrected).toBe(npmBom);
+    expect(productionPart(corrected).extraneous).toEqual(['left-pad@1.3.0', 'helper@2.8.1']);
+  });
+
   it('[SEC-007] changes nothing when every copy of a development package is a development copy', () => {
     // Arrange
     const npmBom = bomWithBundledCopyFirst();
@@ -129,13 +149,20 @@ describe('[SEC-007] a runtime package that npm describes by another copy', () =>
     expect(withLockFileCorrections(npmBom, [], {})).toBe(npmBom);
   });
 
-  it('[SEC-007] refuses a production copy the lock file lacks, or one without a sha512 value', () => {
-    // Arrange
+  it('[SEC-007] refuses a production copy the lock file lacks or lists in another version, or without sha512', () => {
+    // Arrange: an install that lags the lock file has 2.8.1 where the lock file says 2.8.0
     const weak = lockWith({ resolved: ADDRESS, integrity: 'sha1-2jmj7l5rSw0yVb/vlWAYkK/YBwk=' });
+    const other = lockWith({
+      version: '2.8.0',
+      resolved: ADDRESS.replace('2.8.1', '2.8.0'),
+      integrity: INTEGRITY,
+    });
+    const lacks = /package-lock\.json lacks node_modules\/helper in the installed version/;
     // Act and assert
     expect(() => withLockFileCorrections(bomWithBundledCopyFirst(), INSTALLED, lockWith(undefined))).toThrow(
-      /package-lock\.json lacks node_modules\/helper/,
+      lacks,
     );
+    expect(() => withLockFileCorrections(bomWithBundledCopyFirst(), INSTALLED, other)).toThrow(lacks);
     expect(() => withLockFileCorrections(bomWithBundledCopyFirst(), INSTALLED, weak)).toThrow(
       /node_modules\/helper needs one sha512 integrity value/,
     );

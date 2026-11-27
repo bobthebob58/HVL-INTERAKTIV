@@ -12,8 +12,9 @@
  *      the flag read here says what a production install keeps.
  * Spec: SEC-007
  * Invariants:
- *   - A component stays only when npm marked it neither development nor extraneous (installed, but not in
- *     package-lock.json). The dependency graph keeps only edges between components that stay.
+ *   - A component stays only when it is marked neither development nor extraneous. npm sets "extraneous" on a copy
+ *     that no installed package needs; after the correction it is left only on a package that is installed but not
+ *     in package-lock.json. The dependency graph keeps only edges between components that stay.
  *   - npm's data is kept as npm wrote it, with two exceptions: `name` is the package name (npm names a workspace
  *     after its folder, `server` for `@hvl-interaktiv/server`, and the root after the checkout folder), and a licence
  *     that check:licences records in REVIEWED replaces npm's, marked by a property. REVIEWED was read from the
@@ -32,7 +33,7 @@ import {
 
 /** npm's property for a package that only dev dependencies need. */
 export const DEVELOPMENT = 'cdx:npm:package:development';
-/** npm's property for a package in node_modules that package-lock.json does not list. */
+/** npm's property for a copy that no installed package needs; after lockFileCorrections.mjs, one the lock file lacks. */
 export const EXTRANEOUS = 'cdx:npm:package:extraneous';
 /** Our property on a component whose licence comes from check:licences' REVIEWED list. */
 export const REVIEWED_LICENCE = 'hvl:licence:reviewed-in';
