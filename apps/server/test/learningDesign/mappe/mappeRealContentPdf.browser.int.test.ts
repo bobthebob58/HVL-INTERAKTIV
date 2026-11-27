@@ -71,7 +71,7 @@ describeWithBrowser('[MAPPE-004] the PDF of the repository’s own pedagogisk ma
         expect(flatten(facts.outline)).toEqual(mappeHeadings(markdown).map(({ text }) => text));
         expect(facts.language).toBe(locale);
         expect(facts.title).toBe(firstTopHeading(markdown));
-        expect(facts.structure).toMatch(/^Document\(H1 .*Table\(TR\(TH TH TH\) TR\(TH TD TD\)/);
+        expect(facts.structure).toMatch(/^Document\(H1 .*Table\(TR\(TH TH TH\) TR\(TH\(Strong\) TD TD\)/);
         expect(facts.textItems).toEqual(expect.arrayContaining([...TITLES]));
         expect(facts.imageCount).toBe(0);
         expect(facts.fonts.every((font) => font.embedded)).toBe(true);

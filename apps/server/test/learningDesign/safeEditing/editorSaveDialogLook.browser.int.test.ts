@@ -81,23 +81,25 @@ describeWithServices('[PROD-013] the save choice dialog’s look in the editor p
       it('upstream pin: after a mouse click the autofocus button has focus but no :focus-visible; only a :focus rule shows a ring', async () => {
         // Arrange
         const probe = await openEditorWithProbe(browser(), bench);
-        // Act
+        // Act: the looks are read after the plain mouse click, before anything asks for a visible focus
         await openByMouse(probe);
         const byMouse = await focusIn(probe.frame);
+        const unstyled = await lookOf(probe.frame);
+        expect(await linkProbeStyles(probe.frame)).toBe(true);
+        const styled = await lookOf(probe.frame);
         await probe.page.click('#hvl-save-choice-copy');
         await eventually(() => probeLog(probe.frame)).toEqual({ log: ['close:copy'], results: ['copy'] });
         await openByMouse(probe, { focusVisible: true });
         const asked = await focusIn(probe.frame);
-        const unstyled = await lookOf(probe.frame);
-        expect(await linkProbeStyles(probe.frame)).toBe(true);
-        const styled = await lookOf(probe.frame);
         // Assert: `method="dialog"` closes without navigating, so `form-action 'self'` does not stop it
         expect(probe.csp).toContain("form-action 'self'");
         expect(byMouse).toEqual({ at: CANCEL, visible: false });
-        // Chromium 141 ignores focus({ focusVisible: true }); only a `:focus` rule can show the ring here
-        expect(asked).toEqual({ at: CANCEL, visible: false });
+        // Chromium 159 follows focus({ focusVisible: true }), which 141 ignored (D-149). The page's own script does
+        // not ask for it (autofocus places the focus), so only a `:focus` rule shows the ring after a mouse click
+        expect(asked).toEqual({ at: CANCEL, visible: true });
+        // No ring: the outline's style is none. Chromium 159 still reports the width it would have (141: 0px)
         expect(unstyled.button).toMatchObject({
-          ring: ['none', '0px', 'rgb(255, 255, 255)', '0px'],
+          ring: ['none', '3px', 'rgb(255, 255, 255)', '0px'],
           inner: 'none',
         });
         expect(styled.button).toMatchObject({ ring: ['solid', '3px', 'rgb(0, 67, 87)', '2px'] });

@@ -111,7 +111,7 @@
     document.body.append(dialog);
     dialog.showModal();
     // WHY: «Avbryt» already has focus (autofocus), and focusing the focused element again changes nothing. The
-    // probe shows that Chromium 141 ignores the option anyway (./editorSaveDialogLook.browser.int.test.ts).
+    // probe shows that Chromium 159 follows the option, which 141 ignored (./editorSaveDialogLook.browser.int.test.ts).
     if (settings.focusVisible) cancel.blur();
     if (settings.focusVisible) cancel.focus({ focusVisible: true });
     if (settings.guardFrameFocus) guardFrameFocus(dialog, cancel);

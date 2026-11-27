@@ -37,8 +37,9 @@ const SAVE = 'hvl-editor-save';
 /** The dialog as assistive technology sees it: its name, form, heading, text and three buttons, and nothing else. */
 const DIALOG_NODES = [
   `dialog:${SAVE_CHOICE_TEXTS.title}`,
-  // WHY: the unnamed `method="dialog"` form.
-  'generic:',
+  // WHY: the unnamed `method="dialog"` form. Chromium 159 gives it the role `form` (141: generic); without a name it
+  // is no landmark (D-149).
+  'form:',
   `heading:${SAVE_CHOICE_TEXTS.title}`,
   'paragraph:',
   'paragraph:',

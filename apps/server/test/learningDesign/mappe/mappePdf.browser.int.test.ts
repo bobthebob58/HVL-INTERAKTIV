@@ -100,7 +100,7 @@ describeWithBrowser('[MAPPE-004] the portfolio PDF from the server’s Chromium'
         /^attachment; filename="pedagogisk-mappe-[\d-]+\.pdf"$/,
       );
       expect(facts.marked).toBe(true);
-      expect(facts.structure).toMatch(/^Document\(H1 .*Table\(TR\(TH TH TH\) TR\(TH TD TD\)/);
+      expect(facts.structure).toMatch(/^Document\(H1 .*Table\(TR\(TH TH TH\) TR\(TH\(Strong\) TD TD\)/);
       expect(flatten(facts.outline)).toEqual(headingsOf(markdown));
       expect(facts.language).toBe('nn');
       expect(facts.title).toBe(firstTopHeading(markdown));
