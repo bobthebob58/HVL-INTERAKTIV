@@ -2,18 +2,23 @@
  * Browser tests that find a reliable way to run Chromium with third-party cookies blocked for the cookie-less LTI
  * iframe e2e (D-065, D-149), prove it with a canary against a control run, and record what a blocked cross-site
  * frame can still store. They also pin the Chromium switches, settings and CDP controls that look like they block
- * but do not, so a browser update that changes one of them is noticed.
+ * but do not, so a browser update that changes one of them is noticed. One test holds the clean-up of a profile
+ * folder: removed with what is in it, and a failure reported, never thrown.
  *
  * Spec: LTI-003
  */
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { chromium, type Browser } from 'playwright-core';
-import { afterAll, beforeAll, expect, it } from 'vitest';
+import { afterAll, beforeAll, expect, it, vi } from 'vitest';
 import { describeWithBrowser } from '../support/browser.js';
 import { startCookieCanary, type CookieCanary } from '../support/thirdPartyCookieCanary.js';
-import { BLOCK_THIRD_PARTY_COOKIES_SWITCH, launchCookieTestChromium } from '../support/thirdPartyCookies.js';
+import {
+  BLOCK_THIRD_PARTY_COOKIES_SWITCH,
+  launchCookieTestChromium,
+  removeBrowserProfile,
+} from '../support/thirdPartyCookies.js';
 
 const COOKIE_CONTROLS = {
   enableThirdPartyCookieRestriction: true,
@@ -107,6 +112,26 @@ describeWithBrowser('[LTI-003] Chromium with third-party cookies blocked', () =>
   });
 });
 
+it('[LTI-003] a profile folder is removed with what is in it, and one that cannot be removed fails no run', () => {
+  // Arrange: a profile as a closing Chromium leaves it, and a path no removal can take
+  const profile = mkdtempSync(join(tmpdir(), 'cookie-profile-'));
+  mkdirSync(join(profile, 'Default', 'Cache'), { recursive: true });
+  writeFileSync(join(profile, 'Default', 'Cache', 'index'), 'x');
+  const warned = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+  // Act
+  removeBrowserProfile(profile);
+  removeBrowserProfile(profile);
+  const unremovable = () => removeBrowserProfile('no\0such-profile');
+  // Assert: gone, gone again without a word, and the failure said, not thrown
+  expect(existsSync(profile)).toBe(false);
+  expect(warned).not.toHaveBeenCalled();
+  expect(unremovable).not.toThrow();
+  expect(warned.mock.calls.map(([line]) => String(line))).toEqual([
+    expect.stringMatching(/^the browser profile no\0such-profile could not be removed: /),
+  ]);
+  warned.mockRestore();
+});
+
 describeWithBrowser('[LTI-003] Chromium cookie controls that do not block reliably', (browser) => {
   let canary: CookieCanary;
   beforeAll(async () => {
@@ -140,7 +165,7 @@ describeWithBrowser('[LTI-003] Chromium cookie controls that do not block reliab
     // Act
     const shell = await chromium.launchPersistentContext(profile);
     const report = await canary.open(await shell.newPage()).finally(() => shell.close());
-    rmSync(profile, { recursive: true, force: true });
+    removeBrowserProfile(profile);
     // Assert
     expect(report).toMatchObject({ documentCookie: 'canary=1', followUpCookie: 'canary=1' });
   });

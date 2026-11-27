@@ -3630,3 +3630,10 @@ Append one entry per session: date, session, what was done, gate output, and any
     has the screen's size and the footer's boxes have stood still for a second
     (`a11y/support/pointerReach.ts` `waitForSteadyBoxes`). After the change the six footer cases passed four
     times, twice of them with every processor kept busy twice over, and the whole file passed (124 tests).
+  - GitHub's next run failed in another place, with every test passed (851 files, 28 963 tests): the helper that
+    starts Chromium for the cookie tests removed its temporary profile folder when the browser disconnected, and
+    Chromium, still closing, wrote a file into the folder while it was being emptied («ENOTEMPTY»). The error was
+    thrown in the close handler, which fails a whole run. The helper (from step 33) now lets Node try such a
+    removal again, a little later each time, and reports a removal that still fails instead of throwing
+    (`test/support/thirdPartyCookies.ts` `removeBrowserProfile`, with a test). Its test file passed four times
+    after the change and left no folder behind; the Canvas iframe flow that uses the helper passed.

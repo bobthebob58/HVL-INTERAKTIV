@@ -15,7 +15,9 @@
  *   - A test that relies on the block asserts the canary first (./thirdPartyCookieCanary.ts): an ignored setting
  *     must fail, never pass.
  *   - Every context of the returned browser follows the profile's setting; the profile folder is removed when the
- *     browser closes.
+ *     browser closes. Chromium's processes still write into it for a moment after the connection is gone, so a
+ *     removal is tried again, and one that still fails is reported and never thrown: an exception in the close
+ *     handler would fail a whole run in which every test passed.
  * Collaborators: playwright-core 1.65.1 (the switches it starts Chromium with, read for `partitionedStorage`),
  *   ./thirdPartyCookieCanary.ts.
  * Tests: apps/server/test/browser/thirdPartyCookies.browser.test.ts
@@ -68,6 +70,21 @@ function playwrightDisableFeaturesSwitch(): Promise<string> {
 }
 
 /**
+ * Removes a browser profile folder with everything in it.
+ * @param profile - The folder; one that is already gone is no error.
+ */
+export function removeBrowserProfile(profile: string): void {
+  try {
+    // WHY: a file Chromium writes while the folder is being emptied makes the removal fail with ENOTEMPTY; Node
+    // tries such a removal again itself, a little later each time.
+    rmSync(profile, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
+  } catch (error) {
+    // WHY: a temporary folder left behind harms nothing; the line says where it is.
+    console.warn(`the browser profile ${profile} could not be removed: ${String(error)}`);
+  }
+}
+
+/**
  * Starts the full Chromium build in new headless mode on a fresh profile, by default with third-party cookies
  * blocked by the profile's own setting.
  * @param options - Blocking on or off (control), and whether storage partitioning is restored.
@@ -101,6 +118,6 @@ export async function launchCookieTestChromium(options: CookieTestChromiumOption
   });
   const browser = started.browser();
   if (!browser) throw new Error('the persistent context has no browser; recheck launchCookieTestChromium');
-  browser.on('disconnected', () => rmSync(profile, { recursive: true, force: true }));
+  browser.on('disconnected', () => removeBrowserProfile(profile));
   return browser;
 }
