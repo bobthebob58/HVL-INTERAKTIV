@@ -46,9 +46,11 @@ describe('[SEC-007] dependency hygiene in CI', () => {
   });
 
   it('[SEC-007] Playwright comes as a pull request of its own, and no other Ubuntu version is proposed (D-148)', () => {
+    // Act: read the committed settings, one block per ecosystem
     const dependabot = readFileSync(`${root}.github/dependabot.yml`, 'utf8');
     const block = (ecosystem) =>
       dependabot.split(`package-ecosystem: ${ecosystem}`)[1].split('package-ecosystem:')[0];
+    // Assert
     // WHY: a dependency joins the first group it fits, so Playwright's group stands before the general one.
     expect(block('npm')).toMatch(
       /groups:\n(\s+#.*\n)*\s+playwright:\n\s+patterns: \['playwright-core'\]\n[\s\S]*minor-and-patch:\n\s+exclude-patterns: \['playwright-core'\]/,
