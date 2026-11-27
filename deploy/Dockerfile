@@ -67,7 +67,7 @@ RUN npm query '#tsx, #tsx *' \
  && test -f node_modules/prisma/build/index.js \
  && test -f node_modules/playwright-core/cli.js
 
-# Full Chromium as Playwright 1.56.1 pins it; replaced by `--build-context pwbrowsers=<folder>` where the download host
+# Full Chromium as Playwright 1.65.1 pins it; replaced by `--build-context pwbrowsers=<folder>` where the download host
 # is refused (D-110 P3 amendment). Never the headless shell.
 FROM deps AS pwbrowsers-download
 RUN --mount=type=secret,id=proxy_ca,required=false \
@@ -116,7 +116,7 @@ ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright NODE_ENV=production WEB_APP=prod POR
 # SECURITY: tsx would otherwise write each translated source file to /tmp/tsx-<uid> and run it from there the next
 # time it is loaded, without checking it: the one place where the code is not on the read-only root (D-144).
 ENV TSX_DISABLE_CACHE=1
-COPY --from=pwbrowsers /chromium-1194 /ms-playwright/chromium-1194
+COPY --from=pwbrowsers /chromium-1255 /ms-playwright/chromium-1255
 WORKDIR /app
 COPY --from=prod-deps /app /app
 COPY --from=build /app/package.json /app/tsconfig.base.json /app/

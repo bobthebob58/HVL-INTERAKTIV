@@ -11,6 +11,7 @@ import type { Browser, Frame } from 'playwright-core';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { CANVAS_USERS, type LaunchSpec } from '../../../tools/mock-platform/mockPlatform.mjs';
 import { openAppTestbed, type AppTestbed } from '../test/support/appTestbed.js';
+import { isPageError } from '../test/support/browserConsole.js';
 import { launchFromCanvas } from '../test/support/ltiLaunchDriver.js';
 import { describeWithServices } from '../test/support/services.js';
 import { recordFlow, redactTokens } from '../test/support/flowRecorder.js';
@@ -77,7 +78,7 @@ describeWithServices('[LTI-006] the H5P editor in the Canvas iframe with third-p
       // Act: open the editor in the same frame and save
       page.on('console', (m) => {
         // WHY: the mock Canvas frame does not delegate fullscreen, as Canvas's own `allow` list does.
-        if (m.type() === 'error' && !m.text().includes('fullscreen is not allowed'))
+        if (isPageError(m) && !m.text().includes('fullscreen is not allowed'))
           problems.push(redactTokens(m.text()));
       });
       page.on('pageerror', (e) => problems.push(e.message));

@@ -281,7 +281,7 @@ asynchronous and synchronous teaching, it is out of scope.</p>
 <tr>
 <td>S6</td><td>xAPI → AGS grade bridge, insight, privacy jobs, Docker, conformance report</td><td>02 §4–§8; 05; 00 §3 (journeys J1–J5), §6; 01 <a class="req-ref" href="#r-H5P-009"><code>H5P-009</code></a>, <a class="req-ref" href="#r-H5P-010"><code>H5P-010</code></a>, <a class="req-ref" href="#r-SEC-004"><code>SEC-004</code></a>, <a class="req-ref" href="#r-SEC-006"><code>SEC-006</code></a>; 03 <a class="req-ref" href="#r-UD-003"><code>UD-003</code></a>, §6 (<a class="req-ref" href="#r-UD-040"><code>UD-040</code></a>); 04 <a class="req-ref" href="#r-MAPPE-003"><code>MAPPE-003</code></a>, <a class="req-ref" href="#r-MAPPE-004"><code>MAPPE-004</code></a> (D-101)</td><td>✅ Done (gate passed 2026-11-06; started 2026-10-30; D-101…D-116)</td></tr>
 <tr>
-<td>SR</td><td>Security repairs after the S6 gate: 32 steps, each with tests, a gate run and a decision entry</td><td>The spec a step names</td><td>✅ Done (2026-11-20 to 2026-11-27; D-117…D-148; session log, steps 1–32); open: HVL IT&#39;s and the owner&#39;s questions Q32, Q33 and Q34, with the earlier ones</td></tr>
+<td>SR</td><td>Security repairs after the S6 gate: 33 steps, each with tests, a gate run and a decision entry</td><td>The spec a step names</td><td>✅ Done (2026-11-20 to 2026-11-27; D-117…D-149; session log, steps 1–33); open: HVL IT&#39;s and the owner&#39;s questions Q32, Q33 and Q34, with the earlier ones</td></tr>
 </tbody></table></div>
 
 <p class="more"><a href="#progress">Open the build tracker</a> · <a href="#evaluator-guide--5-session-gates">See each session's pass/fail gate</a></p>
@@ -6768,20 +6768,20 @@ Møgelvang &amp; Isaksen (2025), and some criteria are translations or paraphras
 <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/reference/alu-review-s5.md" rel="noopener" class="ext">reference/alu-review-s5.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> lists each; the review is required before the pilot.
 The English guide keeps Norwegian terms such as <em>kontekst</em> and <em>samskaping</em> in running text, which its Markdown
 cannot mark with their own language (WCAG 3.1.2 allows such terms).</li>
-<li><strong>The portfolio PDF needs Chromium on the server</strong> (D-096). <code>playwright-core</code> 1.56.1 prints it with the server&#39;s
+<li><strong>The portfolio PDF needs Chromium on the server</strong> (D-096). <code>playwright-core</code> 1.65.1 prints it with the server&#39;s
 own Chromium, in a fresh context per export with JavaScript off, offline and every request aborted; at most
 <code>PDF_MAX_CONCURRENCY</code> exports at once (2) and one per person, 30 seconds each. Where no browser starts, the PDF
 export answers 503 and the page points to the Markdown export, which always works. The S6 image carries
-Playwright&#39;s full Chromium 141 and fonts with æ, ø and å (the PDF uses Liberation Serif, because Georgia, the body
+Playwright&#39;s full Chromium 159 and fonts with æ, ø and å (the PDF uses Liberation Serif, because Georgia, the body
 font token, is not installed) and runs the server as uid 10001; Chromium keeps its sandbox only with Playwright&#39;s
 seccomp profile and <code>CAP_SYS_CHROOT</code>, which OpenShift&#39;s <code>restricted-v2</code> does not allow (Q5; the
 development-only <code>PDF_ALLOW_NO_SANDBOX=true</code> is refused in production). The server logs at start whether the
 export works (<code>PDF export availability</code>). HVL keeps Chromium patched by rebuilding the image.</li>
 <li><strong>What the PDF does not tag yet is checked by hand</strong> (D-096, <a class="req-ref" href="#r-MAPPE-004"><code>MAPPE-004</code></a>). The automated test reads the
 structure tree, the outline, <code>/Lang</code>, the title and the text with <code>pdfjs-dist</code>; a person checks the rest with PAC
-and NVDA (protocol J4 in <code>docs/accessibility/manual-test-protocol.md</code>). Known residuals to record there: list
-numbers are untagged, list items have no <code>Lbl</code> or <code>LBody</code>, and lists carry no numbering attribute; a table&#39;s
-caption and header row become <code>NonStruct</code>; there is no XMP metadata and so no PDF/UA identifier; links have no
+and NVDA (protocol J4 in <code>docs/accessibility/manual-test-protocol.md</code>). Known residuals to record there, as
+Chromium 159 tags it (D-149): a list item has its <code>Lbl</code> but no <code>LBody</code>; a table has its <code>Caption</code> but no <code>THead</code>
+or <code>TBody</code> for its header row; there is no XMP metadata and so no PDF/UA identifier; links have no
 <code>/Contents</code>; the header says PDF 1.4; activity titles and references carry no language of their own (D-094
 amendment); and an activity&#39;s address is plain text, not a link. No manual check is recorded yet.</li>
 <li><strong>Students&#39; results in the mappe last until the yearly purge, not one academic year</strong> (D-095 and its
@@ -13998,6 +13998,91 @@ follow, and with them the end date they propose for a stage-1 test install. The 
 and into <code>PROGRESS.md</code> moved by the lines added above them (27 of 44), each compared with the line it named
 before. The status overview counts 32 steps.</li>
 </ul>
+<h3 id="decisions--d-149--security-repairs-step-33-playwright-core-1651-with-chromium-159-and-what-the-new-browser-changed-in-the-tests" tabindex="-1">D-149 · Security repairs, step 33: playwright-core 1.65.1 with Chromium 159, and what the new browser changed in the tests</h3>
+<ul>
+<li><strong>Context:</strong> D-148 left playwright-core at 1.56.1, which pins Chromium 141 of October 2025: the browser that
+runs the browser tests and, in the image, prints the portfolio PDF. 1.65.1 (2026-11-13) pins Chrome for Testing
+159.0.8154.6 as build 1255. Dependabot&#39;s own pull request for it fails as the first one did (D-148): the image
+copies Chromium by its folder, which has another name and shape (<code>chromium-1255/chrome-linux64/chrome</code>), and
+the package is now one bundle, without the internal file the cookie helper read. The update was made by hand,
+on the pinned browser fetched with the package&#39;s own installer. Run on Chromium 159, 41 of the server&#39;s 234
+real-browser tests failed, and then one journey test and one accessibility test. Each was read; none is a
+fault in the product:<ul>
+<li><strong>28 for one console message.</strong> H5P Core registers <code>beforeunload unload</code> beside <code>pagehide</code> to save a
+learner&#39;s progress (<code>h5p.js</code>, line 2925). Chromium no longer gives a page the <code>unload</code> event by default and
+says so in the console: «Permissions policy violation: unload is not allowed in this document.» The other two
+listeners still run.</li>
+<li><strong>The wording of refused loads.</strong> «Refused to frame &#39;…&#39;» is now «Framing &#39;…&#39; violates the following Content
+Security Policy directive», and scripts likewise. Three tests read the old wording.</li>
+<li><strong>A last request without the test&#39;s header.</strong> The xAPI bridge sends what is left when the page is hidden, in
+a request that outlives the page. It arrives with the page&#39;s own <code>Authorization</code> header and cookies, but
+without the header Playwright adds through the debugger, by which the test server knows its test person.</li>
+<li><strong>A better tagged PDF.</strong> A list has its numbering attribute, a list item its <code>Lbl</code> (so «1. » is tagged), a
+table caption is a <code>Caption</code>, and bold and italic text is tagged inside its cell or paragraph.</li>
+<li><strong>Three smaller ones.</strong> <code>focus({ focusVisible: true })</code> is followed; an unnamed <code>&lt;form&gt;</code> has the role <code>form</code>
+in the accessibility tree; and a computed <code>outline</code> reads width, style, colour.</li>
+<li><strong>The cookie switch.</strong> <code>--test-third-party-cookie-phaseout</code> blocks nothing while storage partitioning is
+off, and Playwright still turns partitioning off.</li>
+<li><strong>An emulated phone.</strong> Under an emulated device pixel ratio of 2, the full build tells a frame from another
+site the ratio and lays it out at half its width: a frame 300 CSS pixels wide is 150 wide inside. The headless
+shell lays it out right, and Chromium 141 never told such a frame the ratio. In the phone journey the tool&#39;s
+frame in Canvas became 144 pixels wide, and the player inside it got no animation frames, so the test&#39;s wait
+for the player never ended.</li>
+</ul>
+</li>
+<li><strong>Decision — playwright-core 1.65.1 (SEC-007).</strong> The exact pin in <code>apps/server/package.json</code> and the one
+package in the lock file; the image copies <code>chromium-1255</code>, and the smoke test&#39;s checks name the new folder.
+Ubuntu stays at 24.04 (D-148, R-10).</li>
+<li><strong>Decision — the cookie tests turn on the browser&#39;s own setting (LTI-003, amends D-065).</strong>
+<code>launchCookieTestChromium</code> starts the full build on a fresh profile whose preferences have «Block third-party
+cookies» on (<code>profile.cookie_controls_mode</code>), as a person sets it, and returns that profile&#39;s browser, whose
+contexts are separate and all follow the setting. Both variants keep their meaning: with partitioning off, as
+Playwright leaves it, a blocked frame loses its storage too; with partitioning restored, as in stock Chrome,
+only the cookies go. The canary still proves the block before a test relies on it.</li>
+<li><strong>Decision — the tests read the browser&#39;s console in one place (H5P-001, DATA-011).</strong>
+<code>test/support/browserConsole.ts</code> says which console message is an error of the page and reads the address a
+page policy refused. One message is not an error of the page: Chromium&#39;s notice about H5P Core&#39;s <code>unload</code>
+listener. We do not send <code>Permissions-Policy: unload=(self)</code> to bring the event back: Canvas&#39;s frame would
+not pass it on, and H5P saves on the two events that remain. A pin in the player test fails the day the
+notice stops, so the exception cannot outlive its reason.</li>
+<li><strong>Decision — a test names its person by a cookie where Playwright&#39;s header cannot travel (LTI-010).</strong> Only
+the recording endpoint of the bridge&#39;s own test reads it; the product is unchanged.</li>
+<li><strong>Decision — the phone journey emulates the phone at pixel ratio 1 (UD-008).</strong> Reflow is a matter of CSS
+pixels, and at ratio 1 the tool&#39;s frame is as wide as its place in the Canvas page.
+<code>test/browser/emulatedPixelRatio.browser.test.ts</code> holds that, and pins the halving at ratio 2, so the day the
+browser lays the frame out right the pin fails and the journey can take the ratio back. A real phone has a real
+ratio and is not affected. The accessibility suite&#39;s zoom test keeps ratio 2: it runs in the headless shell.</li>
+<li><strong>Decision — the pins follow the browser.</strong> The PDF&#39;s structure as Chromium 159 writes it; the focus option;
+the form&#39;s role; the outline&#39;s wording. The wrapped-heading workaround in <code>mappeHtml.ts</code> stays: 159 still
+drops the space.</li>
+<li><strong>Residual:</strong> the notice about <code>unload</code> shows in every learner&#39;s and author&#39;s console until H5P Core drops
+the listener. The PDF still has no <code>LBody</code>, <code>THead</code> or <code>TBody</code>, no XMP metadata and so no PDF/UA identifier,
+and its links have no <code>/Contents</code>; the manual protocol&#39;s list of residuals (J4) follows. Of the 16 report
+drafts in <code>docs/upstream/</code> that name a browser, one names the new one (<code>h5p-questionset-retry-several-sets.md</code>:
+a test pins its fault, and that test ran on 159). The other 15 keep the browser they were observed in: our
+repairs remove most of those faults before a test sees them, so no test observed them again. Whoever files one
+looks at it in the current browser first.</li>
+<li><strong>Verified:</strong> one portfolio PDF printed before and after the update has the same text, the same embedded
+fonts and, drawn as a picture, the same 969 588 pixels. The Docker smoke test passes on an image built with
+<code>chromium-1255</code>: the PDF is printed as uid 10001 with the sandbox seen in <code>/proc</code>, by Chrome for Testing
+159.0.8154.6 (SHA-256 <code>045558b2…01ae</code> in the development sandbox). The full gate ran on the new browser; step
+33 in <code>PROGRESS.md</code> has its output. Tests: <code>thirdPartyCookies.browser.test.ts</code> (9, two new pins),
+<code>emulatedPixelRatio.browser.test.ts</code> (2), <code>player.browser.int.test.ts</code> (the <code>unload</code> pin),
+<code>h5pPageCsp.browser.int.test.ts</code>, <code>xapiBridge.browser.int.test.ts</code>, <code>taggedPdf.browser.test.ts</code>,
+<code>editorSaveDialog.browser.int.test.ts</code>, <code>editorSaveDialogLook.browser.int.test.ts</code>,
+<code>journeyPhoneResume.e2e.test.ts</code>, <code>keyboardFocus.a11y.test.ts</code>.</li>
+<li><strong>Consequences:</strong> <code>CLAUDE.md</code>&#39;s trap about the cookie tests names the helper and the new version. The
+documents that describe the browser follow: <code>docs/EVALUATOR-GUIDE.md</code>, <code>docs/ops/docker.md</code>,
+<code>docs/accessibility/nfr-003-matrix.md</code>, <code>docs/accessibility/manual-test-protocol.md</code>, the architecture and
+threat-model papers and <code>tools/sbom/README.md</code>; entries of earlier steps keep the version they were written
+for. playwright-core 1.65.1 lists Ubuntu 26.04 among its systems, so the move R-10 waits for is possible when
+it is chosen. Dependabot&#39;s run of 2026-11-27 proposed a new digest of <code>ubuntu:24.04</code>: digests still come, which
+D-148 left to verify. This step takes the update its pull request for playwright-core proposes. On the same day
+the owner turned on GitHub&#39;s private vulnerability reporting, secret scanning with push protection, Dependabot
+alerts and code scanning for the repository (<code>SECURITY.md</code>, ROS-09); the first code-scanning results are read
+in the next step. No line reference moved: the edits keep each file&#39;s line count, and this entry and step 33
+stand at the end of their files. The status overview counts 33 steps.</li>
+</ul>
 
 </section>
 <section class="view doc" id="progress" aria-labelledby="progress-h">
@@ -14025,7 +14110,7 @@ what is done, what is verified, and what is blocked.</p>
 <tr>
 <td>S6</td><td>xAPI → AGS grade bridge, insight, privacy jobs, Docker, conformance report</td><td>02 §4–§8; 05; 00 §3 (journeys J1–J5), §6; 01 <a class="req-ref" href="#r-H5P-009"><code>H5P-009</code></a>, <a class="req-ref" href="#r-H5P-010"><code>H5P-010</code></a>, <a class="req-ref" href="#r-SEC-004"><code>SEC-004</code></a>, <a class="req-ref" href="#r-SEC-006"><code>SEC-006</code></a>; 03 <a class="req-ref" href="#r-UD-003"><code>UD-003</code></a>, §6 (<a class="req-ref" href="#r-UD-040"><code>UD-040</code></a>); 04 <a class="req-ref" href="#r-MAPPE-003"><code>MAPPE-003</code></a>, <a class="req-ref" href="#r-MAPPE-004"><code>MAPPE-004</code></a> (D-101)</td><td>✅ Done (gate passed 2026-11-06; started 2026-10-30; D-101…D-116)</td></tr>
 <tr>
-<td>SR</td><td>Security repairs after the S6 gate: 32 steps, each with tests, a gate run and a decision entry</td><td>The spec a step names</td><td>✅ Done (2026-11-20 to 2026-11-27; D-117…D-148; session log, steps 1–32); open: HVL IT&#39;s and the owner&#39;s questions Q32, Q33 and Q34, with the earlier ones</td></tr>
+<td>SR</td><td>Security repairs after the S6 gate: 33 steps, each with tests, a gate run and a decision entry</td><td>The spec a step names</td><td>✅ Done (2026-11-20 to 2026-11-27; D-117…D-149; session log, steps 1–33); open: HVL IT&#39;s and the owner&#39;s questions Q32, Q33 and Q34, with the earlier ones</td></tr>
 </tbody></table></div>
 <p>Legend: ⬜ not started · 🟨 in progress · ✅ done (gate passed, output pasted below) · ⛔ blocked</p>
 <hr>
@@ -15131,7 +15216,7 @@ log, «2026-11-06 · S6 gate»)</li>
 <tr>
 <td>Q33</td><td>Where is the production image built, and is it signed there? No workflow publishes, signs or attests an image: <code>docker.yml</code> builds it only to test it. Decide the place (HVL&#39;s own pipeline or registry), whether the image is signed and carries a statement of the commit it was built from, and who checks both at deployment (threat model T-92, ROS-21; D-145)</td><td>HVL IT</td><td>Nothing in the code; the production deployment</td></tr>
 <tr>
-<td>Q34</td><td>A secret scan of the repository. The repository is public, so GitHub&#39;s secret scanning and push protection are settings the owner can switch on (Settings → Code security); CI runs no scanner of its own (D-145). Switch them on, or name the scan HVL IT uses once the code lives with HVL</td><td>Owner, HVL IT</td><td>Nothing</td></tr>
+<td>Q34</td><td>A secret scan of the repository. The owner switched on GitHub&#39;s secret scanning and push protection on 2026-11-27, with private vulnerability reporting and Dependabot alerts (the repository&#39;s Advanced Security settings; no check holds them); CI runs no scanner of its own (D-145). Open: name the scan HVL IT uses once the code lives with HVL</td><td>HVL IT</td><td>Nothing</td></tr>
 </tbody></table></div>
 <h3 id="progress--risk-register" tabindex="-1">Risk register</h3>
 <div class="table-wrap" role="region" aria-label="Table 4, Risk register" tabindex="0"><table><thead><tr>
@@ -15155,7 +15240,7 @@ log, «2026-11-06 · S6 gate»)</li>
 <tr>
 <td>R-09</td><td>Lumi&#39;s npm releases lag its repository: none since 10.0.4 (2025-03-08), while <code>master</code> carries file-security work we would want (D-081)</td><td>High</td><td>Medium</td><td>Our own file security (D-003) and adapters in our code; S6 asks for a release or pins a reviewed commit (D-081); the revisit triggers in D-081. The release request is drafted for the owner to file (<code>docs/upstream/lumi-release-request.md</code>, D-112); the choice before 2027-03-27 is in <code>docs/handoff/lumi-path.md</code></td></tr>
 <tr>
-<td>R-10</td><td>The image is built on Ubuntu 24.04, whose security support ends in 2029; Dependabot proposes no other Ubuntu version, and the pinned Playwright lists Ubuntu up to 24.04 (D-148)</td><td>Low</td><td>Medium</td><td>Fresh digests of 24.04 come monthly; decide the move to a later long-term Ubuntu together with a Playwright update, and look at it again by 2028-04-30 at the latest</td></tr>
+<td>R-10</td><td>The image is built on Ubuntu 24.04, whose security support ends in 2029; Dependabot proposes no other Ubuntu version; the pinned Playwright lists Ubuntu up to 26.04 since D-149 (D-148)</td><td>Low</td><td>Medium</td><td>Fresh digests of 24.04 come monthly; the move to Ubuntu 26.04 is a step of its own (the image&#39;s packages and the smoke test go with it); look at it again by 2028-04-30 at the latest</td></tr>
 </tbody></table></div>
 <h3 id="progress--session-log" tabindex="-1">Session log</h3>
 <p>Append one entry per session: date, session, what was done, gate output, and any decisions added.</p>
@@ -17488,6 +17573,81 @@ $ npm run test:e2e                                   36 passed, 1 skipped; 1 fil
 $ npx vitest run --project server                    27154 passed, 31 skipped; 1 failed in 4 files: a
     privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
     MAPPE-004)</code></pre>
+</li>
+<li><p><strong>2026-11-27 · Security repairs, step 33 (D-149)</strong> — playwright-core 1.65.1, with Chromium 159 in the browser
+tests and in the image, and the tests brought to what the new browser does.</p>
+<ul>
+<li>The update (SEC-007): the exact pin and the one package in the lock file (949 registry packages, as before);
+the image copies <code>chromium-1255</code>, and the smoke test&#39;s checks name its folder. The SBOM lists 478 npm
+packages, as before.</li>
+<li>Run on Chromium 159, 41 of the server&#39;s 234 real-browser tests failed, and in the gate one journey test and
+one accessibility test. Each was read; none is a fault in the product (D-149 lists the causes). What changed
+in the tests:<ul>
+<li>the cookie tests start the full build on a profile with «Block third-party cookies» on
+(<code>test/support/thirdPartyCookies.ts</code>; LTI-003, amends D-065); the canary has its own file;</li>
+<li>one place reads the browser&#39;s console (<code>test/support/browserConsole.ts</code>; H5P-001, DATA-011): Chromium&#39;s
+notice about H5P Core&#39;s <code>unload</code> listener is not an error of the page, and the new wording of a refused
+frame or script is read there;</li>
+<li>the bridge&#39;s own test names its learner by a cookie, since a request sent while the page is hidden carries
+no test header (LTI-010);</li>
+<li>the phone journey emulates the phone at pixel ratio 1 (UD-008); <code>emulatedPixelRatio.browser.test.ts</code>
+holds what it relies on, and pins that the full build lays a frame from another site out at half its
+width under an emulated ratio of 2;</li>
+<li>the pins follow the browser: the PDF&#39;s tags, the focus option, the dialog form&#39;s role and the wording of
+a computed outline (MAPPE-004, UD-004).</li>
+</ul>
+</li>
+<li>The portfolio PDF is the same for a reader: one PDF printed before and after has the same text, the same
+fonts and the same picture, pixel for pixel. Its tags are better (a list item&#39;s number, a table&#39;s caption);
+the residual list in the manual protocol (J4) and in the evaluator guide follows.</li>
+<li><code>CLAUDE.md</code>&#39;s trap about the cookie tests names the helper and the new version, and the documents that
+describe the browser follow. Of the 16 upstream drafts that name a browser, one names the new one; the
+others keep theirs, because no test observed their faults again (D-149). Risk R-10: the pinned Playwright
+now lists Ubuntu 26.04.</li>
+<li>GitHub, on the owner&#39;s side (2026-11-27): private vulnerability reporting, secret scanning with push
+protection, Dependabot alerts and code scanning are on; Dependabot&#39;s security updates stay off (D-145).
+Dependabot&#39;s alerts list four advisories. Two are the <code>image-size</code> ones, accepted until 2027-03-27 (R-08).
+Two are of moderate severity, below what <code>check:audit</code> holds, and the running server does not reach them:
+<code>minimatch</code> 10.2.6 (GHSA-g3hv-75wg-m249) sits only under typedoc, a documentation tool outside the image, and
+<code>ts-deepmerge</code> 7.0.3 (GHSA-87mf-gv2c-c62c) only under <code>@lumieducation/h5p-clamav-scanner</code>, in a start-up
+function that our clamd client does not call; its repaired version is a new major, outside the range Lumi
+asks for. Dependabot&#39;s monthly run opened three pull requests: playwright-core, which this step takes; a new
+digest of <code>ubuntu:24.04</code>; and four npm updates, one of them the accessibility scanner that D-148 held back.
+The last two are read after this step. Gate output:</li>
+</ul>
+<pre class="code" tabindex="0" role="region" aria-label="Code 54, Session log"><code>$ npm run build                                      exit 0
+$ HVLI_DOCKER_SANDBOX=1 bash deploy/smoke/dockerSmoke.sh   passed in 236 s (image built with chromium-1255:
+    Chrome for Testing 159.0.8154.6, the PDF printed as uid 10001 with the sandbox seen in /proc)
+$ npm run typecheck                                  exit 0
+$ npm run lint &amp;&amp; npm run format:check               exit 0
+$ npm run lint:css                                   exit 0
+$ npm run doc:lint &amp;&amp; npm run check:filesize         11 checks passed; file-size passed
+$ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+$ npm run privacy:dpia-check                         13 sections, the developer key and the residuals agree
+$ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+$ npm run check:pins &amp;&amp; npm run check:licences       every version pinned; 489 production packages compatible
+$ npm run check:lockfile                             949 packages from the registry with sha512; 4 install scripts reviewed
+$ npm run check:workflows                            3 workflows: actions by commit, images by digest
+$ npm run check:audit                                2 high/critical advisories, both covered by reviewed exceptions
+$ npm run sbom -- --check                            current: 478 npm packages, 12 H5P components, 3 images
+$ npm run content:check &amp;&amp; npm run tokens:check      exit 0
+$ node tools/spec-site/buildSpecSite.mjs --check     up to date
+$ npm run docs:api                                   exit 0
+$ npm run a11y:report -- --check                     exit 0
+$ npx vitest run --project web                       644 passed (100 files)
+$ npx vitest run --project api-contract              123 passed (15 files)
+$ npx vitest run --project tools                     599 passed (80 files)
+$ npx vitest run --project design-tokens             156 passed
+$ npx vitest run --project hvl-h5p-theme             206 passed
+$ LIVE_TARGET=mock npm run test:live                 36 passed
+$ npm run test:a11y                                  563 passed (18 files); in the gate's own run, before the pin
+    of the outline's wording followed the browser, 562 passed and 1 failed
+$ npm run test:e2e                                   36 passed, 1 skipped; 1 file failed: learnerDataRights
+    (needs the privileged database, like DATA-010's tests); in the gate's own run, before the phone journey
+    emulated ratio 1, 35 passed and 1 failed
+$ npx vitest run --project server                    27157 passed, 31 skipped; 1 failed in 4 files: a
+    privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
+    MAPPE-004). The pin file added after this run, `emulatedPixelRatio.browser.test.ts`, passes on its own (2)</code></pre>
 </li>
 </ul>
 

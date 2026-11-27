@@ -408,9 +408,9 @@ limit on login and launch in the app (ROS-07); the residuals R1–R41 in `docs/p
 ## 5. How to report findings
 
 - **Security findings: privately**, as [SECURITY.md](../../SECURITY.md) says, never in a public issue, comment or pull
-  request. **Neither of its routes works yet:** GitHub's private vulnerability reporting must be turned on by the
-  owner, and HVL's e-mail address is a placeholder (`SECURITY.md`, lines 12–14 and 42–44). Until then, agree a
-  private channel with the repository owner *(IT to fill in)*.
+  request. **One of its two routes works:** the owner turned on GitHub's private vulnerability reporting on
+  2026-11-27, and a report reaches the repository owner. HVL's e-mail address is still a placeholder (`SECURITY.md`,
+  lines 12–14 and 42–44) *(IT to fill in)*.
 - **Faults:** a GitHub issue with the «Feil» form (`.github/ISSUE_TEMPLATE/feil.yml`). **Accessibility barriers:** the
   form «Barriere for universell utforming» (`uu-barriere.yml`; its issues are titled «UU-barriere: …»). Blank
   issues are off, and each form has a required check that it holds no personal data (`config.yml`). The forms are in

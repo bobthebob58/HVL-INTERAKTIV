@@ -28,9 +28,16 @@ import type { RealTypesServer } from '../../support/realTypesPlayer.js';
 /** One item of a batch, as the bridge sent it. */
 export type SentItem = Record<string, unknown> & { statementId: string; attemptId: string };
 
+/**
+ * The cookie that names the test person where the `x-test-actor` header cannot travel. WHY: Playwright adds that
+ * header through the debugger, which from Chromium 159 no longer reaches a request sent while the page is left; a
+ * cookie goes with it, as a real session does.
+ */
+export const ACTOR_COOKIE = 'x-test-actor';
+
 /** One request the endpoint received. */
 export interface ReceivedBatch {
-  /** The `x-test-actor` header: whose page sent it. */
+  /** The `x-test-actor` header, or else the cookie of that name: whose page sent it. */
   readonly actor: string;
   readonly headers: Record<string, string | undefined>;
   readonly body: { contentId: string; contentVersion: number; statements: SentItem[] };
@@ -45,8 +52,9 @@ export function recordXapiBatches(server: RealTypesServer): ReceivedBatch[] {
   const received: ReceivedBatch[] = [];
   server.tb.app.post('/api/h5p/xapi', express.json({ limit: '64kb' }), (req, res) => {
     const header = (name: string) => (typeof req.headers[name] === 'string' ? req.headers[name] : undefined);
+    const cookie = new RegExp(`(?:^|; )${ACTOR_COOKIE}=([^;]+)`).exec(header('cookie') ?? '')?.[1];
     received.push({
-      actor: header('x-test-actor') ?? '',
+      actor: header('x-test-actor') ?? cookie ?? '',
       headers: {
         authorization: header('authorization'),
         csrf: header('x-csrf-token'),

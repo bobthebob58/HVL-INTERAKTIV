@@ -122,7 +122,7 @@ The commit of each H5P component is also in its purl (`pkg:github/<owner>/<repo>
   `PROGRESS.md`), and the manifest pins 120, 3 of them untagged. Only the ten content types are components; the
   manifest is the full list.
 - The npm trees of the 23 H5P libraries built with webpack (each has its own lockfile, outside our tree).
-- What the image build fetches outside npm: Chromium `chromium-1194` (Playwright's download), Prisma's engine binary
+- What the image build fetches outside npm: Chromium `chromium-1255` (Playwright's download), Prisma's engine binary
   (the `@prisma/engines` install script), and the Ubuntu packages for Chromium, fonts and `tini`, which have no
   version pins (`deploy/Dockerfile`).
 - The other images (PostgreSQL, Redis and moto in the local stack and CI; k6 in `tools/load`; BuildKit in

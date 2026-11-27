@@ -9,6 +9,7 @@ import { join } from 'node:path';
 import type { Page } from 'playwright-core';
 import { afterAll, beforeAll, expect, it } from 'vitest';
 import { describeWithBrowser } from '../support/browser.js';
+import { isPageError, refusedFrame } from '../support/browserConsole.js';
 import { closeLoopbackServers, listenOnLoopback } from '../support/loopbackServers.js';
 import { openHttpTestbed, type HttpTestbed, type TestActor } from '../support/httpTestbed.js';
 import {
@@ -18,9 +19,6 @@ import {
   type PackageExample,
 } from '../support/realPackages.js';
 import { describeWithServices } from '../support/services.js';
-
-/** A third-party frame the policy refused, as the browser reports it. */
-const REFUSED_FRAME = /^Refused to frame '(https?:\/\/[^']+)'/;
 
 /** What the browser reported on one editor page. */
 interface EditorReport {
@@ -34,8 +32,8 @@ async function openEditor(page: Page, url: string): Promise<EditorReport> {
   const problems: string[] = [];
   const refusedFrames: string[] = [];
   page.on('console', (m) => {
-    if (m.type() !== 'error') return;
-    const refused = REFUSED_FRAME.exec(m.text())?.[1];
+    if (!isPageError(m)) return;
+    const refused = refusedFrame(m.text());
     if (refused) refusedFrames.push(refused);
     else problems.push(`console: ${m.text()}`);
   });

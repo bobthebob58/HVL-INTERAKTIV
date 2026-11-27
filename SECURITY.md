@@ -9,8 +9,8 @@ eit endringsforslag (*pull request*). Alle kan lese dei.
 
 Meld frå privat, på ein av desse måtane:
 
-1. På GitHub: opne fana «Security» i kodelageret og vel «Report a vulnerability». Knappen finst når eigaren har slått
-   på privat melding.
+1. På GitHub: opne fana «Security» i kodelageret og vel «Report a vulnerability». Eigaren slo på privat melding
+   27. november 2026.
 2. Med e-post til HVL: **[HVL fyller inn: e-postadresse for tryggleiksmeldingar]**
 
 Eit tryggleiksproblem er til dømes:
@@ -40,8 +40,8 @@ Send ikkje personopplysningar eller ekte data om studentar. Bruk testbrukarar. H
 ## English
 
 Please do not report a security problem in a public issue, comment or pull request. Report it privately: through
-GitHub's private vulnerability reporting («Report a vulnerability» on the repository's Security tab, once the owner
-has turned it on), or by e-mail to HVL: **[HVL to fill in: e-mail address for security reports]**.
+GitHub's private vulnerability reporting («Report a vulnerability» on the repository's Security tab; the owner
+turned it on on 2026-11-27), or by e-mail to HVL: **[HVL to fill in: e-mail address for security reports]**.
 
 Describe the problem, where it is (without a URL that carries a token), the steps to reproduce it and its impact.
 Use test users only; never send personal data or real student data, and do not access more data than you need to

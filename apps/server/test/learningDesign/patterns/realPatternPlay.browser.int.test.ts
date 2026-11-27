@@ -10,6 +10,7 @@
 import type { Browser } from 'playwright-core';
 import { afterAll, beforeAll, expect, it } from 'vitest';
 import { describeWithBrowser } from '../../support/browser.js';
+import { isPageError } from '../../support/browserConsole.js';
 import { describeWithRealPackages } from '../../support/realPackages.js';
 import { signInRunAuthor, type BrowserStorage } from '../../support/runFeideAuthor.js';
 import { describeWithServices } from '../../support/services.js';
@@ -43,7 +44,7 @@ async function play(
   const page = await context.newPage();
   const problems: string[] = [];
   page.on('pageerror', (error) => problems.push(`page: ${error.message}`));
-  page.on('console', (m) => void (m.type() === 'error' && problems.push(`console: ${m.text()}`)));
+  page.on('console', (m) => void (isPageError(m) && problems.push(`console: ${m.text()}`)));
   const response = await page.goto(`${base}/h5p/play/${creation.contentId}`);
   // WHY: H5P.init marks the container, then builds the activity in the same task (h5p.js). Once the mark shows,
   // the activity's constructor has run to its end or failed, so a crash shows at once, as in probe P3's player.

@@ -37,8 +37,9 @@ const SAVE = 'hvl-editor-save';
 /** The dialog as assistive technology sees it: its name, form, heading, text and three buttons, and nothing else. */
 const DIALOG_NODES = [
   `dialog:${SAVE_CHOICE_TEXTS.title}`,
-  // WHY: the unnamed `method="dialog"` form.
-  'generic:',
+  // WHY: the unnamed `method="dialog"` form. Chromium 159 gives it the role `form` (141: generic); without a name it
+  // is no landmark (D-149).
+  'form:',
   `heading:${SAVE_CHOICE_TEXTS.title}`,
   'paragraph:',
   'paragraph:',
@@ -151,7 +152,7 @@ describeWithServices('[PROD-013] the save choice dialog in the editor page (prob
             field?.focus();
             return document.activeElement === field;
           });
-        // Act: Chromium 141 does not keep focus out of an inert frame's document
+        // Act: Chromium (141 and 159) does not keep focus out of an inert frame's document
         await openByKeyboard(probe);
         const taken = await takeFocus();
         await probe.page.keyboard.press('Escape');

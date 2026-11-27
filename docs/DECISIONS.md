@@ -6571,3 +6571,85 @@ loading of one spec per session are kept.
   follow, and with them the end date they propose for a stage-1 test install. The line references into this file
   and into `PROGRESS.md` moved by the lines added above them (27 of 44), each compared with the line it named
   before. The status overview counts 32 steps.
+
+### D-149 · Security repairs, step 33: playwright-core 1.65.1 with Chromium 159, and what the new browser changed in the tests
+- **Context:** D-148 left playwright-core at 1.56.1, which pins Chromium 141 of October 2025: the browser that
+  runs the browser tests and, in the image, prints the portfolio PDF. 1.65.1 (2026-11-13) pins Chrome for Testing
+  159.0.8154.6 as build 1255. Dependabot's own pull request for it fails as the first one did (D-148): the image
+  copies Chromium by its folder, which has another name and shape (`chromium-1255/chrome-linux64/chrome`), and
+  the package is now one bundle, without the internal file the cookie helper read. The update was made by hand,
+  on the pinned browser fetched with the package's own installer. Run on Chromium 159, 41 of the server's 234
+  real-browser tests failed, and then one journey test and one accessibility test. Each was read; none is a
+  fault in the product:
+  - **28 for one console message.** H5P Core registers `beforeunload unload` beside `pagehide` to save a
+    learner's progress (`h5p.js`, line 2925). Chromium no longer gives a page the `unload` event by default and
+    says so in the console: «Permissions policy violation: unload is not allowed in this document.» The other two
+    listeners still run.
+  - **The wording of refused loads.** «Refused to frame '…'» is now «Framing '…' violates the following Content
+    Security Policy directive», and scripts likewise. Three tests read the old wording.
+  - **A last request without the test's header.** The xAPI bridge sends what is left when the page is hidden, in
+    a request that outlives the page. It arrives with the page's own `Authorization` header and cookies, but
+    without the header Playwright adds through the debugger, by which the test server knows its test person.
+  - **A better tagged PDF.** A list has its numbering attribute, a list item its `Lbl` (so «1. » is tagged), a
+    table caption is a `Caption`, and bold and italic text is tagged inside its cell or paragraph.
+  - **Three smaller ones.** `focus({ focusVisible: true })` is followed; an unnamed `<form>` has the role `form`
+    in the accessibility tree; and a computed `outline` reads width, style, colour.
+  - **The cookie switch.** `--test-third-party-cookie-phaseout` blocks nothing while storage partitioning is
+    off, and Playwright still turns partitioning off.
+  - **An emulated phone.** Under an emulated device pixel ratio of 2, the full build tells a frame from another
+    site the ratio and lays it out at half its width: a frame 300 CSS pixels wide is 150 wide inside. The headless
+    shell lays it out right, and Chromium 141 never told such a frame the ratio. In the phone journey the tool's
+    frame in Canvas became 144 pixels wide, and the player inside it got no animation frames, so the test's wait
+    for the player never ended.
+- **Decision — playwright-core 1.65.1 (SEC-007).** The exact pin in `apps/server/package.json` and the one
+  package in the lock file; the image copies `chromium-1255`, and the smoke test's checks name the new folder.
+  Ubuntu stays at 24.04 (D-148, R-10).
+- **Decision — the cookie tests turn on the browser's own setting (LTI-003, amends D-065).**
+  `launchCookieTestChromium` starts the full build on a fresh profile whose preferences have «Block third-party
+  cookies» on (`profile.cookie_controls_mode`), as a person sets it, and returns that profile's browser, whose
+  contexts are separate and all follow the setting. Both variants keep their meaning: with partitioning off, as
+  Playwright leaves it, a blocked frame loses its storage too; with partitioning restored, as in stock Chrome,
+  only the cookies go. The canary still proves the block before a test relies on it.
+- **Decision — the tests read the browser's console in one place (H5P-001, DATA-011).**
+  `test/support/browserConsole.ts` says which console message is an error of the page and reads the address a
+  page policy refused. One message is not an error of the page: Chromium's notice about H5P Core's `unload`
+  listener. We do not send `Permissions-Policy: unload=(self)` to bring the event back: Canvas's frame would
+  not pass it on, and H5P saves on the two events that remain. A pin in the player test fails the day the
+  notice stops, so the exception cannot outlive its reason.
+- **Decision — a test names its person by a cookie where Playwright's header cannot travel (LTI-010).** Only
+  the recording endpoint of the bridge's own test reads it; the product is unchanged.
+- **Decision — the phone journey emulates the phone at pixel ratio 1 (UD-008).** Reflow is a matter of CSS
+  pixels, and at ratio 1 the tool's frame is as wide as its place in the Canvas page.
+  `test/browser/emulatedPixelRatio.browser.test.ts` holds that, and pins the halving at ratio 2, so the day the
+  browser lays the frame out right the pin fails and the journey can take the ratio back. A real phone has a real
+  ratio and is not affected. The accessibility suite's zoom test keeps ratio 2: it runs in the headless shell.
+- **Decision — the pins follow the browser.** The PDF's structure as Chromium 159 writes it; the focus option;
+  the form's role; the outline's wording. The wrapped-heading workaround in `mappeHtml.ts` stays: 159 still
+  drops the space.
+- **Residual:** the notice about `unload` shows in every learner's and author's console until H5P Core drops
+  the listener. The PDF still has no `LBody`, `THead` or `TBody`, no XMP metadata and so no PDF/UA identifier,
+  and its links have no `/Contents`; the manual protocol's list of residuals (J4) follows. Of the 16 report
+  drafts in `docs/upstream/` that name a browser, one names the new one (`h5p-questionset-retry-several-sets.md`:
+  a test pins its fault, and that test ran on 159). The other 15 keep the browser they were observed in: our
+  repairs remove most of those faults before a test sees them, so no test observed them again. Whoever files one
+  looks at it in the current browser first.
+- **Verified:** one portfolio PDF printed before and after the update has the same text, the same embedded
+  fonts and, drawn as a picture, the same 969 588 pixels. The Docker smoke test passes on an image built with
+  `chromium-1255`: the PDF is printed as uid 10001 with the sandbox seen in `/proc`, by Chrome for Testing
+  159.0.8154.6 (SHA-256 `045558b2…01ae` in the development sandbox). The full gate ran on the new browser; step
+  33 in `PROGRESS.md` has its output. Tests: `thirdPartyCookies.browser.test.ts` (9, two new pins),
+  `emulatedPixelRatio.browser.test.ts` (2), `player.browser.int.test.ts` (the `unload` pin),
+  `h5pPageCsp.browser.int.test.ts`, `xapiBridge.browser.int.test.ts`, `taggedPdf.browser.test.ts`,
+  `editorSaveDialog.browser.int.test.ts`, `editorSaveDialogLook.browser.int.test.ts`,
+  `journeyPhoneResume.e2e.test.ts`, `keyboardFocus.a11y.test.ts`.
+- **Consequences:** `CLAUDE.md`'s trap about the cookie tests names the helper and the new version. The
+  documents that describe the browser follow: `docs/EVALUATOR-GUIDE.md`, `docs/ops/docker.md`,
+  `docs/accessibility/nfr-003-matrix.md`, `docs/accessibility/manual-test-protocol.md`, the architecture and
+  threat-model papers and `tools/sbom/README.md`; entries of earlier steps keep the version they were written
+  for. playwright-core 1.65.1 lists Ubuntu 26.04 among its systems, so the move R-10 waits for is possible when
+  it is chosen. Dependabot's run of 2026-11-27 proposed a new digest of `ubuntu:24.04`: digests still come, which
+  D-148 left to verify. This step takes the update its pull request for playwright-core proposes. On the same day
+  the owner turned on GitHub's private vulnerability reporting, secret scanning with push protection, Dependabot
+  alerts and code scanning for the repository (`SECURITY.md`, ROS-09); the first code-scanning results are read
+  in the next step. No line reference moved: the edits keep each file's line count, and this entry and step 33
+  stand at the end of their files. The status overview counts 33 steps.

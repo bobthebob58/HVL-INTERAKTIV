@@ -11,7 +11,7 @@
  *   - Headers are read with `allHeaders()`, which includes `Cookie` and `Referer` as the browser sent them.
  *   - A stripped answer is the server's own answer for that path (fetched with supertest, since Node does not resolve
  *     `files.localhost`), with only the named headers removed; its body and every other header stay.
- * Collaborators: playwright-core 1.56.1, ../../test/support/filesOriginFixtures.ts, ../filesOrigin.e2e.test.ts.
+ * Collaborators: playwright-core 1.65.1, ../../test/support/filesOriginFixtures.ts, ../filesOrigin.e2e.test.ts.
  * Tests: apps/server/e2e/filesOrigin.e2e.test.ts
  */
 import type { BrowserContext, Page } from 'playwright-core';

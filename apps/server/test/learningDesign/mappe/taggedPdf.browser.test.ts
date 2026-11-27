@@ -64,10 +64,10 @@ describeWithBrowser(
 
     it('[MAPPE-004] the structure tree tags headings, paragraphs, both lists, the table with header scopes and the link', () => {
       expect(portfolio.pages).toBe(1);
-      // WHY: pinned as Chromium 141 tags it. <caption> and <thead> become NonStruct and <tbody> no element (no Caption,
-      // THead, TBody); LI has no Lbl/LBody and "1." is untagged: residuals for the manual PAC check (D-096).
+      // WHY: pinned as Chromium 159 tags it: Lbl in a list item («1. ») and Caption are new since 141 (D-149). Still
+      // missing: LBody, THead and TBody (<thead> and <tbody> give no element): residuals for the PAC check (D-096).
       expect(portfolio.structure).toBe(
-        'Document(H1 P H2 P L(LI LI) H3 L(LI LI) Table(TR(TH TH) TR(TH TD)) P(Link) H2 P)',
+        'Document(H1 P H2 P L(LI(Lbl) LI(Lbl)) H3 L(LI(Lbl) LI(Lbl)) Table(Caption TR(TH TH) TR(TH TD)) P(Link) H2 P)',
       );
       expect(portfolio.headerScopes).toEqual(['Column', 'Column', 'Row']);
       expect(portfolio.dataCellHeaderCounts).toEqual([2]);

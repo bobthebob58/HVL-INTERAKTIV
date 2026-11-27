@@ -133,7 +133,7 @@ check_upload() {
 
 check_chromium() {
   "${COMPOSE[@]}" exec -T app sh -c \
-    'id; /ms-playwright/chromium-1194/chrome-linux/chrome --version; sha256sum /ms-playwright/chromium-1194/chrome-linux/chrome' |
+    'id; /ms-playwright/chromium-1255/chrome-linux64/chrome --version; sha256sum /ms-playwright/chromium-1255/chrome-linux64/chrome' |
     sed 's/^/  chromium: /'
 }
 

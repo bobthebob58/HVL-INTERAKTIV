@@ -13,7 +13,8 @@ import { openAppTestbed, type AppTestbed } from '../test/support/appTestbed.js';
 import { PROBE_LIBRARIES } from '../test/support/probeContentType.js';
 import { describeWithServices } from '../test/support/services.js';
 import { recordFlow } from '../test/support/flowRecorder.js';
-import { launchCookieTestChromium, startCookieCanary } from '../test/support/thirdPartyCookies.js';
+import { startCookieCanary } from '../test/support/thirdPartyCookieCanary.js';
+import { launchCookieTestChromium } from '../test/support/thirdPartyCookies.js';
 
 describeWithServices('[LTI-003] Canvas iframe with third-party cookies blocked', () => {
   let tb: AppTestbed;

@@ -1,19 +1,19 @@
 /**
  * Browser tests that find a reliable way to run Chromium with third-party cookies blocked for the cookie-less LTI
- * iframe e2e (D-065), prove it with a canary against a control run, and record what a blocked cross-site frame
- * can still store. They also pin the Chromium switches and CDP controls that look like they block but do not.
+ * iframe e2e (D-065, D-149), prove it with a canary against a control run, and record what a blocked cross-site
+ * frame can still store. They also pin the Chromium switches, settings and CDP controls that look like they block
+ * but do not, so a browser update that changes one of them is noticed.
  *
  * Spec: LTI-003
  */
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { chromium, type Browser } from 'playwright-core';
 import { afterAll, beforeAll, expect, it } from 'vitest';
 import { describeWithBrowser } from '../support/browser.js';
-import {
-  BLOCK_THIRD_PARTY_COOKIES_SWITCH,
-  launchCookieTestChromium,
-  startCookieCanary,
-  type CookieCanary,
-} from '../support/thirdPartyCookies.js';
+import { startCookieCanary, type CookieCanary } from '../support/thirdPartyCookieCanary.js';
+import { BLOCK_THIRD_PARTY_COOKIES_SWITCH, launchCookieTestChromium } from '../support/thirdPartyCookies.js';
 
 const COOKIE_CONTROLS = {
   enableThirdPartyCookieRestriction: true,
@@ -121,6 +121,28 @@ describeWithBrowser('[LTI-003] Chromium cookie controls that do not block reliab
     const { report, stored } = await probe(shell, canary).finally(() => shell.close());
     expect(report.followUpCookie).toBe('canary=1');
     expect(stored).toEqual(['canary']);
+  });
+
+  it('upstream pin: the full build ignores the blocking switch while storage partitioning is off', async () => {
+    // WHY: up to Chromium 141 the switch blocked here; from 159 it needs the partitioning Playwright turns off.
+    const full = await chromium.launch({ channel: 'chromium', args: [BLOCK_THIRD_PARTY_COOKIES_SWITCH] });
+    const { report, stored } = await probe(full, canary).finally(() => full.close());
+    expect(report.followUpCookie).toBe('canary=1');
+    expect(stored).toEqual(['canary']);
+  });
+
+  it('upstream pin: the default headless shell ignores the profile setting that the full build follows', async () => {
+    // Arrange: a profile with «Block third-party cookies» on, as launchCookieTestChromium prepares it
+    const profile = mkdtempSync(join(tmpdir(), 'cookie-shell-'));
+    mkdirSync(join(profile, 'Default'));
+    const preferences = JSON.stringify({ profile: { cookie_controls_mode: 1 } });
+    writeFileSync(join(profile, 'Default', 'Preferences'), preferences);
+    // Act
+    const shell = await chromium.launchPersistentContext(profile);
+    const report = await canary.open(await shell.newPage()).finally(() => shell.close());
+    rmSync(profile, { recursive: true, force: true });
+    // Assert
+    expect(report).toMatchObject({ documentCookie: 'canary=1', followUpCookie: 'canary=1' });
   });
 
   it('upstream pin: CDP Network.setCookieControls changes nothing until Network.enable', async () => {

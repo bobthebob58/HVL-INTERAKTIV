@@ -7,6 +7,7 @@
  */
 import { afterAll, beforeAll, expect, it } from 'vitest';
 import { describeWithBrowser } from '../support/browser.js';
+import { isPageError, UNLOAD_REFUSED } from '../support/browserConsole.js';
 import { closeLoopbackServers, listenOnLoopback } from '../support/loopbackServers.js';
 import { openHttpTestbed, type HttpTestbed, type TestActor } from '../support/httpTestbed.js';
 import { describeWithServices } from '../support/services.js';
@@ -45,7 +46,7 @@ describeWithServices('H5P player in a browser', () => {
       const page = await browser().newPage();
       await page.setExtraHTTPHeaders({ [learner.header[0]]: learner.header[1] });
       const problems: string[] = [];
-      page.on('console', (m) => void (m.type() === 'error' && problems.push(`console: ${m.text()}`)));
+      page.on('console', (m) => void (isPageError(m) && problems.push(`console: ${m.text()}`)));
       page.on('pageerror', (e) => problems.push(`page: ${e.message}`));
       page.on('response', (r) => void (r.status() >= 400 && problems.push(`${r.status()} ${r.url()}`)));
       await page.goto(`${base}/h5p/play/${id}`);
@@ -59,6 +60,19 @@ describeWithServices('H5P player in a browser', () => {
       expect(
         await page.evaluate(() => typeof (window as unknown as { H5P?: { init?: unknown } }).H5P?.init),
       ).toBe('function');
+      await page.close();
+    });
+
+    it('upstream pin: H5P Core asks for the unload event, and Chromium says that it refused it', async () => {
+      // WHY: isPageError leaves this one notice out of every test's problems (../support/browserConsole.ts). The
+      // day H5P Core or Chromium stops it, this pin fails and the exception is removed (D-149).
+      const page = await browser().newPage();
+      await page.setExtraHTTPHeaders({ [learner.header[0]]: learner.header[1] });
+      const errors: string[] = [];
+      page.on('console', (m) => void (m.type() === 'error' && errors.push(m.text())));
+      await page.goto(`${base}/h5p/play/${contentId}`);
+      await page.waitForSelector('.hvl-probe-attached .hvl-probe');
+      expect(errors).toEqual([UNLOAD_REFUSED]);
       await page.close();
     }, 30_000);
 

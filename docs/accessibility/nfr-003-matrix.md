@@ -7,7 +7,7 @@
 
 ## 1. What CI verifies automatically (Chromium)
 
-The build environment and CI have one engine: Chromium, driven by `playwright-core` 1.56.1 (D-065, D-079).
+The build environment and CI have one engine: Chromium, driven by `playwright-core` 1.65.1 (D-065, D-079, D-149).
 `npm run build && npm run test:a11y` runs the suite in `apps/server/a11y/` against the built web app, the real
 H5P content types (D-078) and the server's own pages, all behind the production router.
 

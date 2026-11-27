@@ -16,7 +16,7 @@ what is done, what is verified, and what is blocked.
 | S4+ | Whole-code-base simplification pass (owner decision, 2026-10-24) | — | ✅ Done (2026-10-25): 59 changes, 569 lines shorter, every test kept, S4 gate green again; a second round is the owner's call |
 | S5 | Læringsdesign studio, patterns, planner, pedagogisk mappe export | 04; 00 S5 rows | ✅ Gate passed (2026-10-30); the ALU and pilot review (Q17), the bank consent text and the manual PDF check open; the Canvas side in S6 |
 | S6 | xAPI → AGS grade bridge, insight, privacy jobs, Docker, conformance report | 02 §4–§8; 05; 00 §3 (journeys J1–J5), §6; 01 `H5P-009`, `H5P-010`, `SEC-004`, `SEC-006`; 03 `UD-003`, §6 (`UD-040`); 04 `MAPPE-003`, `MAPPE-004` (D-101) | ✅ Done (gate passed 2026-11-06; started 2026-10-30; D-101…D-116) |
-| SR | Security repairs after the S6 gate: 32 steps, each with tests, a gate run and a decision entry | The spec a step names | ✅ Done (2026-11-20 to 2026-11-27; D-117…D-148; session log, steps 1–32); open: HVL IT's and the owner's questions Q32, Q33 and Q34, with the earlier ones |
+| SR | Security repairs after the S6 gate: 33 steps, each with tests, a gate run and a decision entry | The spec a step names | ✅ Done (2026-11-20 to 2026-11-27; D-117…D-149; session log, steps 1–33); open: HVL IT's and the owner's questions Q32, Q33 and Q34, with the earlier ones |
 
 Legend: ⬜ not started · 🟨 in progress · ✅ done (gate passed, output pasted below) · ⛔ blocked
 
@@ -992,7 +992,7 @@ under the step that does it):
 | Q31 | Name a system owner (*systemeigar*) and a maintainer (*forvaltar*) at HVL for HVL Interaktiv. Neither is named anywhere, and the IT assurance pack asks for them (D-116; `docs/assurance/README.md`, «Who is accountable»; ROS-19 in `docs/assurance/ros-analyse.md`): the system owner, and who owns the test install and its tester list, before stage 1; the maintainer, who rebuilds and redeploys the image with fixes and runs the key rotations, the yearly purge and the backups (`docs/ops/runbook.md` §2, §4–§7), before stage 2 at the latest. Until then the repository owner makes the product decisions; the bachelor students' project (D-101) does not replace either role | Owner, HVL IT / ALU | Stage 1 of the IT assurance pack (`docs/assurance/test-environment.md`) |
 | Q32 | May a Feide ID (`eduPersonPrincipalName`) hold letters outside a–z, digits and `.`, `-`, `_` before the `@`, for example æ, ø or å? The server keeps such a letter as written and folds only `A`–`Z` (D-142); if Feide never issues one, the Feide ID pattern can refuse it | HVL IT, Sikt | Nothing; a stricter Feide ID pattern |
 | Q33 | Where is the production image built, and is it signed there? No workflow publishes, signs or attests an image: `docker.yml` builds it only to test it. Decide the place (HVL's own pipeline or registry), whether the image is signed and carries a statement of the commit it was built from, and who checks both at deployment (threat model T-92, ROS-21; D-145) | HVL IT | Nothing in the code; the production deployment |
-| Q34 | A secret scan of the repository. The repository is public, so GitHub's secret scanning and push protection are settings the owner can switch on (Settings → Code security); CI runs no scanner of its own (D-145). Switch them on, or name the scan HVL IT uses once the code lives with HVL | Owner, HVL IT | Nothing |
+| Q34 | A secret scan of the repository. The owner switched on GitHub's secret scanning and push protection on 2026-11-27, with private vulnerability reporting and Dependabot alerts (the repository's Advanced Security settings; no check holds them); CI runs no scanner of its own (D-145). Open: name the scan HVL IT uses once the code lives with HVL | HVL IT | Nothing |
 
 ## Risk register
 
@@ -1007,7 +1007,7 @@ under the step that does it):
 | R-06 | Upstream H5P accessibility barriers | High | Medium | Theme fixes where possible; report upstream; document in `UD-040` |
 | R-08 | `image-size` (via h5p-server) has two unfixed DoS advisories; accepted until 2027-03-27 (D-030, renewed by D-148) | Low | Medium | Only reachable through authenticated uploads; `SEC-002` sniffing in S2; `check:audit` fails at expiry |
 | R-09 | Lumi's npm releases lag its repository: none since 10.0.4 (2025-03-08), while `master` carries file-security work we would want (D-081) | High | Medium | Our own file security (D-003) and adapters in our code; S6 asks for a release or pins a reviewed commit (D-081); the revisit triggers in D-081. The release request is drafted for the owner to file (`docs/upstream/lumi-release-request.md`, D-112); the choice before 2027-03-27 is in `docs/handoff/lumi-path.md` |
-| R-10 | The image is built on Ubuntu 24.04, whose security support ends in 2029; Dependabot proposes no other Ubuntu version, and the pinned Playwright lists Ubuntu up to 24.04 (D-148) | Low | Medium | Fresh digests of 24.04 come monthly; decide the move to a later long-term Ubuntu together with a Playwright update, and look at it again by 2028-04-30 at the latest |
+| R-10 | The image is built on Ubuntu 24.04, whose security support ends in 2029; Dependabot proposes no other Ubuntu version; the pinned Playwright lists Ubuntu up to 26.04 since D-149 (D-148) | Low | Medium | Fresh digests of 24.04 come monthly; the move to Ubuntu 26.04 is a step of its own (the image's packages and the smoke test go with it); look at it again by 2028-04-30 at the latest |
 
 ## Session log
 
@@ -3398,4 +3398,78 @@ Append one entry per session: date, session, what was done, gate output, and any
   $ npx vitest run --project server                    27154 passed, 31 skipped; 1 failed in 4 files: a
       privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
       MAPPE-004)
+  ```
+
+- **2026-11-27 · Security repairs, step 33 (D-149)** — playwright-core 1.65.1, with Chromium 159 in the browser
+  tests and in the image, and the tests brought to what the new browser does.
+  - The update (SEC-007): the exact pin and the one package in the lock file (949 registry packages, as before);
+    the image copies `chromium-1255`, and the smoke test's checks name its folder. The SBOM lists 478 npm
+    packages, as before.
+  - Run on Chromium 159, 41 of the server's 234 real-browser tests failed, and in the gate one journey test and
+    one accessibility test. Each was read; none is a fault in the product (D-149 lists the causes). What changed
+    in the tests:
+    - the cookie tests start the full build on a profile with «Block third-party cookies» on
+      (`test/support/thirdPartyCookies.ts`; LTI-003, amends D-065); the canary has its own file;
+    - one place reads the browser's console (`test/support/browserConsole.ts`; H5P-001, DATA-011): Chromium's
+      notice about H5P Core's `unload` listener is not an error of the page, and the new wording of a refused
+      frame or script is read there;
+    - the bridge's own test names its learner by a cookie, since a request sent while the page is hidden carries
+      no test header (LTI-010);
+    - the phone journey emulates the phone at pixel ratio 1 (UD-008); `emulatedPixelRatio.browser.test.ts`
+      holds what it relies on, and pins that the full build lays a frame from another site out at half its
+      width under an emulated ratio of 2;
+    - the pins follow the browser: the PDF's tags, the focus option, the dialog form's role and the wording of
+      a computed outline (MAPPE-004, UD-004).
+  - The portfolio PDF is the same for a reader: one PDF printed before and after has the same text, the same
+    fonts and the same picture, pixel for pixel. Its tags are better (a list item's number, a table's caption);
+    the residual list in the manual protocol (J4) and in the evaluator guide follows.
+  - `CLAUDE.md`'s trap about the cookie tests names the helper and the new version, and the documents that
+    describe the browser follow. Of the 16 upstream drafts that name a browser, one names the new one; the
+    others keep theirs, because no test observed their faults again (D-149). Risk R-10: the pinned Playwright
+    now lists Ubuntu 26.04.
+  - GitHub, on the owner's side (2026-11-27): private vulnerability reporting, secret scanning with push
+    protection, Dependabot alerts and code scanning are on; Dependabot's security updates stay off (D-145).
+    Dependabot's alerts list four advisories. Two are the `image-size` ones, accepted until 2027-03-27 (R-08).
+    Two are of moderate severity, below what `check:audit` holds, and the running server does not reach them:
+    `minimatch` 10.2.6 (GHSA-g3hv-75wg-m249) sits only under typedoc, a documentation tool outside the image, and
+    `ts-deepmerge` 7.0.3 (GHSA-87mf-gv2c-c62c) only under `@lumieducation/h5p-clamav-scanner`, in a start-up
+    function that our clamd client does not call; its repaired version is a new major, outside the range Lumi
+    asks for. Dependabot's monthly run opened three pull requests: playwright-core, which this step takes; a new
+    digest of `ubuntu:24.04`; and four npm updates, one of them the accessibility scanner that D-148 held back.
+    The last two are read after this step. Gate output:
+
+  ```
+  $ npm run build                                      exit 0
+  $ HVLI_DOCKER_SANDBOX=1 bash deploy/smoke/dockerSmoke.sh   passed in 236 s (image built with chromium-1255:
+      Chrome for Testing 159.0.8154.6, the PDF printed as uid 10001 with the sandbox seen in /proc)
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run lint:css                                   exit 0
+  $ npm run doc:lint && npm run check:filesize         11 checks passed; file-size passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run privacy:dpia-check                         13 sections, the developer key and the residuals agree
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins && npm run check:licences       every version pinned; 489 production packages compatible
+  $ npm run check:lockfile                             949 packages from the registry with sha512; 4 install scripts reviewed
+  $ npm run check:workflows                            3 workflows: actions by commit, images by digest
+  $ npm run check:audit                                2 high/critical advisories, both covered by reviewed exceptions
+  $ npm run sbom -- --check                            current: 478 npm packages, 12 H5P components, 3 images
+  $ npm run content:check && npm run tokens:check      exit 0
+  $ node tools/spec-site/buildSpecSite.mjs --check     up to date
+  $ npm run docs:api                                   exit 0
+  $ npm run a11y:report -- --check                     exit 0
+  $ npx vitest run --project web                       644 passed (100 files)
+  $ npx vitest run --project api-contract              123 passed (15 files)
+  $ npx vitest run --project tools                     599 passed (80 files)
+  $ npx vitest run --project design-tokens             156 passed
+  $ npx vitest run --project hvl-h5p-theme             206 passed
+  $ LIVE_TARGET=mock npm run test:live                 36 passed
+  $ npm run test:a11y                                  563 passed (18 files); in the gate's own run, before the pin
+      of the outline's wording followed the browser, 562 passed and 1 failed
+  $ npm run test:e2e                                   36 passed, 1 skipped; 1 file failed: learnerDataRights
+      (needs the privileged database, like DATA-010's tests); in the gate's own run, before the phone journey
+      emulated ratio 1, 35 passed and 1 failed
+  $ npx vitest run --project server                    27157 passed, 31 skipped; 1 failed in 4 files: a
+      privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
+      MAPPE-004). The pin file added after this run, `emulatedPixelRatio.browser.test.ts`, passes on its own (2)
   ```

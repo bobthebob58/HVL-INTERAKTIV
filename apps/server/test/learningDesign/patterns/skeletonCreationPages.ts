@@ -18,11 +18,9 @@
  */
 import type { Browser, Page } from 'playwright-core';
 import { t } from '../../../src/i18n/translate.js';
+import { isPageError, refusedFrame } from '../../support/browserConsole.js';
 import type { TestActor } from '../../support/httpTestbed.js';
 import { builtEditor, LATE_ERROR_WINDOW_MS, SETTLE, settled } from './skeletonCreationSettling.js';
-
-/** A third-party frame the policy refused, as the browser reports it. */
-const REFUSED_FRAME = /^Refused to frame '(https?:\/\/[^']+)'/;
 
 /** What the browser reported on one page. */
 export interface PageReport {
@@ -58,8 +56,8 @@ async function openAs(browser: Browser, actor: TestActor): Promise<{ page: Page 
   const problems: string[] = [];
   const refusedFrames: string[] = [];
   page.on('console', (m) => {
-    if (m.type() !== 'error') return;
-    const refused = REFUSED_FRAME.exec(m.text())?.[1];
+    if (!isPageError(m)) return;
+    const refused = refusedFrame(m.text());
     if (refused) refusedFrames.push(refused);
     else problems.push(`console: ${m.text()}`);
   });

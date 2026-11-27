@@ -68,8 +68,8 @@ where a rule changed, but their figures (test counts, commit IDs, CI run numbers
    The full plan for reviewers, in order of risk and with a checklist per area, is
    [human-review.md](../assurance/human-review.md) §4.
 4. **Report what you find.** A security finding goes privately, never into a public issue, comment or pull request.
-   [SECURITY.md](../../SECURITY.md) names two routes, and human-review.md §5 says neither is set up yet, so agree a
-   private channel with the repository owner first. Other faults go into a GitHub issue with the «Feil» form. A fix
+   [SECURITY.md](../../SECURITY.md) names two routes: GitHub's private reporting, on since 2026-11-27, and an HVL
+   e-mail address that is not filled in yet. Other faults go into a GitHub issue with the «Feil» form. A fix
    is a pull request that starts with a test that fails; `main` takes changes only through a pull request with a
    green «Session gate» ([hand-off index](README.md), «Ground rules for changing the code»).
 
@@ -136,7 +136,7 @@ is written out in full.
 7. **Who reads the code first,** which area, and the private channel for security findings (section 3;
    human-review.md §4, §5).
 8. **Two small ones.** Whether a Feide ID may hold letters outside a–z before the `@` (Q32), and which secret scan
-   covers the repository (Q34).
+   HVL IT uses once the code lives with HVL (Q34; GitHub's own is on since 2026-11-27).
 
 ## 7. What is not asked now
 

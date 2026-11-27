@@ -20,7 +20,7 @@
 
 - **Environment:** Other (Lumi's Node.js H5P server, `@lumieducation/h5p-server` 10.0.4)
 - **LMS:** Canvas (the same outside it)
-- **Browsers:** Chrome (Chromium 141, through Playwright 1.56.1)
+- **Browsers:** Chrome (Chromium 159, through Playwright 1.65.1)
 - **Operating system:** Linux (Debian), Ubuntu 24.04
 
 ### Versions
@@ -28,7 +28,7 @@
 - H5P.QuestionSet 1.21.13 (tag 1.21.13, commit 4598d1d6); the same code is on the default branch at a961bac
   (1.21.14), `js/questionset.js` line 521.
 - H5P.Components 1.0.99 (commit 223a9164), H5P.InteractiveBook 1.15.1 (commit 90efced9).
-- H5P Core 1.28.0; Chromium 141 (Playwright 1.56.1); Nynorsk, though the language does not matter.
+- H5P Core 1.28.0; Chromium 159 (Playwright 1.65.1); Nynorsk, though the language does not matter.
 
 ### Steps to reproduce
 

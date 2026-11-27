@@ -14,7 +14,7 @@
  *   - SECURITY/PRIVACY: the log line holds `pdfAvailable`, `pdfSandbox` and a reason code only, never Chromium's error
  *     text, which can carry paths and command lines.
  * Collaborators: ./SharedChromium.ts (`pdfBrowserLaunchOptions`, `LaunchBrowser`), ./pdfCheckCli.ts,
- *   ../../../server/main.ts (calls `logPdfAvailability` once after listening), playwright-core 1.56.1.
+ *   ../../../server/main.ts (calls `logPdfAvailability` once after listening), playwright-core 1.65.1.
  * Tests: apps/server/test/learningDesign/mappe/pdfAvailability.test.ts
  */
 import { chromium, type Browser } from 'playwright-core';

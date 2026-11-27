@@ -26,7 +26,7 @@ import type { Locale } from '../../../i18n/translate.js';
 const markdown = new MarkdownIt({ html: false, linkify: false, typographer: false }).disable(['image']);
 
 // A11Y: WCAG 1.4.8 and HVL's rules: line height 1.5, left-aligned, never justified; underline only on links.
-// WHY: Chromium 141's tagged-PDF outline drops the space where a heading wraps («emneom»); `pre-wrap` on the
+// WHY: Chromium's tagged-PDF outline drops the space where a heading wraps («emneom»; 141 and 159); `pre-wrap` on the
 // headings keeps it, and a one-line Markdown heading renders the same (D-096 amendment 2026-10-29 on wrapped
 // headings).
 const STYLE = `@page { size: A4; margin: 20mm 18mm; }

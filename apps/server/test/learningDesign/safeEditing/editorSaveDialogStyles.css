@@ -34,9 +34,10 @@ dialog.hvl-probe-save-choice h2 {
   margin-top: 0;
 }
 
-/* A11Y: after a mouse click on «Lagre», Chromium gives the programmatically focused «Avbryt» no :focus-visible and
-   ignores focus({ focusVisible: true }), so the dialog's buttons show the ring on :focus. WCAG 2.4.7 is already met
-   by :focus-visible (the ring appears once the keyboard is used); this rule goes further, an open choice (P7). */
+/* A11Y: after a mouse click on «Lagre», Chromium gives the programmatically focused «Avbryt» no :focus-visible
+   (141 also ignored focus({ focusVisible: true }); 159 follows it), so the dialog's buttons show the ring on :focus.
+   WCAG 2.4.7 is already met by :focus-visible (the ring appears once the keyboard is used); this rule goes further,
+   an open choice (P7). */
 dialog.hvl-probe-save-choice button:focus {
   outline: var(--hvl-focus-outline);
   outline-offset: var(--hvl-focus-offset);

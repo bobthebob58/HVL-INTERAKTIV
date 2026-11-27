@@ -55,7 +55,7 @@ describe('[MAPPE-004] the PDF availability probe', () => {
     ['[FATAL:zygote_host_impl_linux.cc(128)] No usable sandbox! ...', 'Error', 'no-usable-sandbox'],
     ['[err] Check failed: sys_chroot("/proc/self/fdinfo/") == 0', 'Error', 'no-usable-sandbox'],
     ['Running as root without --no-sandbox is not supported.', 'Error', 'root-without-no-sandbox'],
-    ["Executable doesn't exist at /ms-playwright/chromium-1194/chrome-linux/chrome", 'Error', 'no-browser'],
+    ["Executable doesn't exist at /ms-playwright/chromium-1255/chrome-linux64/chrome", 'Error', 'no-browser'],
     ['browserType.launch: Timeout 20000ms exceeded.', 'TimeoutError', 'launch-timeout'],
     ['Target page, context or browser has been closed', 'Error', 'launch-failed'],
   ] as const)(
