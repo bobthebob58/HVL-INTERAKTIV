@@ -6672,8 +6672,8 @@ loading of one spec per session are kept.
   no defence against a flood, which is the reverse proxy's (threat model T-111).
 - **Decision — three lines in the tools (UD-040, DOC-004, NFR-001).** The accessibility report and the
   traceability matrix escaped `|` in a table cell but not `\`; both escape the two now. The load tool's reader
-  of a page's scripts and stylesheets takes a tag name in any letter case. All three only ever met text of this
-  repository; the change makes the lines right, and the scanner's findings on them end.
+  of a page's scripts and stylesheets takes a tag and its attributes in any letter case. All three only ever met
+  text of this repository; the change makes the lines right, and the scanner's findings on them end.
 - **Decision — no change, for these reasons:**
   - **Eight routes without a limit of their own.** `http/api/contentListRoutes.ts` (a signed-in person's own
     list) and three routes of `learningDesign/http/collaborationRoutes.ts` (list, add and remove a co-author)
@@ -6695,22 +6695,29 @@ loading of one spec per session are kept.
   The scanner stays in its default setup. A settings file that leaves tests and the library out would need a
   workflow of our own with permission to write security events, which `check:workflows` refuses (tokens that
   only read, D-145), and it would hide later findings in those folders. The two findings on the Feide routes
-  stay listed after the repair: the query knows a few limiter libraries by name and not a middleware of our
-  own. They are dismissed as false positives, with this entry as the reason.
+  may stay listed after the repair, since the query knows a few limiter libraries by name and may not know a
+  middleware of our own. If they do, they are dismissed as false positives, with this entry as the reason.
 - **Decision — the Ubuntu base image is taken by hand (SEC-007, amends D-148).** Dependabot's monthly pull
   request for a new digest of `ubuntu:24.04` changes the Dockerfile alone and passes CI, but the SBOM and the
   architecture paper name the digest too, and CI does not run the SBOM's check. The digest of 2026-11
   (`sha256:562111b8…`) is taken with all three, and the Docker smoke test ran on the image built from it. A
   digest proposal is taken this way until the SBOM's check runs in CI.
 - **Residual:** the two ceilings are far above real use on purpose, so they do not stop a slow flood or one from
-  many addresses (T-111, the question to HVL IT about the proxy). The scanner's settings live in GitHub, not in
-  the repository, and no check holds them (Q34). A dismissed finding returns only if its code changes.
+  many addresses (T-111, the question to HVL IT about the proxy). A ceiling per address is shared by everyone
+  behind that address. One sender on a campus network who sends more than the ceiling uses up the address's
+  minute, and the others there are told to try again when they start a login or a launch, for as long as the
+  sender goes on; a person already signed in, or in an activity already open, is not affected. It is accepted:
+  without the ceiling the same sender fills Redis with pending logins (each lives ten minutes) for the whole
+  service, and a limit at the proxy counts by address too. With `TRUST_PROXY` left at 0 behind a proxy, every
+  visitor has the proxy's address and shares one count; the runbook says to set it, and nothing at start-up
+  checks it. The scanner's settings live in GitHub, not in the repository, and no check holds them (Q34). A
+  dismissed finding returns only if its code changes.
 - **Verified:** `feideLoginCeiling.int.test.ts` (5: the number; three logins pass and the next two get the page,
   with no login stored; login and callback share the count, and a callback past it writes no audit row; the
   address is never a key; Redis unreachable) failed before the routes ran the ceiling, with five logins
   accepted, and passes after. `launchRequestCeiling.int.test.ts` passes unchanged on the shared module. The
-  three tool tests (`renderSections.test.mjs`, one each in `specTrace.test.mjs` and `playerPages.test.mjs`) fail
-  on the old lines and pass on the new. The full gate and the Docker smoke test ran; step 34 in `PROGRESS.md`
+  tool tests (`renderSections.test.mjs`, one in `specTrace.test.mjs`, two in `playerPages.test.mjs`) fail on
+  the old lines and pass on the new. The full gate and the Docker smoke test ran; step 34 in `PROGRESS.md`
   has the output.
 - **Consequences:** the risk list (ROS-07) and the threat model (T-111 and its summary row) say what the app
   limits itself and what is left to the proxy; the data inventory names the new counter beside the first; the

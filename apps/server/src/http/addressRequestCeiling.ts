@@ -16,7 +16,7 @@
  *   - PRIVACY: the address is never a key. The key is its keyed fingerprint under the identity key ring
  *     (`auth-audit-ip`, as the audit log stores it), and it expires with its minute.
  *   - Redis unreachable: the request goes ahead and one line a minute says so. The ceiling is a backstop, never the
- *     thing that lets a person in, so it does not make a login or a launch depend on Redis.
+ *     thing that lets a person in, so a Redis fault is never the ceiling's reason to refuse anyone.
  * Collaborators: ../lti/http/launchRequestCeiling.ts and ../auth/feide/loginRequestCeiling.ts (the two groups),
  *   ../learningDesign/collaboration/PersonRateLimit.ts (the counter), ./learningDesignErrors.ts (the refusal).
  * Tests: apps/server/test/lti/http/launchRequestCeiling.int.test.ts,
@@ -38,6 +38,7 @@ export interface AddressRequestCeilingDeps {
   readonly redis: Redis;
   /** Makes the address's fingerprint. */
   readonly hasher: Pick<IdentityHasher, 'hash'>;
+  /** Says, once a minute, that Redis is unreachable and requests are not counted. */
   readonly logger: Pick<Logger, 'warn'>;
 }
 

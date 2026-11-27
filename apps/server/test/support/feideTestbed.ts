@@ -44,7 +44,9 @@ export interface FeideTestbed {
 
 /** The request ceiling of a test bed: a lower number, or another Redis client for its counter. */
 export interface TestbedCeiling {
+  /** Requests one address may send in a minute (default: the product's number). */
   readonly limit?: number;
+  /** The Redis client the ceiling counts in (default: the test Redis). */
   readonly redis?: Redis;
 }
 

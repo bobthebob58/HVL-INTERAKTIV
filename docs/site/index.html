@@ -14102,8 +14102,8 @@ when Redis cannot be reached. It is a backstop: it bounds what one address can m
 no defence against a flood, which is the reverse proxy&#39;s (threat model T-111).</li>
 <li><strong>Decision — three lines in the tools (UD-040, DOC-004, NFR-001).</strong> The accessibility report and the
 traceability matrix escaped <code>|</code> in a table cell but not <code>\</code>; both escape the two now. The load tool&#39;s reader
-of a page&#39;s scripts and stylesheets takes a tag name in any letter case. All three only ever met text of this
-repository; the change makes the lines right, and the scanner&#39;s findings on them end.</li>
+of a page&#39;s scripts and stylesheets takes a tag and its attributes in any letter case. All three only ever met
+text of this repository; the change makes the lines right, and the scanner&#39;s findings on them end.</li>
 <li><strong>Decision — no change, for these reasons:</strong><ul>
 <li><strong>Eight routes without a limit of their own.</strong> <code>http/api/contentListRoutes.ts</code> (a signed-in person&#39;s own
 list) and three routes of <code>learningDesign/http/collaborationRoutes.ts</code> (list, add and remove a co-author)
@@ -14127,22 +14127,29 @@ server or the web app. A newer copy is a tool update of its own.</li>
 The scanner stays in its default setup. A settings file that leaves tests and the library out would need a
 workflow of our own with permission to write security events, which <code>check:workflows</code> refuses (tokens that
 only read, D-145), and it would hide later findings in those folders. The two findings on the Feide routes
-stay listed after the repair: the query knows a few limiter libraries by name and not a middleware of our
-own. They are dismissed as false positives, with this entry as the reason.</li>
+may stay listed after the repair, since the query knows a few limiter libraries by name and may not know a
+middleware of our own. If they do, they are dismissed as false positives, with this entry as the reason.</li>
 <li><strong>Decision — the Ubuntu base image is taken by hand (SEC-007, amends D-148).</strong> Dependabot&#39;s monthly pull
 request for a new digest of <code>ubuntu:24.04</code> changes the Dockerfile alone and passes CI, but the SBOM and the
 architecture paper name the digest too, and CI does not run the SBOM&#39;s check. The digest of 2026-11
 (<code>sha256:562111b8…</code>) is taken with all three, and the Docker smoke test ran on the image built from it. A
 digest proposal is taken this way until the SBOM&#39;s check runs in CI.</li>
 <li><strong>Residual:</strong> the two ceilings are far above real use on purpose, so they do not stop a slow flood or one from
-many addresses (T-111, the question to HVL IT about the proxy). The scanner&#39;s settings live in GitHub, not in
-the repository, and no check holds them (Q34). A dismissed finding returns only if its code changes.</li>
+many addresses (T-111, the question to HVL IT about the proxy). A ceiling per address is shared by everyone
+behind that address. One sender on a campus network who sends more than the ceiling uses up the address&#39;s
+minute, and the others there are told to try again when they start a login or a launch, for as long as the
+sender goes on; a person already signed in, or in an activity already open, is not affected. It is accepted:
+without the ceiling the same sender fills Redis with pending logins (each lives ten minutes) for the whole
+service, and a limit at the proxy counts by address too. With <code>TRUST_PROXY</code> left at 0 behind a proxy, every
+visitor has the proxy&#39;s address and shares one count; the runbook says to set it, and nothing at start-up
+checks it. The scanner&#39;s settings live in GitHub, not in the repository, and no check holds them (Q34). A
+dismissed finding returns only if its code changes.</li>
 <li><strong>Verified:</strong> <code>feideLoginCeiling.int.test.ts</code> (5: the number; three logins pass and the next two get the page,
 with no login stored; login and callback share the count, and a callback past it writes no audit row; the
 address is never a key; Redis unreachable) failed before the routes ran the ceiling, with five logins
 accepted, and passes after. <code>launchRequestCeiling.int.test.ts</code> passes unchanged on the shared module. The
-three tool tests (<code>renderSections.test.mjs</code>, one each in <code>specTrace.test.mjs</code> and <code>playerPages.test.mjs</code>) fail
-on the old lines and pass on the new. The full gate and the Docker smoke test ran; step 34 in <code>PROGRESS.md</code>
+tool tests (<code>renderSections.test.mjs</code>, one in <code>specTrace.test.mjs</code>, two in <code>playerPages.test.mjs</code>) fail on
+the old lines and pass on the new. The full gate and the Docker smoke test ran; step 34 in <code>PROGRESS.md</code>
 has the output.</li>
 <li><strong>Consequences:</strong> the risk list (ROS-07) and the threat model (T-111 and its summary row) say what the app
 limits itself and what is left to the proxy; the data inventory names the new counter beside the first; the
@@ -17716,6 +17723,78 @@ $ npm run test:e2e                                   36 passed, 1 skipped; 1 fil
 $ npx vitest run --project server                    27157 passed, 31 skipped; 1 failed in 4 files: a
     privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
     MAPPE-004). The pin file added after this run, `emulatedPixelRatio.browser.test.ts`, passes on its own (2)</code></pre>
+</li>
+<li><p><strong>2026-11-27 · Security repairs, step 34 (D-150)</strong> — the first results of GitHub&#39;s code scanning, a ceiling on
+the Feide login, and the Ubuntu base image of November.</p>
+<ul>
+<li>The scanner (CodeQL in its default setup, on since 2026-11-27) lists 36 findings on <code>main</code>, all with the
+severity &quot;High&quot; that their queries carry: 12 in the running server, 3 in the build tools, 17 in tests and
+their support files, and 4 in the copied Markdown library. Each was read against the code it names. None is
+a weakness that can be used; one names a limit the risk list already had.</li>
+<li>The repair (AUTH-001, NFR-006): one network address may send 4 000 requests a minute to
+<code>/auth/feide/login</code> and <code>/auth/feide/callback</code> together. Past that the answer is the portal&#39;s page with 429
+and <code>Retry-After</code>, before a login is stored or a callback is looked at. The counting is the launch
+ceiling&#39;s (D-141), now in one module for both (<code>src/http/addressRequestCeiling.ts</code>): a fixed minute in
+Redis, the address only as its keyed fingerprint, and a request that goes ahead when Redis cannot be
+reached. <code>feideLoginCeiling.int.test.ts</code> (5) failed before the routes ran the ceiling and passes after.</li>
+<li>What a ceiling per address costs is written down (D-150&#39;s residual, ROS-07, T-111): everyone behind one
+address shares its count, so one sender on a campus network can use up that address&#39;s minute for the others
+there; with <code>TRUST_PROXY</code> left at 0 behind a proxy, every visitor shares one count.</li>
+<li>Three lines in the tools (UD-040, DOC-004, NFR-001): the accessibility report and the traceability matrix
+escape <code>\</code> as well as <code>|</code> in a table cell, and the load tool reads a tag and its attributes in any letter
+case. Five new tests; each fails on the old line.</li>
+<li>No change, with the reason in D-150: eight routes without a limit of their own (small requests of a
+signed-in author, or files behind a signed grant and the pages&#39; own files); two readers of blanks that
+follow how H5P.Blanks reads a blank and are no cleaners of markup (each place now says so); the 17 findings
+in tests; the 4 in the copied library. The owner closes these on GitHub by dismissal, each with its reason;
+the scanner stays in its default setup.</li>
+<li>The base image (SEC-007, amends D-148): the digest of <code>ubuntu:24.04</code> of 2026-11, taken by hand in the
+Dockerfile, the SBOM and the architecture paper together; the Docker smoke test ran on the image built from
+it. The SBOM lists 478 npm packages, as before.</li>
+<li>A second read of the change against the project&#39;s rules found a header sentence that said too much, two
+members without TSDoc, and attribute names read in one letter case only. The three were corrected after the
+long suites; the checks and the tests they touch ran again (below).</li>
+<li>One accessibility test failed once in the gate&#39;s run and not again: the footer controls of
+H5P.CoursePresentation at 640 × 320 in full screen. Its message (points inside the frame&#39;s height that hit
+nothing) says the footer was measured while the frame was taking its full-screen size; the test waits for
+the full-screen class and for animations, not for the size. It passed five times on its own afterwards,
+twice of them with every processor kept busy, and nothing in this step touches the player. Gate output:</li>
+</ul>
+<pre class="code" tabindex="0" role="region" aria-label="Code 55, Session log"><code>$ npm run build                                      exit 0
+$ HVLI_DOCKER_SANDBOX=1 bash deploy/smoke/dockerSmoke.sh   passed in 330 s (image built from
+    ubuntu:24.04@sha256:562111b8…; the PDF printed as uid 10001 with the sandbox seen in /proc)
+$ npm run typecheck                                  exit 0
+$ npm run lint &amp;&amp; npm run format:check               exit 0
+$ npm run lint:css                                   exit 0
+$ npm run doc:lint &amp;&amp; npm run check:filesize         11 checks passed; file-size passed
+$ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+$ npm run privacy:dpia-check                         13 sections, the developer key and the residuals agree
+$ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+$ npm run check:pins &amp;&amp; npm run check:licences       every version pinned; 489 production packages compatible
+$ npm run check:lockfile                             949 packages from the registry with sha512; 4 install scripts reviewed
+$ npm run check:workflows                            3 workflows: actions by commit, images by digest
+$ npm run check:audit                                2 high/critical advisories, both covered by reviewed exceptions
+$ npm run sbom -- --check                            current: 478 npm packages, 12 H5P components, 3 images
+$ npm run content:check &amp;&amp; npm run tokens:check      exit 0
+$ node tools/spec-site/buildSpecSite.mjs --check     up to date
+$ node tools/deploy-check/checkDeployFiles.mjs       exit 0
+$ npm run docs:api                                   exit 0
+$ npm run a11y:report -- --check                     exit 0
+$ npx vitest run --project web                       644 passed (100 files)
+$ npx vitest run --project api-contract              123 passed (15 files)
+$ npx vitest run --project tools                     604 passed (81 files); 603 in the gate's own run, before
+    the test of attribute names
+$ npx vitest run --project design-tokens             156 passed
+$ npx vitest run --project hvl-h5p-theme             206 passed
+$ LIVE_TARGET=mock npm run test:live                 36 passed
+$ npm run test:a11y                                  562 passed, 1 failed (18 files): the footer test above,
+    which passed five times on its own afterwards
+$ npm run test:e2e                                   36 passed, 1 skipped; 1 file failed: learnerDataRights
+    (needs the privileged database, like DATA-010's tests)
+$ npx vitest run --project server                    27164 passed, 31 skipped; 1 failed in 4 files: a
+    privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
+    MAPPE-004). After the second read's corrections, the Feide and launch-ceiling tests ran again: 159 passed
+    (14 files)</code></pre>
 </li>
 </ul>
 
