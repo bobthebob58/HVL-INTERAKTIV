@@ -51,7 +51,7 @@
     "next": "16.4.6",
     "openid-client": "6.9.1",
     "pino": "10.4.0",
-    "playwright-core": "1.56.1",
+    "playwright-core": "1.65.1",
     "redis": "4.7.1",
     "sanitize-html": "2.18.2",
     "tsx": "4.23.15",
