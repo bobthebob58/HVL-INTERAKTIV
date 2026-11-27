@@ -109,7 +109,7 @@ file does not list»).
 | openid-client | 6.8.8 | Feide OIDC client | `apps/server/package.json`; `src/auth/feide/FeideClient.ts` |
 | Prisma, pg | `@prisma/client`, `@prisma/adapter-pg`, `prisma` 7.10.1; `pg` 8.23.1 | Database access and migrations | `apps/server/package.json`; `package-lock.json` |
 | Other server packages | `redis` 4.7.1, `@aws-sdk/client-s3` 3.1155.0, `clamscan` 2.4.0, `pino` 10.4.0, `zod` 4.6.7, `jsdom` 26.1.0, `dompurify` 3.4.17 | Redis, S3, clamd client, logs, validation, SVG sanitising | `apps/server/package.json` |
-| playwright-core and Chromium | `playwright-core` 1.65.1; full Chromium build `chromium-1255` (159.0.8154.6), never the headless shell | Renders the mappe PDF (`MAPPE-004`) | `deploy/Dockerfile:70-75,119`; `PROGRESS.md:1496`; D-096 |
+| playwright-core and Chromium | `playwright-core` 1.65.1; full Chromium build `chromium-1255` (159.0.8154.6), never the headless shell | Renders the mappe PDF (`MAPPE-004`) | `deploy/Dockerfile:70-75,119`; `PROGRESS.md:3443-3444`; D-096, D-149 |
 | tini, fonts, Chromium's system libraries | From Ubuntu's archive at build time, **versions not pinned** | PID 1; æ, ø and å in the PDF | `deploy/Dockerfile:107-112,140` |
 | Seccomp profile | Docker Engine 29.9.2's default profile (SHA-256 `785b24292643…`) with one rule added (D-144); the file's SHA-256 is `42127de905b5…` | Lets Chromium keep its sandbox as non-root | `deploy/seccomp/README.md`; `tools/deploy-check/seccompRules.mjs` |
 | Browser-side scripts | H5P core and content-type JavaScript, and our theme scripts including the xAPI bridge | Run in users' browsers, served from the app origin | `packages/hvl-h5p-theme/`; D-102; `src/http/h5pPageCsp.ts:90` |

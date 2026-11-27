@@ -3399,3 +3399,77 @@ Append one entry per session: date, session, what was done, gate output, and any
       privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
       MAPPE-004)
   ```
+
+- **2026-11-27 · Security repairs, step 33 (D-149)** — playwright-core 1.65.1, with Chromium 159 in the browser
+  tests and in the image, and the tests brought to what the new browser does.
+  - The update (SEC-007): the exact pin and the one package in the lock file (949 registry packages, as before);
+    the image copies `chromium-1255`, and the smoke test's checks name its folder. The SBOM lists 478 npm
+    packages, as before.
+  - Run on Chromium 159, 41 of the server's 234 real-browser tests failed, and in the gate one journey test and
+    one accessibility test. Each was read; none is a fault in the product (D-149 lists the causes). What changed
+    in the tests:
+    - the cookie tests start the full build on a profile with «Block third-party cookies» on
+      (`test/support/thirdPartyCookies.ts`; LTI-003, amends D-065); the canary has its own file;
+    - one place reads the browser's console (`test/support/browserConsole.ts`; H5P-001, DATA-011): Chromium's
+      notice about H5P Core's `unload` listener is not an error of the page, and the new wording of a refused
+      frame or script is read there;
+    - the bridge's own test names its learner by a cookie, since a request sent while the page is hidden carries
+      no test header (LTI-010);
+    - the phone journey emulates the phone at pixel ratio 1 (UD-008); `emulatedPixelRatio.browser.test.ts`
+      holds what it relies on, and pins that the full build lays a frame from another site out at half its
+      width under an emulated ratio of 2;
+    - the pins follow the browser: the PDF's tags, the focus option, the dialog form's role and the wording of
+      a computed outline (MAPPE-004, UD-004).
+  - The portfolio PDF is the same for a reader: one PDF printed before and after has the same text, the same
+    fonts and the same picture, pixel for pixel. Its tags are better (a list item's number, a table's caption);
+    the residual list in the manual protocol (J4) and in the evaluator guide follows.
+  - `CLAUDE.md`'s trap about the cookie tests names the helper and the new version, and the documents that
+    describe the browser follow. Of the 16 upstream drafts that name a browser, one names the new one; the
+    others keep theirs, because no test observed their faults again (D-149). Risk R-10: the pinned Playwright
+    now lists Ubuntu 26.04.
+  - GitHub, on the owner's side (2026-11-27): private vulnerability reporting, secret scanning with push
+    protection, Dependabot alerts and code scanning are on; Dependabot's security updates stay off (D-145).
+    Dependabot's alerts list four advisories. Two are the `image-size` ones, accepted until 2027-03-27 (R-08).
+    Two are of moderate severity, below what `check:audit` holds, and the running server does not reach them:
+    `minimatch` 10.2.6 (GHSA-g3hv-75wg-m249) sits only under typedoc, a documentation tool outside the image, and
+    `ts-deepmerge` 7.0.3 (GHSA-87mf-gv2c-c62c) only under `@lumieducation/h5p-clamav-scanner`, in a start-up
+    function that our clamd client does not call; its repaired version is a new major, outside the range Lumi
+    asks for. Dependabot's monthly run opened three pull requests: playwright-core, which this step takes; a new
+    digest of `ubuntu:24.04`; and four npm updates, one of them the accessibility scanner that D-148 held back.
+    The last two are read after this step. Gate output:
+
+  ```
+  $ npm run build                                      exit 0
+  $ HVLI_DOCKER_SANDBOX=1 bash deploy/smoke/dockerSmoke.sh   passed in 236 s (image built with chromium-1255:
+      Chrome for Testing 159.0.8154.6, the PDF printed as uid 10001 with the sandbox seen in /proc)
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run lint:css                                   exit 0
+  $ npm run doc:lint && npm run check:filesize         11 checks passed; file-size passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run privacy:dpia-check                         13 sections, the developer key and the residuals agree
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins && npm run check:licences       every version pinned; 489 production packages compatible
+  $ npm run check:lockfile                             949 packages from the registry with sha512; 4 install scripts reviewed
+  $ npm run check:workflows                            3 workflows: actions by commit, images by digest
+  $ npm run check:audit                                2 high/critical advisories, both covered by reviewed exceptions
+  $ npm run sbom -- --check                            current: 478 npm packages, 12 H5P components, 3 images
+  $ npm run content:check && npm run tokens:check      exit 0
+  $ node tools/spec-site/buildSpecSite.mjs --check     up to date
+  $ npm run docs:api                                   exit 0
+  $ npm run a11y:report -- --check                     exit 0
+  $ npx vitest run --project web                       644 passed (100 files)
+  $ npx vitest run --project api-contract              123 passed (15 files)
+  $ npx vitest run --project tools                     599 passed (80 files)
+  $ npx vitest run --project design-tokens             156 passed
+  $ npx vitest run --project hvl-h5p-theme             206 passed
+  $ LIVE_TARGET=mock npm run test:live                 36 passed
+  $ npm run test:a11y                                  563 passed (18 files); in the gate's own run, before the pin
+      of the outline's wording followed the browser, 562 passed and 1 failed
+  $ npm run test:e2e                                   36 passed, 1 skipped; 1 file failed: learnerDataRights
+      (needs the privileged database, like DATA-010's tests); in the gate's own run, before the phone journey
+      emulated ratio 1, 35 passed and 1 failed
+  $ npx vitest run --project server                    27157 passed, 31 skipped; 1 failed in 4 files: a
+      privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
+      MAPPE-004). The pin file added after this run, `emulatedPixelRatio.browser.test.ts`, passes on its own (2)
+  ```
