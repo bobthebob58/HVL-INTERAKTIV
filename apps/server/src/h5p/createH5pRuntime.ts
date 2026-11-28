@@ -13,7 +13,7 @@
  *   - Editor and player share one HvlUrlGenerator; its content-file grants are signed with `URL_SIGNING_KEYS`,
  *     and the routes verify them with the same ContentFileGrants (D-058). Its file URLs and the player pages' policy
  *     name the files origin (`FILES_BASE_URL`, ../config/filesOrigin.ts); the editor's files have their own grants
- *     (`editorFileGrants`) on the app origin (D-110 amendment of 2026-11-05).
+ *     (`editorFileGrants`), on the files origin too (D-110 amendment of 2026-11-05, D-153).
  *   - File sanitisers run in this order: file-type sniffer, then the SVG sanitiser.
  *   - With `CLAMAV_HOST`, the fail-closed ClamAV scanner is the editor's one malware scanner (editor uploads and
  *     package imports, SEC-006); without it there is none (../security/malware/createMalwareScanners.ts).
@@ -73,8 +73,8 @@ export interface H5pRuntimeInputs {
   /** Base folder for relative H5P folders; defaults to apps/server. */
   readonly root?: string;
   /**
-   * Where the player's file URLs point; defaults to the files origin of `env` (../config/filesOrigin.ts). A test bed
-   * that serves the player's file route on its one test server passes `''`, for relative URLs.
+   * Where the pages' file URLs point; defaults to the files origin of `env` (../config/filesOrigin.ts). A test bed
+   * that serves the grant-checked file routes on its one test server passes `''`, for relative URLs.
    */
   readonly filesOrigin?: string;
   /** HVL's texts for the libraries (D-111), as the start-up loaded them; loaded from `content/` when absent. */
@@ -165,6 +165,7 @@ export async function createH5pRuntime(inputs: H5pRuntimeInputs): Promise<H5pRun
     fileGrants,
     editorFileGrants: new ContentFileGrants(env.URL_SIGNING_KEYS, 'editor-file-url'),
     uploadGrants: new ContentFileGrants(env.URL_SIGNING_KEYS, 'temporary-file-url'),
+    filesOrigin,
     limits: createH5pRouteLimits(redis),
     corePath: paths.coreDir,
     editorPath: paths.editorDir,

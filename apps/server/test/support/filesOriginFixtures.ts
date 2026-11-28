@@ -1,6 +1,6 @@
 /**
- * filesOriginFixtures — an activity with an image and a scripted SVG stored as they are, signed URLs for both kinds of
- * grant, and requests addressed to the files origin or the app origin of an app test bed.
+ * filesOriginFixtures — an activity with an image and a scripted SVG stored as they are, a fresh upload, signed URLs
+ * for every kind of grant, and requests addressed to the files origin or the app origin of an app test bed.
  *
  * Why: the `SEC-004` tests need files the sanitiser never saw (a crafted SVG must be inert because of how it is
  *      served, not only because the upload path cleans it) and need to say which origin a request is for. Node does
@@ -16,7 +16,9 @@
  * Tests: used by apps/server/test/http/filesOrigin.int.test.ts, apps/server/test/http/editorFiles.int.test.ts and
  *   apps/server/e2e/filesOrigin.e2e.test.ts.
  */
+import type { ReadStream } from 'node:fs';
 import { Readable } from 'node:stream';
+import type { IUser } from '@lumieducation/h5p-server';
 import request from 'supertest';
 import { filesOriginOf } from '../../src/config/filesOrigin.js';
 import type { ContentFileGrants } from '../../src/h5p/contentFileGrants.js';
@@ -46,19 +48,35 @@ export async function storeUserFiles(tb: AppTestbed, contentId: string): Promise
   await storage.addFile(contentId, STORED.svg, Readable.from([SCRIPTED_SVG]));
 }
 
+/** The name the fresh upload is stored under. */
+export const UPLOADED = 'images/fersk.png';
+
+/**
+ * Stores the PNG as a fresh upload of an account, as the editor's upload route leaves one.
+ * @param tb - The app test bed.
+ * @param ownerId - The account that owns the upload.
+ */
+export async function storeUpload(tb: AppTestbed, ownerId: string): Promise<void> {
+  const owner: IUser = { id: ownerId, name: '', email: '', type: 'local' };
+  const keepUntil = new Date(Date.now() + 3_600_000);
+  // WHY: Lumi's type asks for a file's stream; the storage reads any stream.
+  const bytes = Readable.from([PNG_1X1]) as unknown as ReadStream;
+  await tb.runtime.editor.temporaryStorage.saveFile(UPLOADED, bytes, owner, keepUntil);
+}
+
 /**
  * A signed file path, as a player or editor page would carry it.
- * @param grants - The grants of the kind wanted (the player's `fileGrants`, the editor's `editorFileGrants`).
- * @param mount - `/h5p/files` (the player's, on the files origin) or `/h5p/editor-files` (the editor's, app origin).
- * @param contentId - The activity the grant is for.
+ * @param grants - The grants of the kind wanted (`fileGrants`, `editorFileGrants` or `uploadGrants`).
+ * @param mount - `/h5p/files` (the player's), `/h5p/editor-files` (the editor's) or `/h5p/uploads` (fresh uploads).
+ * @param contentId - The activity the grant is for; for an upload, the account that owns it.
  * @param file - The file name to ask for, which may belong to another activity.
- * @param inPath - The activity named in the path; defaults to `contentId`.
+ * @param inPath - The activity (or account) named in the path; defaults to `contentId`.
  * @param at - When the grant is issued; the past gives an expired grant.
  * @returns The path, without an origin.
  */
 export const signedPath = (
   grants: ContentFileGrants,
-  mount: '/h5p/files' | '/h5p/editor-files',
+  mount: '/h5p/files' | '/h5p/editor-files' | '/h5p/uploads',
   contentId: string,
   file: string,
   inPath = contentId,

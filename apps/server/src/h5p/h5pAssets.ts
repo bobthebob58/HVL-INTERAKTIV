@@ -1,12 +1,14 @@
 /**
  * h5pAssets — the files the player and the editor add to Lumi's lists: the H5P Core 1.28 files that h5p-server
- * 10.0.4 leaves out, and HVL's theme for H5P (tokens, Daylight mapping, theme, feedback prefixes, the content and
- * editor markup repairs, reduced motion).
+ * 10.0.4 leaves out, the one editor script H5P would load in a way our page policy refuses, and HVL's theme for H5P
+ * (tokens, Daylight mapping, theme, feedback prefixes, the content and editor markup repairs, reduced motion).
  *
  * Why: Lumi 10.0.4's asset lists were written for Core 1.27. Core 1.28 adds the theme ("Daylight") styles and
  *      fonts (F3 in spec 01 §1). The editor list also lacks the tooltip and table styles and two core scripts
  *      that the player list has (found in S2). Without them content types render unstyled or call a missing
- *      H5P.Tooltip. HVL's theme must reach every document H5P renders in (UD-011): files in Lumi's
+ *      H5P.Tooltip. The editor's picture tool loads its script (`libs/cropper.js`) on demand as inline script,
+ *      which no H5P page of ours allows (D-070), so that file is one of the editor frame's scripts from the start
+ *      (D-153). HVL's theme must reach every document H5P renders in (UD-011): files in Lumi's
  *      `customization.global` lists go into the player page, into `H5PIntegration.core`, which H5P Core copies
  *      into the iframes it writes for iframe content (`H5P.getHeadTags`), and into
  *      `H5PIntegration.editor.assets`, which the editor's iframe loads. So the theme is added here too, after the
@@ -20,7 +22,8 @@
  * Invariants:
  *   - With these additions, the player and the editor load every style and script that Core 1.28's own
  *     H5PCore lists (`h5p.classes.php`), checked by a test against the fetched core.
- *   - Core URLs are built by Lumi's UrlGenerator, so they carry the same base URL and cache buster as Lumi's own.
+ *   - Core URLs are built by Lumi's UrlGenerator, so they carry the same base URL and cache buster as Lumi's own;
+ *     so is the picture tool's script, which comes after the core scripts and before the theme's.
  *   - Theme URLs are `<baseUrl>/theme/<name>?version=<content hash>`; only the names in `HVL_THEME_FILES` are served
  *     there (../http/routes/staticRoutes.ts). The tokens come before the Daylight mapping, which comes before the
  *     theme, the feedback styles, the indicator styles (drop zones, task dots) and the prefixes; the prefix, repair
@@ -57,6 +60,18 @@ export const EDITOR_MISSING_CORE_STYLES: readonly string[] = [
 
 /** Core 1.28 scripts missing from Lumi 10.0.4's editor list (the player list has them). */
 export const EDITOR_MISSING_CORE_SCRIPTS: readonly string[] = ['js/request-queue.js', 'js/h5p-tooltip.js'];
+
+// SECURITY: an H5P page allows no inline script (D-070, ../http/h5pPageCsp.ts), and that is not relaxed for this:
+// the script the editor would run as inline script is loaded as a file instead.
+// UPSTREAM: https://github.com/h5p/h5p-editor-php-library/blob/ab2daa18bd61b19e7f8729e22eec88f3b637a868/scripts/h5peditor-image-popup.js (no issue filed yet; docs/upstream/h5p-editor-cropper-loader.md)
+// Remove when the pinned editor loads the file with a `<script src>`; a test in H5pFactories.test.ts then fails.
+/**
+ * Scripts the pinned H5P editor loads on demand in a way the page policy refuses, loaded with the editor frame
+ * instead. The picture tool («Rediger bilete») fetches `libs/cropper.js` at its first opening with jQuery's
+ * `dataType: 'script'`; jQuery runs a same-origin script's text as an inline script, the policy refuses it, and
+ * the tool threw `Cropper is not defined` (D-153).
+ */
+export const EDITOR_ON_DEMAND_SCRIPTS: readonly string[] = ['libs/cropper.js'];
 
 /** Where the H5P router serves the theme files, below the H5P base URL. */
 export const THEME_PATH = '/theme';
@@ -121,7 +136,7 @@ export interface GlobalAssets {
 }
 
 /** The part of Lumi's URL generator the asset lists need: Core's file URLs and the base URL. */
-export type AssetUrls = Pick<IUrlGenerator, 'coreFile' | 'baseUrl'>;
+export type AssetUrls = Pick<IUrlGenerator, 'coreFile' | 'editorLibraryFile' | 'baseUrl'>;
 
 /**
  * The URLs of the theme's styles or scripts.
@@ -167,7 +182,11 @@ export function playerGlobalAssets(urls: AssetUrls): GlobalAssets {
  */
 export function editorGlobalAssets(urls: AssetUrls): GlobalAssets {
   return {
-    scripts: [...EDITOR_MISSING_CORE_SCRIPTS.map((file) => urls.coreFile(file)), ...themeUrls(urls, '.js')],
+    scripts: [
+      ...EDITOR_MISSING_CORE_SCRIPTS.map((file) => urls.coreFile(file)),
+      ...EDITOR_ON_DEMAND_SCRIPTS.map((file) => urls.editorLibraryFile(file)),
+      ...themeUrls(urls, '.js'),
+    ],
     styles: [...EDITOR_MISSING_CORE_STYLES.map((file) => urls.coreFile(file)), ...themeUrls(urls, '.css')],
   };
 }

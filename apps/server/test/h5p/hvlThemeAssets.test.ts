@@ -25,7 +25,11 @@ import { testActor } from '../support/testActors.js';
 
 afterAll(removeEngineTestbeds);
 
-const urls = { baseUrl: () => '/h5p', coreFile: (file: string) => `/h5p/core/${file}?version=1.28.0` };
+const urls = {
+  baseUrl: () => '/h5p',
+  coreFile: (file: string) => `/h5p/core/${file}?version=1.28.0`,
+  editorLibraryFile: (file: string) => `/h5p/editor/${file}?version=1.28.0`,
+};
 const names = (list: string[]) => list.map((url) => /\/theme\/([^?]+)/.exec(url)?.[1]).filter(Boolean);
 const STYLE_ORDER = [
   'tokens.css',

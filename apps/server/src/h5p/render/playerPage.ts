@@ -39,10 +39,11 @@ export const H5P_INTEGRATION_SCRIPT = '/h5p/boot/h5pIntegration.js';
 export const ANONYMOUS_H5P_USER = Object.freeze({ name: '', mail: '', id: '' });
 
 /**
- * H5P's `crossorigin` setting for the player: `H5P.setSource` gives every content file this attribute, and H5P.Video
- * its captions. A cross-origin `<track>` loads only in CORS mode; `anonymous` never sends credentials.
+ * H5P's `crossorigin` setting for the player and the editor: `H5P.setSource` gives every content file this attribute,
+ * and H5P.Video its captions. A cross-origin `<track>` loads only in CORS mode, and so does a picture the editor's
+ * picture tool exports from its canvas; `anonymous` never sends credentials.
  */
-export const PLAYER_CROSSORIGIN = 'anonymous';
+export const USER_FILE_CROSSORIGIN = 'anonymous';
 
 /**
  * Script tags for same-origin static scripts that run before H5P's, e.g. the LTI landing script.
@@ -85,7 +86,7 @@ export function renderPlayerPage(
   const integration = {
     ...(shown.integration as object),
     user: ANONYMOUS_H5P_USER,
-    crossorigin: PLAYER_CROSSORIGIN,
+    crossorigin: USER_FILE_CROSSORIGIN,
   };
   const styles = shown.styles.map((href) => `<link rel="stylesheet" href="${escapeHtml(href)}">`);
   const scripts = shown.scripts.map((src) => `<script src="${escapeHtml(src)}"></script>`);

@@ -8,8 +8,8 @@
  *      View check, puts a grant into `contentUrl` instead: an HMAC over the activity ID and an expiry, valid for
  *      about 12 hours, which the public file route checks before it reads storage (D-045 moved signed URLs here).
  *      The editor render, after the Edit check, does the same for the activity's files and the signed-in owner's
- *      uploads (D-069), which stay on the app origin while the player's move to the files origin (D-110 amendment of
- *      2026-11-05), so each kind has its own key.
+ *      uploads (D-069). All three are served from the files origin, each on its own path (D-110 amendment of
+ *      2026-11-05, D-153), and each kind has its own key, so a grant opens nothing on another kind's path.
  * Spec: H5P-007, SEC-004
  * Invariants:
  *   - Format `<keyId>.<expirySeconds>.<base64url HMAC-SHA256(purpose key, "<contentId>|<expirySeconds>")>`, where

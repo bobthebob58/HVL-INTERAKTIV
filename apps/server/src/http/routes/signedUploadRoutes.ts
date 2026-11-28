@@ -4,7 +4,8 @@
  * Why: right after an upload the editor shows the file from `H5PIntegration.editor.filesPath + "/" + path`, from
  *      `<img>` and `<video>` tags that carry no ltik and, in a Canvas iframe, no cookie. The editor page puts a
  *      grant for the uploading account into `filesPath` (../../h5p/render/editorIntegration.ts, D-069), and this
- *      public route serves that account's uploads with the headers of every user file (`SEC-004`, D-045).
+ *      public route, on the files origin, serves that account's uploads with the headers of every user file
+ *      (`SEC-004`, D-045, D-153).
  * Spec: H5P-007, SEC-004
  * Invariants:
  *   - The grant (purpose `temporary-file-url`) is verified for the account ID in the path before storage is read;
@@ -14,7 +15,7 @@
  *   - No session, ltik or cookie is read; storage receives a user that only names the account (no roles), which
  *     the permission system never accepts.
  * Collaborators: ../../h5p/contentFileGrants.ts, ../../h5p/render/editorIntegration.ts, ../sendUserFile.ts,
- *   ../createH5pRouter.ts (mounts it before authentication).
+ *   ../filesOriginRouter.ts (mounts it, where nothing authenticates).
  * Tests: apps/server/test/http/signedUploads.int.test.ts
  */
 import type { IUser } from '@lumieducation/h5p-server';

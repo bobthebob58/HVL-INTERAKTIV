@@ -103,22 +103,24 @@ describeWithServices('[SEC-004] the files origin', () => {
   it('[SEC-004] the app origin never serves a player’s file: the same signed URL is 404 there', async () => {
     // Act
     const onApp = await onAppOrigin(tb, playerPath());
-    const asEditorGrant = await onAppOrigin(tb, playerPath().replace('/h5p/files/', '/h5p/editor-files/'));
+    const asEditorGrant = await onFilesOrigin(tb, playerPath().replace('/h5p/files/', '/h5p/editor-files/'));
     // Assert
     expect(onApp.status).toBe(404);
     expect(onApp.headers['content-type']).toMatch(/^application\/json/);
     expect(asEditorGrant.status).toBe(403);
   });
 
-  it('[SEC-004] the files origin serves nothing else: pages, APIs, health, editor files and uploads are 404 there', async () => {
+  it('[SEC-004] the files origin serves nothing but files behind a grant: pages, APIs, health and H5P’s own files are 404 there', async () => {
     // Arrange
-    const editorFile = signedPath(tb.runtime.editorFileGrants, '/h5p/editor-files', contentId, STORED.image);
-    const upload = `/h5p/uploads/${tb.runtime.uploadGrants.issueGrant('owner', new Date())}/owner/images/a.png`;
-    const paths = ['/', '/healthz', '/api/me', `/h5p/play/${contentId}`, '/lti/play', editorFile, upload];
+    const pages = [`/h5p/play/${contentId}`, `/h5p/edit/${contentId}`, '/lti/play'];
+    const paths = ['/', '/healthz', '/api/me', ...pages];
     // Act
     const answers = await Promise.all(
       [...paths, '/h5p/core/js/h5p.js'].map((path) => onFilesOrigin(tb, path)),
     );
+    // SECURITY: the files host written with a final dot is the files host too, never the app.
+    const dotted = filesHost(tb).replace(/(:\d+)?$/, '.$1');
+    answers.push(await request(tb.app).get('/healthz').set('Host', dotted));
     // Assert
     for (const res of answers) {
       expect(res.status).toBe(404);
@@ -150,18 +152,18 @@ describeWithServices('[SEC-004] the files origin', () => {
     expect((await onFilesOrigin(tb, playerPath(`..%2F..%2F${otherId}%2F${STORED.image}`))).status).toBe(404);
   });
 
-  it('[SEC-004] a file name no stored file can have is 404 on both origins, never a server error', async () => {
+  it('[SEC-004] a file name no stored file can have is 404 on the player’s path and the editor’s, never a server error', async () => {
     // Arrange: a NUL byte, a backslash and a dot segment, each behind a valid grant
     const names = ['images/bilde.png%00.svg', 'images%5Cbilde.png', `images/%2e%2e/${STORED.image}`];
     const grants = tb.runtime.editorFileGrants;
     const logged = tb.logs.length;
     // Act
     const onFiles = await Promise.all(names.map((name) => onFilesOrigin(tb, playerPath(name))));
-    const onApp = await Promise.all(
-      names.map((name) => onAppOrigin(tb, signedPath(grants, '/h5p/editor-files', contentId, name))),
+    const asEditor = await Promise.all(
+      names.map((name) => onFilesOrigin(tb, signedPath(grants, '/h5p/editor-files', contentId, name))),
     );
     // Assert
-    expect([...onFiles, ...onApp].map((res) => res.status)).toEqual(Array(6).fill(404));
+    expect([...onFiles, ...asEditor].map((res) => res.status)).toEqual(Array(6).fill(404));
     expect(tb.logs.slice(logged).some((line) => line.includes('"msg":"h5p request failed"'))).toBe(false);
   });
 

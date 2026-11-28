@@ -1,14 +1,15 @@
 /**
- * uploadFixtures — small valid files and an editor-upload helper for the HTTP upload tests.
+ * uploadFixtures — small valid files, an editor-upload helper and a read-back of an upload, for the HTTP upload tests.
  *
  * Why: the upload checks sniff real bytes (SEC-002), so tests need genuine PNG and PDF bytes, and they send
  *      files the way the H5P editor does: `POST ajax?action=files` with `file`, `field` (JSON) and `contentId`.
  * Spec: SEC-001, SEC-002, SEC-004
- * Tests: shared by apps/server/test/http/editorUpload.int.test.ts and apps/server/test/http/contentFiles.int.test.ts.
+ * Tests: shared by apps/server/test/http/editorUpload.int.test.ts, contentFiles.int.test.ts, malwareScan.int.test.ts,
+ *   packageImport.int.test.ts and signedUploads.int.test.ts in the same folder.
  */
 import request from 'supertest';
 import type { Express } from 'express';
-import type { TestActor } from './httpTestbed.js';
+import type { HttpTestbed, TestActor } from './httpTestbed.js';
 
 /** The two-argument form of supertest's `.parse()` callback. */
 type BodyParser = Extract<Parameters<request.Test['parse']>[0], (res: never, done: never) => void>;
@@ -66,3 +67,19 @@ export const uploadEditorFile = (
     .field('field', JSON.stringify(field))
     .field('contentId', '0')
     .attach('file', bytes, name);
+
+/**
+ * Reads a fresh upload back through its owner's signed URL, as the editor shows it.
+ * @param tb - The HTTP test bed, which serves the grant-checked file routes on its one server.
+ * @param owner - The account whose upload it is, and whose grant is issued.
+ * @param path - The upload's path as the upload answered it, with or without `#tmp`.
+ * @returns The supertest request, with the raw body kept.
+ */
+export const readUpload = (tb: HttpTestbed, owner: TestActor, path: string): request.Test => {
+  const { accountId } = owner.actor;
+  const grant = tb.runtime.uploadGrants.issueGrant(accountId, new Date());
+  return request(tb.app)
+    .get(`/h5p/uploads/${grant}/${accountId}/${path.replace(/#tmp$/, '')}`)
+    .buffer(true)
+    .parse(rawBody);
+};

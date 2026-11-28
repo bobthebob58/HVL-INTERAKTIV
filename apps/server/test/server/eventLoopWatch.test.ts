@@ -1,7 +1,7 @@
 /**
  * Tests of the standstill watch (D-144): a standstill of the event loop that reaches the limit is written as one
- * warning line with numbers only, normal work writes none, the timer finds a standstill by itself, and a stopped
- * watch writes nothing.
+ * warning line with numbers only, normal work writes none, the timer finds a standstill by itself, the first check
+ * after a standstill finds it even before anything else has run (D-153), and a stopped watch writes nothing.
  *
  * Spec: NFR-002
  */
@@ -68,6 +68,24 @@ describe('[NFR-002] the server says when it stood still', () => {
     // Assert
     expect(longest).toBeGreaterThanOrEqual(100);
     expect(lines).toEqual([]);
+  });
+
+  it('[NFR-002] the first check after a standstill finds it, before any other timer has run, and only once', async () => {
+    // Arrange
+    const { logger, lines } = capturedLogger('info');
+    watch = new EventLoopWatch(logger);
+    watch.start();
+    await delay(50);
+    watch.check();
+    // Act: hold the thread and check at once, as when the check's timer is the first to run afterwards
+    standStill(STANDSTILL_WARN_MS + 200);
+    const atOnce = watch.check();
+    await delay(50);
+    const later = watch.check();
+    // Assert
+    expect(atOnce).toBeGreaterThanOrEqual(STANDSTILL_WARN_MS);
+    expect(later).toBeLessThan(STANDSTILL_WARN_MS);
+    expect(parsed(lines)).toEqual([expect.objectContaining({ level: 'warn', standstillMs: atOnce })]);
   });
 
   it('[NFR-002] the timer finds a standstill by itself; a stopped watch writes nothing more', async () => {

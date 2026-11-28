@@ -12,8 +12,8 @@
  *     unknown) is an `attachment`, with an RFC 6266 `filename*` parameter.
  *   - Text types carry `charset=utf-8`; an unknown extension is `application/octet-stream`.
  *   - Header values never contain CR, LF or quotes from the file name.
- * SPEC-DEVIATION: D-045 — SEC-004's separate files origin is not in place yet (S3 signed URLs, S6 deployment);
- *   until then the sandbox CSP and `attachment` are what keep a crafted file away from the app's origin.
+ *   - These headers are the second defence: every user file is served from the separate files origin
+ *     (../http/filesOriginRouter.ts, D-110 amendment of 2026-11-05, D-153), and never as a file from the app's own.
  * Collaborators: ./fileExtension.ts; ../http/sendUserFile.ts and ../http/multipartUpload.ts call it.
  * Tests: apps/server/test/security/ContentFileHeaders.test.ts
  */

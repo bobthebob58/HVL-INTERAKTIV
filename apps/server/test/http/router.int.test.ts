@@ -23,8 +23,6 @@ describeWithServices('H5P router', () => {
   const ACTOR_ROUTES: ['get' | 'post' | 'put' | 'delete', string][] = [
     ['get', '/h5p/ajax?action=content-type-cache'],
     ['post', '/h5p/ajax?action=libraries'],
-    ['get', `/h5p/content/${id}/images/a.png`],
-    ['get', '/h5p/temp-files/a.png'],
     ['get', `/h5p/contentUserData/${id}/state/0`],
     ['post', `/h5p/contentUserData/${id}/state/0`],
     ['get', `/h5p/params/${id}`],
@@ -111,7 +109,9 @@ describeWithServices('H5P router', () => {
     // Act and assert: a missing client file
     expect((await request(tb.app).get('/h5p/core/js/no-such-file.js')).status).toBe(404);
     // Act and assert: an unsafe file name
-    const unsafe = await requestAs(tb.app, author, 'get', '/h5p/temp-files/..%2F..%2Fsecret.png');
+    const grant = tb.runtime.uploadGrants.issueGrant(author.actor.accountId, new Date());
+    const upload = `/h5p/uploads/${grant}/${author.actor.accountId}`;
+    const unsafe = await request(tb.app).get(`${upload}/..%2F..%2Fsecret.png`);
     expect(unsafe.status).toBeGreaterThanOrEqual(400);
     expect(unsafe.status).toBeLessThan(500);
   });

@@ -2,11 +2,12 @@
  * uploadProof — run inside the app container by the smoke test (`node --import tsx --input-type=module -`, from
  * apps/server, with the app's own environment): uploads the EICAR test file and a clean PNG through the editor's
  * upload method, so the stack's clamd scans both, saves a draft activity with the clean image, renders its player and
- * prints the player's URL for that image on the files origin.
+ * prints the three URLs a page would carry for uploaded files: the player's and the editor's for that image, and
+ * the editor's for a fresh upload, all on the files origin.
  *
  * Why: SEC-006 and SEC-004 must hold in the image, not only in the test beds: the stack's real clamd must refuse
- *      EICAR and pass a clean file, and the player's file URL must point at the files origin, where the running app
- *      serves it with the sandbox policy (D-110 integration amendment of 2026-11-05).
+ *      EICAR and pass a clean file, and every file URL must point at the files origin, where the running app
+ *      serves it with the sandbox policy (D-110 integration amendment of 2026-11-05, D-153).
  * Spec: SEC-006, SEC-004, NFR-007
  * Invariants:
  *   - Builds the H5P engine with `createH5pRuntime` from `loadEnv()`, as the server does, so the scanner, the
@@ -15,9 +16,9 @@
  *     then Lumi's `files` action, which scans and stores. Only the HTTP part is left out: the stack has no Feide or
  *     LTI platform to log in with. The route itself is covered by apps/server/test/http/malwareScan.int.test.ts.
  *   - The author is a new staff `User` row with no person behind it; the activity stays a draft.
- *   - Prints one JSON line last: the EICAR outcome, the stored file, the activity and the file URL. The lines before
- *     it are the engine's own log (warn and above), which the smoke reads for the scanner's reason code. The URL
- *     carries a grant; the smoke uses it and never prints it.
+ *   - Prints one JSON line last: the EICAR outcome, the stored file, the activity and then the three file URLs. The
+ *     lines before it are the engine's own log (warn and above), which the smoke reads for the scanner's reason
+ *     code. Each URL carries a grant; the smoke uses them and never prints them.
  * Collaborators: apps/server/src/h5p/createH5pRuntime.ts, apps/server/src/h5p/HvlH5PEditor.ts, ./smokeChecks.sh
  *   (`check_upload`).
  * Tests: it is a check of the smoke test (./dockerSmoke.sh), run here and in .github/workflows/docker.yml.
@@ -27,6 +28,7 @@ import { writeFileSync } from 'node:fs';
 import { loadEnv } from './src/config/env.ts';
 import { createH5pRuntime } from './src/h5p/createH5pRuntime.ts';
 import { asAccountUser, asStateUser } from './src/h5p/HvlH5pUser.ts';
+import { editorIntegration } from './src/h5p/render/editorIntegration.ts';
 import { PLAYER_DISPLAY_OPTIONS } from './src/http/routes/playerRoutes.ts';
 import { createPrismaClient } from './src/infra/prismaClient.ts';
 import { connectRedis } from './src/infra/redisClient.ts';
@@ -107,9 +109,27 @@ try {
     contextId: '',
   });
   const contentUrl = model.integration.contents[`cid-${contentId}`].contentUrl;
-  process.stdout.write(
-    `${JSON.stringify({ eicar, stored: stored.path, contentId, fileUrl: `${contentUrl}/${stored.path}` })}\n`,
+  // WHY: the editor's two URLs as its page carries them (../../apps/server/src/http/editorView.ts), for the saved
+  // image and for an upload that is not saved yet.
+  const fresh = await upload('fersk.png', 'image/png', PNG, 'image');
+  const editor = editorIntegration(
+    { editor: {} },
+    {
+      contentId,
+      ownerId: accountId,
+      contentGrants: h5p.editorFileGrants,
+      uploadGrants: h5p.uploadGrants,
+      baseUrl: h5p.config.baseUrl,
+      filesOrigin: h5p.filesOrigin,
+      now: new Date(),
+    },
   );
+  const urls = {
+    fileUrl: `${contentUrl}/${stored.path}`,
+    editorFileUrl: `${editor.contents[`cid-${contentId}`].contentUrl}/${stored.path}`,
+    uploadUrl: `${editor.editor.filesPath}/${fresh.path.replace(/#tmp$/, '')}`,
+  };
+  process.stdout.write(`${JSON.stringify({ eicar, stored: stored.path, contentId, ...urls })}\n`);
 } catch (error) {
   failed = true;
   // PRIVACY: the error's name and message only, never a stack with paths.

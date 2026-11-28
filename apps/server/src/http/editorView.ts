@@ -9,7 +9,8 @@
  *   - An existing activity is rendered only when the permission system allows Edit for the account view;
  *     otherwise the result is `undefined` and nothing was issued.
  *   - The page carries the actor's own token only (ltik or CSRF), never anyone else's.
- *   - The page's file URLs carry editor grants on the app origin, never the player's (D-110 amendment of 2026-11-05).
+ *   - The page's file URLs carry editor grants on the files origin, never the player's (D-110 amendment of
+ *     2026-11-05, D-153).
  * Collaborators: ../h5p/render/editorIntegration.ts, ../h5p/render/editorAssets.ts, ../h5p/render/editorPage.ts, ./routes/editorRoutes.ts,
  *   ../lti/play/ltiEditRoutes.ts.
  * Tests: apps/server/test/http/editorRoutes.int.test.ts, apps/server/test/h5p/editorPage.browser.int.test.ts
@@ -24,12 +25,12 @@ import type { H5pRouteDeps } from './h5pRouteDeps.js';
 /** What the editor view needs from the H5P runtime. */
 export type EditorViewDeps = Pick<
   H5pRouteDeps,
-  'editor' | 'permissions' | 'uploadGrants' | 'editorFileGrants'
+  'editor' | 'permissions' | 'uploadGrants' | 'editorFileGrants' | 'filesOrigin'
 >;
 
 /**
  * Renders the editor page when the actor may edit.
- * @param deps - Editor, permission system, and the grants of the editor's files and uploads.
+ * @param deps - Editor, permission system, the grants of the editor's files and uploads, and the files origin.
  * @param actor - The authenticated person.
  * @param contentId - The activity; undefined for a new one.
  * @param firstScripts - Same-origin static scripts that run before H5P's.
@@ -53,6 +54,7 @@ export async function editorView(
     contentGrants: deps.editorFileGrants,
     uploadGrants: deps.uploadGrants,
     baseUrl: deps.editor.config.baseUrl,
+    filesOrigin: deps.filesOrigin,
     now: new Date(),
   });
   const { config } = deps.editor;

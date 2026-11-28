@@ -1,5 +1,5 @@
 /**
- * filesOrigin — the origin the player's user files are served from: `FILES_BASE_URL`, or `files.<host>` of
+ * filesOrigin — the origin every uploaded file is served from: `FILES_BASE_URL`, or `files.<host>` of
  * `PUBLIC_BASE_URL`, and the rules that keep it apart from the app's origin.
  *
  * Why: a file an author uploaded may be crafted (CVE-2025-7062). Served from another host, a script in it can reach
@@ -15,7 +15,7 @@
  *   - Production requires https: a set `FILES_BASE_URL` is checked here; the default inherits `PUBLIC_BASE_URL`'s
  *     scheme, which ./productionChecks.ts already requires to be https, so it is not reported twice.
  *   - Messages name the variable, never its value.
- * Collaborators: ./env.ts (`loadEnv` collects the problems), ../h5p/createH5pRuntime.ts (the player's file URLs and
+ * Collaborators: ./env.ts (`loadEnv` collects the problems), ../h5p/createH5pRuntime.ts (the pages' file URLs and
  *   page policy), ../http/createH5pRouter.ts (`createFilesHostRouter`) and ../http/filesOriginRouter.ts (which requests
  *   go to the files origin), ../server/createApp.ts (mounts it).
  * Tests: apps/server/test/config/filesOrigin.test.ts
@@ -37,7 +37,7 @@ export const FILES_HOST_PREFIX = 'files.';
 const isIpHost = (hostname: string): boolean => isIP(hostname.replace(/^\[|\]$/g, '')) !== 0;
 
 /**
- * The origin the player's files come from.
+ * The origin uploaded files come from.
  * @param settings - `PUBLIC_BASE_URL` and, when set, `FILES_BASE_URL`.
  * @returns `FILES_BASE_URL`, or `<scheme>://files.<host>[:port]` of `PUBLIC_BASE_URL`.
  * @throws Error when `FILES_BASE_URL` is unset and the app's host is an IP address (`loadEnv` reports this first).

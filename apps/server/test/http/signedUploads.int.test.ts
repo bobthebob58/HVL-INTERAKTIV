@@ -56,6 +56,19 @@ describeWithServices('signed upload URLs', () => {
     expect(new Set(answers.map((r) => r.text)).size).toBe(1);
   });
 
+  it('[SEC-004] a file name no stored upload can have is refused, never a server error and never a file', async () => {
+    // Arrange: a dot segment, a NUL byte and a backslash, each behind the owner's own grant
+    const own = `/h5p/uploads/${grantFor(author.actor.accountId)}/${author.actor.accountId}`;
+    const names = ['..%2F..%2Fsecret.png', `${file}%00.svg`, file.replaceAll('/', '%5C')];
+    // Act
+    const answers = await Promise.all(names.map((name) => request(tb.app).get(`${own}/${name}`)));
+    // Assert
+    for (const [i, res] of answers.entries()) {
+      expect([400, 404], names[i]).toContain(res.status);
+      expect(res.headers['content-type'], names[i]).toMatch(/^application\/json/);
+    }
+  });
+
   it('[SEC-004] the other author’s own grant does not reach this upload', async () => {
     const res = await request(tb.app).get(
       `/h5p/uploads/${grantFor(other.actor.accountId)}/${other.actor.accountId}/${file}`,

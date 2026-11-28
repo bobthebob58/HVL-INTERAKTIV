@@ -3,8 +3,8 @@
  *
  * Why: the S3 store refuses unsafe names when it writes a file (`assertSafeObjectName` in ./s3Objects.ts), so a
  *      lookup by such a name can only miss. Asking the database anyway fails for a NUL byte, which PostgreSQL refuses
- *      in text: H5P's cookie route `/h5p/content/:id/*file` answered 500 with an error-level log line at a signed-in
- *      person's will (D-110's amendment of 2026-11-05, S6 step 7).
+ *      in text: a file route would answer 500 with an error-level log line at a caller's will, as the cookie route
+ *      of that time did (D-110's amendment of 2026-11-05, S6 step 7; that route is gone since D-153).
  * Spec: H5P-004, SEC-004
  * Invariants:
  *   - Exactly the names `assertSafeObjectName` accepts are storable; this module adds no rule of its own.

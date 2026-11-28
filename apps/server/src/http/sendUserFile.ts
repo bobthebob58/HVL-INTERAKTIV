@@ -10,16 +10,18 @@
  *   - Headers come from ../security/ContentFileHeaders.ts, never from the stored object or the browser.
  *   - A single satisfiable range gives 206 with Content-Range; anything else sends the whole file with 200.
  *   - A stream error after the headers ends the connection (./h5pErrorHandler.ts); the source is always closed.
- * SPEC-DEVIATION: D-045 — files are served from the app's own origin until S3/S6 add the separate files origin.
- * Collaborators: ./routes/fileRoutes.ts, Lumi's H5PAjaxEndpoint (getContentFile, getTemporaryFile).
- * Tests: apps/server/test/http/contentFiles.int.test.ts
+ *   - Only the files origin's routes call it (./filesOriginRouter.ts): the app's own origin sends no user file as
+ *     a file (D-110 amendment of 2026-11-05, D-153); an activity's `.h5p` export is a zip download
+ *     (./routes/contentRoutes.ts).
+ * Collaborators: ./routes/signedFileRoutes.ts, ./routes/signedUploadRoutes.ts, Lumi's content and temporary storage.
+ * Tests: apps/server/test/http/contentFiles.int.test.ts, apps/server/test/http/signedFiles.int.test.ts
  */
 import type { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import type { Request, Response } from 'express';
 import { contentFileHeaders } from '../security/ContentFileHeaders.js';
 
-/** A file as Lumi's AJAX endpoint returns it. */
+/** A file as the storage returns it: its stream, its size and the part asked for. */
 export interface UserFile {
   readonly stream: Readable;
   readonly stats: { readonly size: number };

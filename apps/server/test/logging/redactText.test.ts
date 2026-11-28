@@ -24,8 +24,10 @@ describe('[DATA-009] credentials and e-mail addresses in free text', () => {
     );
     expect(text).not.toMatch(/SIGA|SIGB|SIGC/);
     expect(text).toContain('/h5p/uploads/[Redacted]/u1/images/b.png');
-    // SECURITY: the editor's grants on the app origin are 12-hour bearer credentials too (D-110 amendment of 2026-11-05).
+    // SECURITY: the editor's grants are 12-hour bearer credentials too (D-110 amendment of 2026-11-05, D-153).
     expect(text).toContain('/h5p/editor-files/[Redacted]/c1/images/c.png');
+    // WHY: the routes answer in any letter case, so a grant is masked in any letter case.
+    expect(redactText('GET /H5P/Uploads/k1.4.SIGD/u1/b.png')).toBe('GET /H5P/Uploads/[Redacted]/u1/b.png');
   });
 
   it('[DATA-009] masks authorization credentials in any case, with or without a colon', () => {

@@ -1,7 +1,7 @@
 /**
- * Tests for the files origin in the H5P pages' policy: a player page names it in `img-src` and `media-src` and nowhere
- * else, before any outside media origin; the editor page and a same-origin set-up never name it (D-110 amendment of
- * 2026-11-05).
+ * Tests for the files origin in the H5P pages' policy: the player page and the editor page name it in `img-src` and
+ * `media-src` and nowhere else, before any outside media origin; a same-origin set-up never names it (D-110
+ * amendment of 2026-11-05, D-153).
  *
  * Spec: SEC-004, DATA-011
  */
@@ -21,31 +21,39 @@ const directivesNaming = (policy: string, origin: string): string[] =>
     .map((directive) => directive.split(' ')[0] ?? '');
 
 describe('[SEC-004] the files origin in the H5P page policy', () => {
-  it('[SEC-004] a player page names the files origin in img-src and media-src only', () => {
+  it.each([
+    ['a player page', { player: true }],
+    ['the editor page', {}],
+  ])('[SEC-004] %s names the files origin in img-src and media-src only', (_what, page) => {
     // Act
-    const policy = h5pPageCsp(settings, ["'self'"], { playerFiles: true });
+    const policy = h5pPageCsp(settings, ["'self'"], page);
     // Assert
     expect(directivesNaming(policy, FILES)).toEqual(['img-src', 'media-src']);
     expect(policy).toContain(`img-src 'self' data: blob: ${FILES} ${PANOPTO}`);
     expect(policy).toContain(`media-src 'self' blob: ${FILES} ${PANOPTO}`);
     expect(directivesNaming(policy, PANOPTO)).toEqual(['img-src', 'media-src', 'frame-src']);
+    // SECURITY: nothing from the files origin is fetched by script or runs as script (SEC-004).
+    expect(policy).toContain("connect-src 'self';");
+    expect(policy).toMatch(/script-src 'self'(;| https:\/\/developers\.panopto\.com)/);
   });
 
-  it('[SEC-004] the editor page never names it, and the outside media origins stay as they were', () => {
+  it('[SEC-004] a same-origin set-up never names it, and the two pages differ in what they may frame alone', () => {
     // Act
     const editor = h5pPageCsp(settings, ["'self'"]);
-    const without = h5pPageCsp({ ...settings, filesOrigin: undefined }, ["'self'"], { playerFiles: true });
-    const empty = h5pPageCsp({ ...settings, filesOrigin: '' }, ["'self'"], { playerFiles: true });
-    // WHY: the two pages differ in `frame-src` alone: only the editor may frame our own origin (D-125).
+    const player = h5pPageCsp(settings, ["'self'"], { player: true });
+    const without = h5pPageCsp({ ...settings, filesOrigin: undefined }, ["'self'"], { player: true });
+    const empty = h5pPageCsp({ ...settings, filesOrigin: '' }, ["'self'"], { player: true });
+    // WHY: only the editor may frame our own origin (D-125).
     const exceptFrames = (policy: string) =>
       policy
         .split('; ')
         .filter((directive) => !directive.startsWith('frame-src '))
         .join('; ');
     // Assert
-    expect(directivesNaming(editor, FILES)).toEqual([]);
-    expect(exceptFrames(editor)).toBe(exceptFrames(without));
+    expect(directivesNaming(without, FILES)).toEqual([]);
     expect(empty).toBe(without);
-    expect(editor).toContain(`img-src 'self' data: blob: ${PANOPTO}`);
+    expect(without).toContain(`img-src 'self' data: blob: ${PANOPTO}`);
+    expect(exceptFrames(editor)).toBe(exceptFrames(player));
+    expect(editor).not.toBe(player);
   });
 });

@@ -14,7 +14,7 @@
  *   - The author is the mock Feide's `author` with a Feide ID of this run (./runFeideAuthor.ts): a new account with
  *     no notice dismissals and no activities but this run's, whatever earlier runs left in the database.
  *   - `ids` hold published activities; `draftId` is a draft MultiChoice for flows that change state.
- *   - `filesBase` is the files origin the player's files come from (SEC-004, D-110), ours and so first-party (DATA-011).
+ *   - `filesBase` is the files origin every uploaded file comes from (SEC-004, D-153), ours and so first-party (DATA-011).
  *   - `close` removes the seed audit rows this run wrote (by ID, ./testLibraryAuditSink.ts) and the library folder,
  *     on top of ./appTestbed.ts's cleanup (which removes the author and the LTI users with all their content), and
  *     then fails if any of the author's or the teacher's accounts or activities is still in the database.

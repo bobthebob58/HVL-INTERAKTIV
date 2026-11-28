@@ -1,6 +1,7 @@
 /**
- * Tests for the editor and player factories: Core 1.28 assets (F3), the Hub local ID (F1), and the wiring of
- * language fallback, DragQuestion removal and renderers (the permission wiring: permissionSystemGuard.test.ts).
+ * Tests for the editor and player factories: Core 1.28 assets (F3), the picture tool's script, the Hub local ID
+ * (F1), and the wiring of language fallback, DragQuestion removal and renderers (the permission wiring:
+ * permissionSystemGuard.test.ts).
  *
  * Spec: H5P-001, H5P-002, H5P-008, SEC-008
  */
@@ -49,6 +50,23 @@ describe('H5P engine factories', () => {
     };
     for (const file of coreList('styles')) expect(model.styles).toContain(urls.coreFile(file));
     for (const file of coreList('scripts')) expect(model.scripts).toContain(urls.coreFile(file));
+  });
+
+  it('[H5P-001][H5P-009] the editor frame loads the picture tool’s script as a file, because the tool would run it as inline script', async () => {
+    // Arrange
+    const popup = readFileSync(join(SERVER_ROOT, 'h5p/editor/scripts/h5peditor-image-popup.js'), 'utf8');
+    const { editor, config } = await engineTestbed();
+    const urls = new UrlGenerator(config);
+    // Act
+    const model = (await editor.render(undefined as never, 'nn', author)) as {
+      integration: { editor: { assets: { js: string[] } } };
+    };
+    // Assert: the pinned «Rediger bilete» still fetches the file with jQuery's script type, which runs the text as
+    // an inline script that the page policy refuses (D-070); so the frame's own scripts must hold the file
+    expect(popup).toMatch(/\$\.ajax\(\{\s*url: path,\s*dataType: 'script'/);
+    expect(popup).toContain("loadScript(H5PEditor.basePath + 'libs/cropper.js'");
+    expect(popup).toContain('new Cropper(');
+    expect(model.integration.editor.assets.js).toContain(urls.editorLibraryFile('libs/cropper.js'));
   });
 
   it('[H5P-001] the player loads every core style and script that Core 1.28 lists (F3)', async () => {
