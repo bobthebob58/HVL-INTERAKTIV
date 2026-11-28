@@ -11,11 +11,11 @@
  *   - Starts once, while it is evaluated, and only in a document that is not one of Core's iframes (whose
  *     `frameElement` has the class `h5p-iframe`) and that has its configuration (the inert JSON block
  *     `#hvl-xapi-bridge`, rendered only for a learner, D-102, and read only when it is the JSON script in the page's
- *     head, D-140); otherwise it does nothing. At event time it ignores an
- *     event that `H5P.isFramed && H5P.externalEmbed === false` marks as raised in a Core iframe.
+ *     head, D-140). An event that `H5P.isFramed && H5P.externalEmbed === false` marks as a Core iframe's is ignored.
  *   - It sends the first root `attempted` of the page load, every `answered` and a root `completed`, each queued once
  *     with a `statementId` (`crypto.randomUUID()`) and an `attemptId` `<viewId>:<n>`; `n` goes up right after a root
- *     result whose `score.max` is above 0 (D-115).
+ *     result whose `score.max` is above 0 (D-115). A Branching Scenario's choices, which H5P keeps and does not
+ *     dispatch, are queued the same way; one handed on in the same turn as a root result has that result's `n` (D-154).
  *   - Every 2 s at most one batch and one request in flight; a batch the server did not take for a passing reason goes
  *     back to the head of the queue. On `pagehide` everything not acknowledged, the request in flight included, goes
  *     in one `keepalive` request, oldest first, within the same limits (D-102 accepts the loss of a larger tail).
@@ -25,17 +25,18 @@
  *   - PRIVACY: no actor, text or answer beyond D-115's cut leaves the page (DATA-012); the server takes the learner
  *     from the request (D-102). Silent for the learner: no UI, no console output, nothing it does throws into H5P.
  * SPEC-DEVIATION: D-102 — LTI-010's bridge is plain JavaScript in the player document, not inside H5P's iframe
- *   (H5P-009); D-115 — it sends only what the server stores, with its own statement and attempt IDs.
- * Collaborators: ./xapiStatements.js, ./xapiBatching.js, apps/server/src/h5p/h5pAssets.ts (the last player scripts,
- *   never the editor's), apps/server/src/h5p/render/xapiBridgeConfig.ts (the configuration), `POST /api/h5p/xapi`.
+ *   (H5P-009); D-115 — it sends only what the server stores, with its own statement and attempt IDs; D-154 — a
+ *   scenario's choices come from the instance, not from the dispatcher.
+ * Collaborators: ./xapiStatements.js, ./xapiBatching.js, ./xapiBranchingChoices.js, apps/server/src/h5p/h5pAssets.ts,
+ *   apps/server/src/h5p/render/xapiBridgeConfig.ts (the configuration), `POST /api/h5p/xapi`.
  * Tests: packages/hvl-h5p-theme/test/xapiBridge.test.ts, packages/hvl-h5p-theme/test/xapiBridgeSending.test.ts,
- *   packages/hvl-h5p-theme/test/xapiBridgeRecovery.test.ts, apps/server/test/h5p/xapiBridge.browser.int.test.ts
+ *   packages/hvl-h5p-theme/test/xapiBridgeRecovery.test.ts, apps/server/test/h5p/xapiBridge.browser.int.test.ts,
+ *   packages/hvl-h5p-theme/test/xapiBranchingChoicesBridge.test.ts
  */
 (function hvlXapiBridge() {
   'use strict';
   var MAX_QUEUE = 1000;
-  // SECURITY: path segments of letters, digits, `_` and `-` only. A looser test lets `/\t/host` through, which the URL
-  // parser turns into `//host`, another origin that would get the token header.
+  // SECURITY: `[\w-]` segments only: `/\t/host` would parse as `//host`, another origin that would get the token.
   var SAME_ORIGIN_PATH = /^(?:\/[\w-]+)+$/;
 
   var frame;
@@ -49,6 +50,7 @@
   if (window.hvliXapiBridgeStarted) return;
   var rules = window.hvliXapiStatements;
   var batching = window.hvliXapiBatching;
+  var choices = window.hvliXapiBranchingChoices;
   var h5p = window.H5P;
   var dispatcher = h5p && h5p.externalDispatcher;
   var crypto = window.crypto;
@@ -58,11 +60,11 @@
   if (!crypto || typeof crypto.randomUUID !== 'function') return;
   window.hvliXapiBridgeStarted = true;
 
-  var integration = window.H5PIntegration;
-  var content = integration && integration.contents && integration.contents['cid-' + config.contentId];
-  var mainLibrary = content && content.library;
+  var contents = (window.H5PIntegration || {}).contents || {};
+  var mainLibrary = (contents['cid-' + config.contentId] || {}).library;
   var viewId = crypto.randomUUID();
   var attempt = 1;
+  var ended = 0; // the attempt a root result closed in this turn of the event loop, else 0
   var rootAttemptedSent = false;
   var queue = [];
   var inFlight = null;
@@ -74,25 +76,18 @@
   function readConfig() {
     var block = document.getElementById('hvl-xapi-bridge');
     // SECURITY: an ID can be given to any element; only the inert JSON element the page wrote in its head is ours.
-    var own =
-      block &&
-      block.tagName === 'SCRIPT' &&
-      block.type === 'application/json' &&
-      block.parentNode === document.head;
+    var json = block && block.tagName === 'SCRIPT' && block.type === 'application/json';
+    var own = json && block.parentNode === document.head;
     var parsed;
     try {
       parsed = own ? JSON.parse(block.textContent || '') : null;
     } catch {
       return null;
     }
-    var valid =
-      parsed &&
-      typeof parsed.endpoint === 'string' &&
-      SAME_ORIGIN_PATH.test(parsed.endpoint) &&
-      typeof parsed.contentId === 'string' &&
-      Number.isInteger(parsed.contentVersion) &&
-      parsed.contentVersion >= 1;
-    return valid ? parsed : null;
+    if (!parsed || typeof parsed.endpoint !== 'string' || !SAME_ORIGIN_PATH.test(parsed.endpoint))
+      return null;
+    var versioned = Number.isInteger(parsed.contentVersion) && parsed.contentVersion >= 1;
+    return typeof parsed.contentId === 'string' && versioned ? parsed : null;
   }
 
   function envelope(items) {
@@ -110,19 +105,32 @@
     return true;
   }
 
+  /** Queues a statement once, cut down, with its own ID and an attempt's (the running one's unless given). */
+  function enqueue(statement, source, ofAttempt) {
+    var item = rules.cut(statement, source);
+    item.statementId = crypto.randomUUID();
+    item.attemptId = viewId + ':' + (ofAttempt || attempt);
+    var entry = batching.sized(item);
+    // WHY: an item that alone overflows a batch can never be sent; a full queue means the server is away.
+    if (batching.fitting([entry], envelopeBytes) === 1 && queue.length < MAX_QUEUE) queue.push(entry);
+  }
+
   function onXapi(event) {
     try {
       // WHY: H5P marks its own iframes so; their events reach the parent document's bridge, which sends them (D-115).
       if (h5p.isFramed && h5p.externalEmbed === false) return;
+      // SPEC-DEVIATION: D-154 — a scenario's choices are in no dispatched statement; the ones it keeps are queued.
+      if (choices) choices.watch(this, (kept) => enqueue(kept, undefined, ended));
       var statement = event && event.data && event.data.statement;
       if (!keep(statement)) return;
-      var item = rules.cut(statement, this);
-      item.statementId = crypto.randomUUID();
-      item.attemptId = viewId + ':' + attempt;
-      var entry = batching.sized(item);
-      // WHY: an item that alone overflows a batch can never be sent; a full queue means the server is away.
-      if (batching.fitting([entry], envelopeBytes) === 1 && queue.length < MAX_QUEUE) queue.push(entry);
-      if (rules.isGradable(statement, config.contentId, mainLibrary)) attempt += 1;
+      enqueue(statement, this);
+      if (!rules.isGradable(statement, config.contentId, mainLibrary)) return;
+      // WHY: H5P raises a scenario's root result inside the move that ends it, before that move's choice arrives here.
+      ended = attempt;
+      attempt += 1;
+      Promise.resolve().then(() => {
+        ended = 0;
+      });
     } catch {
       // WHY: a statement the bridge cannot read is not sent; H5P never sees the bridge's errors (LTI-010).
     }
@@ -136,13 +144,7 @@
     if (token && token.name === 'ltik') headers.Authorization = 'Bearer ' + token.value;
     if (token && token.name === 'csrf') headers['X-CSRF-Token'] = token.value;
     var body = JSON.stringify(envelope(entries.map((entry) => entry.value)));
-    var init = {
-      method: 'POST',
-      headers: headers,
-      body: body,
-      credentials: 'same-origin',
-      keepalive: keepalive,
-    };
+    var init = { method: 'POST', headers, body, credentials: 'same-origin', keepalive };
     try {
       return window.fetch(config.endpoint, init).then(
         (response) => batching.outcome(response.status, response.headers.get('Retry-After')),

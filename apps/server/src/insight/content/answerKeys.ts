@@ -1,7 +1,7 @@
 /**
  * answerKeys — what insight judges each question's answers by: for a choice question which options are correct, for
- * a gap task the answers each gap accepts and whether upper and lower case differ; and whether two versions of an
- * activity's parameters differ in it.
+ * a gap task the answers each gap accepts and whether upper and lower case differ, for a Branching Scenario's
+ * decision its options; and whether two versions of an activity's parameters differ in it.
  *
  * Why: insight shows one content version at a time so that it compares like with like (DATA-012, PROD-013). INS-003
  *      marks options and gap answers right or wrong by the stored parameters, while INS-002's share comes from each
@@ -9,7 +9,7 @@
  *      against the old key are shown against the new one, and the two lists no longer agree, which the
  *      suppression of small groups relies on (INS-006). A save that changes a key therefore starts a new version
  *      (D-137); this module says when.
- * Spec: INS-003, INS-006, PROD-013
+ * Spec: INS-003, INS-004, INS-006, PROD-013
  * Invariants:
  *   - The keys are read with insight's own readers (./questionCatalogue.ts, ./questionShapes.ts), so what
  *     ../aggregate/choiceDistribution.ts and ../aggregate/gapMisconceptions.ts judge by is what is compared.
@@ -18,14 +18,22 @@
  *     and whether the task is case-sensitive. Any other question has no key.
  *   - Question texts, option texts, tips and feedback are not part of a key, nor is the order of a gap's accepted
  *     alternatives.
+ *   - A decision's key is its options' whole plain texts in stored order (./branchingDecisions.ts, D-154): a
+ *     stored choice is an index, and the option is all a choice can be read by, so a reworded or moved option is a
+ *     changed key, also when the change lies past the length insight shows.
  *   - Questions are matched by their item ID, never by order: PostgreSQL's jsonb orders object keys its own way,
  *     so the stored parameters and the editor's may list the same questions differently.
  *   - Pure; never throws on author data.
- * Collaborators: ./questionCatalogue.ts, ./questionShapes.ts, ./gapSolutions.ts,
+ * Collaborators: ./questionCatalogue.ts, ./questionShapes.ts, ./gapSolutions.ts, ./branchingDecisions.ts,
  *   ../../learningDesign/safeEditing/LearnerStateGate.ts (asks on every save of an existing activity).
  * Tests: apps/server/test/insight/answerKeys.test.ts
  */
-import { libraryKey, machineNameOf } from '../../learningDesign/safeEditing/subContentNodes.js';
+import {
+  libraryKey,
+  machineNameOf,
+  plainTextOfValue,
+} from '../../learningDesign/safeEditing/subContentNodes.js';
+import { branchingDecisions } from './branchingDecisions.js';
 import { normaliseGapAnswer } from './gapSolutions.js';
 import { questionCatalogue } from './questionCatalogue.js';
 import type { QuestionShape } from './questionShapes.js';
@@ -58,15 +66,18 @@ export function answerKeyOf(shape: QuestionShape): string | null {
  * The answer keys of an activity's questions.
  * @param mainLibrary - The main library, as a machine name or with its version (`H5P.QuestionSet 1.20`).
  * @param params - The activity's parameters (content.json), as stored or as the editor will store them.
- * @returns One entry per choice question and gap task, at any depth.
+ * @returns One entry per choice question and gap task, at any depth, and per decision of a Branching Scenario.
  * @spec INS-003
  */
 export function answerKeys(mainLibrary: string, params: unknown): AnswerKeys {
   const keys = new Map<string | null, string>();
-  for (const question of questionCatalogue(machineNameOf(libraryKey(mainLibrary)), params)) {
+  const machineName = machineNameOf(libraryKey(mainLibrary));
+  for (const question of questionCatalogue(machineName, params)) {
     const key = answerKeyOf(question.shape);
     if (key !== null) keys.set(question.item, key);
   }
+  for (const { item, options } of branchingDecisions(machineName, params, plainTextOfValue))
+    keys.set(item, JSON.stringify(['decision', options]));
   return keys;
 }
 

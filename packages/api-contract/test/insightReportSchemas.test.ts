@@ -2,7 +2,7 @@
  * Tests the insight answers: one view (INS-001…INS-005) with shown, suppressed and not-available values, the contexts
  * list, and the findings with an acknowledgement whose reason is withheld from readers who may not edit.
  *
- * Spec: INS-001, INS-003, INS-006, INS-007, INS-010
+ * Spec: INS-001, INS-003, INS-004, INS-006, INS-007, INS-010
  */
 import { describe, expect, it } from 'vitest';
 import {
@@ -67,6 +67,7 @@ const report = () => ({
     },
   ],
   videoEngagement: null,
+  branching: null,
 });
 
 describe('[INS-001] the insight view', () => {
@@ -89,6 +90,29 @@ describe('[INS-001] the insight view', () => {
     const withRows = { ...leaky, rows: [{ learner: 'lk-1', score: 1 }] };
     // Act and assert
     for (const body of [withValue, withLearner, withRows])
+      expect(insightReportSchema.safeParse(body).success).toBe(false);
+  });
+
+  it('[INS-004] a scenario’s view carries its decisions: counts per option and who chose again, nothing per learner', () => {
+    // Arrange
+    const decision = {
+      item: 'b3a7c1d2-4e5f-4a6b-8c7d-9e0f1a2b3c02',
+      questionText: 'Korleis vil du bruke tida?',
+      learners: shown(19),
+      options: [
+        { index: 0, text: 'Ein kort video', learners: shown(10) },
+        { index: 1, text: 'Ei lang pensumliste', learners: hidden },
+      ],
+      choseAgain: shown(8),
+    };
+    const view = (branching: unknown) => ({ ...report(), branching });
+    const withPath = { ...decision, paths: [[0, 1]] };
+    const withLearners = { ...decision, options: [{ ...decision.options[0], learnerKeys: ['lk-1'] }] };
+    const { branching: _left, ...withoutField } = report();
+    // Act and assert
+    for (const body of [view([decision]), view([]), view(null)])
+      expect(insightReportSchema.safeParse(body).success).toBe(true);
+    for (const body of [view([withPath]), view([withLearners]), view(undefined), withoutField])
       expect(insightReportSchema.safeParse(body).success).toBe(false);
   });
 

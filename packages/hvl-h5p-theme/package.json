@@ -18,6 +18,7 @@
     "./a11yEditorRepairs.js": "./src/a11yEditorRepairs.js",
     "./reducedMotion.js": "./src/reducedMotion.js",
     "./xapiSingleChoiceSet.js": "./src/xapiSingleChoiceSet.js",
+    "./xapiBranchingChoices.js": "./src/xapiBranchingChoices.js",
     "./xapiStatements.js": "./src/xapiStatements.js",
     "./xapiBatching.js": "./src/xapiBatching.js",
     "./xapiBridge.js": "./src/xapiBridge.js",

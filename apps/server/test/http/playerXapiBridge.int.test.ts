@@ -13,7 +13,13 @@ import { requestAs } from '../support/requestAs.js';
 import { describeWithServices } from '../support/services.js';
 
 const CSRF = 'csrf-token-of-the-portal-session';
-const BRIDGE = ['xapiSingleChoiceSet.js', 'xapiStatements.js', 'xapiBatching.js', 'xapiBridge.js'];
+const BRIDGE = [
+  'xapiSingleChoiceSet.js',
+  'xapiBranchingChoices.js',
+  'xapiStatements.js',
+  'xapiBatching.js',
+  'xapiBridge.js',
+];
 
 describeWithServices('[LTI-010] the xAPI bridge on the portal’s player page', () => {
   let tb: HttpTestbed;
@@ -46,7 +52,7 @@ describeWithServices('[LTI-010] the xAPI bridge on the portal’s player page', 
       token: { name: 'csrf', value: CSRF },
     });
     expect(bridge.scripts).toEqual(BRIDGE);
-    expect(bridge.coreScripts).toHaveLength(4);
+    expect(bridge.coreScripts).toHaveLength(5);
     expect(bridge.bridgeAfterTheme).toBe(true);
     expect(bridge.reporting).toBe(true);
     // PRIVACY: the configuration names no person (D-115)

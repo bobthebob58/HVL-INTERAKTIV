@@ -1,7 +1,7 @@
 /**
  * checkDpiaInput — fails when the DPIA input (docs/privacy/DPIA-INPUT.md) misses one of its sections, when its
- * account of the Canvas developer key differs from the key itself, or when its residual table or a residual cited
- * elsewhere is out of order.
+ * account of the Canvas developer key differs from the key itself, when its residual table or a residual cited
+ * elsewhere is out of order, or when the brief for the DPO's first meeting does not name each residual once.
  *
  * Why: DATA-005 asks for the DPIA input that HVL's data protection officer reviews; D-113 counts a test that compares
  *      a document with its sources as that requirement's test. The key's privacy level, scopes and custom fields decide
@@ -17,20 +17,23 @@
  *   - §12's table numbers its residuals R1…Rn without a gap, each row with six filled cells.
  *   - Every `R<n>` cited in DPIA-INPUT.md or DATA-INVENTORY.md is in that table.
  *   - Every range `R1–R<n>` in §13, the questions for the DPO, ends at the table's last residual.
+ *   - The brief for the DPO's first meeting sorts each residual of §12 into one theme (./dpoBriefProblems.mjs).
  *   - Problems name the section, the field or the number, never a person's data (the documents hold none).
  * Collaborators: docs/privacy/DPIA-INPUT.md, docs/reference/canvas-lti13-developer-key.json,
- *   docs/privacy/DATA-INVENTORY.md, CI and the gate (`npm run privacy:dpia-check`), docs/EVALUATOR-GUIDE.md §5.
- * Tests: tools/privacy/test/checkDpiaInput.test.mjs
+ *   docs/privacy/DATA-INVENTORY.md, ./dpoBriefProblems.mjs (docs/privacy/dpo-first-meeting.md), CI and the gate (`npm run privacy:dpia-check`), docs/EVALUATOR-GUIDE.md §5.
+ * Tests: tools/privacy/test/checkDpiaInput.test.mjs, tools/privacy/test/dpoBriefProblems.test.mjs
  */
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { dpoBriefProblems } from './dpoBriefProblems.mjs';
 
 /** The documents, relative to the repository root. */
 export const DPIA_FILES = {
   dpia: 'docs/privacy/DPIA-INPUT.md',
   key: 'docs/reference/canvas-lti13-developer-key.json',
   inventory: 'docs/privacy/DATA-INVENTORY.md',
+  brief: 'docs/privacy/dpo-first-meeting.md',
 };
 
 /** How many numbered sections the DPIA input has. */
@@ -144,11 +147,11 @@ export function residualProblems(dpia, inventory) {
 }
 
 /**
- * Every problem of the DPIA input.
- * @param {{dpia: string, key: any, inventory: string}} docs - The three documents.
+ * Every problem of the DPIA input and of the brief that sorts its residuals.
+ * @param {{dpia: string, key: any, inventory: string, brief: string}} docs - The four documents.
  * @returns {string[]} The problems; none when the input is consistent.
  */
-export function dpiaProblems({ dpia, key, inventory }) {
+export function dpiaProblems({ dpia, key, inventory, brief }) {
   const problems = [];
   let last = -1;
   for (let n = 1; n <= DPIA_SECTIONS; n += 1) {
@@ -159,13 +162,14 @@ export function dpiaProblems({ dpia, key, inventory }) {
   }
   const keySection = sectionOf(dpia, 6);
   if (keySection) problems.push(...keyProblems(keySection, key));
-  return [...problems, ...residualProblems(dpia, inventory)];
+  const residualCount = rowsWhere(sectionOf(dpia, 12) ?? '', /^R\d+$/).length;
+  return [...problems, ...residualProblems(dpia, inventory), ...dpoBriefProblems(residualCount, brief)];
 }
 
 /**
- * Reads the three documents from a checkout.
+ * Reads the four documents from a checkout.
  * @param {string} root - The repository root.
- * @returns {{dpia: string, key: any, inventory: string}} The documents.
+ * @returns {{dpia: string, key: any, inventory: string, brief: string}} The documents.
  */
 export function readDpiaDocs(root) {
   const read = (path) => readFileSync(join(root, path), 'utf8');
@@ -173,6 +177,7 @@ export function readDpiaDocs(root) {
     dpia: read(DPIA_FILES.dpia),
     key: JSON.parse(read(DPIA_FILES.key)),
     inventory: read(DPIA_FILES.inventory),
+    brief: read(DPIA_FILES.brief),
   };
 }
 
@@ -184,6 +189,6 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   if (problems.length > 0) process.exitCode = 1;
   else
     process.stdout.write(
-      `DPIA input: ${DPIA_SECTIONS} sections, the developer key and the residuals agree\n`,
+      `DPIA input: ${DPIA_SECTIONS} sections, the developer key, the residuals and the DPO's brief agree\n`,
     );
 }

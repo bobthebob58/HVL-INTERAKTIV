@@ -666,6 +666,22 @@
       "summary": "Gap {{number}}: the most common wrong answer of those that can be shown is “{{answer}}” ({{count}} students).",
       "summaryNone": "Gap {{number}}: no wrong answer was given by enough students to be shown."
     },
+    "branching": {
+      "heading": "Choices at each decision",
+      "intro": "For each decision in the scenario: how many students chose each option the first time they reached the decision. “Chose again” counts students who came back to the decision and chose once more, in the same run or in a new one.",
+      "none": "The scenario has no decisions.",
+      "olderVersion": "The choices are shown for the current version of the activity only, as the options may have changed since. Choose the current version to see them.",
+      "untitled": "Decision {{number}} (no text)",
+      "untitledOption": "Option {{number}} (no text)",
+      "learners": "Students who chose:",
+      "choseAgain": "Chose again:",
+      "caption": "First choices at “{{question}}”",
+      "colOption": "Option",
+      "colLearners": "Students (first choice)",
+      "summary": "Most chosen first, of those that can be shown: “{{option}}”, chosen by {{count}} students.",
+      "summaryNone": "No option was chosen by enough students to be shown.",
+      "summaryTie": "Several options were chosen first by equally many of those that can be shown: {{count}} students each."
+    },
     "video": {
       "heading": "Video: how many answered the tasks",
       "intro": "The share of those who started who answered each task in the video. It shows roughly how far they watched.",

@@ -1,9 +1,10 @@
 /**
  * Integration tests of a changed answer key through the editor's save route on the real content types: the save
  * keeps every learner's state, asks nothing and starts a new content version, and insight then counts the answers
- * given before it under the version they were judged in (D-137).
+ * given before it under the version they were judged in (D-137). A reworded option of a Branching Scenario's
+ * decision is such a change (D-154).
  *
- * Spec: PROD-013, INS-003, INS-006
+ * Spec: PROD-013, INS-003, INS-004, INS-006
  */
 import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, expect, it } from 'vitest';
@@ -18,6 +19,7 @@ import {
   edited,
   replaceText,
   type BlanksParams,
+  type BranchingScenarioParams,
   type MultiChoiceParams,
 } from './learnerStateAfterEditEdits.js';
 import { openSafeEditingBench, type BenchActivity, type SafeEditingBench } from './safeEditingBench.js';
@@ -106,6 +108,30 @@ describeWithServices('[PROD-013] a changed answer key through the save route', (
       expect([first.status, second.status]).toEqual([200, 200]);
       expect([afterTip, (await bench.stored(blanks.id)).version]).toEqual([1, 2]);
       expect(await bench.stateKeys(blanks.id)).toHaveLength(1);
+    });
+
+    it('[PROD-013][INS-004] a reworded option of a decision starts a new version and keeps every state; a reworded question does not', async () => {
+      // Arrange
+      const scenario = await bench.importExample('H5P.BranchingScenario');
+      await bench.addOtherLearnersState(scenario);
+      const before = await bench.stateKeys(scenario.id);
+      type Decision = { branchingQuestion: { question: string; alternatives: { text: string }[] } };
+      const decisionOf = (p: BranchingScenarioParams) =>
+        (p.branchingScenario.content[1]!.type.params as unknown as Decision).branchingQuestion;
+      const questionReworded = edited<BranchingScenarioParams>(scenario.params, (p) => {
+        decisionOf(p).question = '<p>Korleis vil du bruke tida di før samlinga?</p>';
+      });
+      const optionReworded = edited<BranchingScenarioParams>(questionReworded, (p) => {
+        decisionOf(p).alternatives[1]!.text = '<p>Eg sender ut ei kort pensumliste.</p>';
+      });
+      // Act
+      const first = await bench.save(scenario, questionReworded);
+      const afterQuestion = (await bench.stored(scenario.id)).version;
+      const second = await bench.save(scenario, optionReworded);
+      // Assert: neither save asks anything; only the option's new text is a new version, with the state kept
+      expect([first.status, second.status]).toEqual([200, 200]);
+      expect([afterQuestion, (await bench.stored(scenario.id)).version]).toEqual([1, 2]);
+      expect(await bench.stateKeys(scenario.id)).toEqual(before);
     });
 
     it('[INS-003] insight counts the answers given before the change under their own version only', async () => {

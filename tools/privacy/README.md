@@ -21,7 +21,10 @@ pseudonymisation rule for learner tables (`DATA-002`). `checkInventory.mjs` read
   level, a scope, the tool-level custom fields, or a placement and its custom fields (a placement on one side only
   counts too). Change the key and §6 together, and only after the DPO's review;
 - §12's residuals are not numbered R1…Rn without a gap, a row lacks one of its six cells, or the DPIA input or the
-  data inventory cites a residual §12 does not list.
+  data inventory cites a residual §12 does not list;
+- the [brief for the DPO's first meeting](../../docs/privacy/dpo-first-meeting.md) does not sort every residual of
+  §12 into exactly one theme, states a wrong count, or cites a residual §12 does not list (`dpoBriefProblems.mjs`).
+  A step that adds a residual adds it to the brief's table too.
 
 ## How to run
 

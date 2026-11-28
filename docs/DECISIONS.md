@@ -7015,3 +7015,127 @@ loading of one spec per session are kept.
   analysis, the architecture paper, the review guide, the hand-off index, the runbook, the server's README and
   the Evaluator Guide (limitation 10, the end-to-end row) follow. No change of database or contract and no new
   stored data, so the data inventory and the DPIA input stand. The status overview counts 37 steps.
+
+### D-154 · Step 38: the choices at each decision of a Branching Scenario in insight (INS-004, LTI-010, DATA-012, INS-006)
+- **Context:** `INS-004` (SHOULD) asks that the view shows, for a BranchingScenario, the distribution of choices
+  at each decision node and how many learners used a retry path. D-115 did not build it: a choice is in no
+  statement H5P dispatches, and it asked for a probe and a decision of its own first. **The owner chose to
+  build it**, as the last of six follow-up parts, and approved this design on 2026-11-28 after the probe, with
+  a note for the data protection officer about what is stored (`docs/privacy/DPIA-INPUT.md`).
+- **Probe (2026-11-28; H5P.BranchingScenario 1.10.1 and H5P.BranchingQuestion 1.0, the real example package in
+  Chromium).** Four runs: through the example's loop back to a decision, with the back button, with a reload
+  after the first choice, and with «Start på nytt» at the end. What P1 found stands: a choice with a feedback
+  screen dispatches `interacted` without a result, and the last choice before an end screen dispatches
+  nothing. But the scenario fires an event of its own, `navigated`, on every move. On a choice its data holds
+  `chosenAlternative`, the option's index, also for the last choice. By the time a later listener runs, the
+  scenario has put the question's own `answered` statement (H5P's report contract, `getXAPIData()`) last on
+  its list `xAPIData`: the interaction type `choice`, the object ID `<content ID>?subContentId=<the node's>`,
+  the category `H5P.BranchingQuestion-1.0` and `result.response`, the index. A decision made again (after the
+  loop or after the back button) is a new entry, in order. The back button (`reverse`) and a resume after a
+  reload (`isResuming`; the list comes back from the saved state) add no choice, and a restart empties the
+  list. The list also holds the entries of the scenario's content pages: the scenario puts the entry of the
+  node it leaves there on every move, a back move and a resume too, and such a page dispatches its own
+  statements as every other content does.
+- **Decision — the bridge sends what H5P kept about a choice (`LTI-010`; `SPEC-DEVIATION`).** `LTI-010` says
+  the bridge sends what `H5P.externalDispatcher` raises. For a choice it sends what H5P made and kept without
+  dispatching. A fifth player-only script (`packages/hvl-h5p-theme/src/xapiBranchingChoices.js`) watches a
+  BranchingScenario from the first xAPI event that instance raises, the root's `attempted` when H5P attaches
+  it, which comes before any choice (H5P Core calls a listener with the raising instance as `this`, D-151; no
+  other library's semantics names a BranchingScenario, so it is never inside another type). On `navigated`
+  with a whole-number `chosenAlternative` and no `isResuming`, it reads the list's last entry when that entry
+  is new since the last move, is an `answered` of a BranchingQuestion and answers with the same index.
+  Anything else (another version of the library that keeps its record elsewhere) sends nothing: a decision
+  then shows no learners, never a wrong count. It hands the bridge a new object with that statement's verb,
+  object and context and, as its result, the index alone. H5P's result also holds `completion` and how long
+  the learner stayed at the decision; insight reads neither, so neither leaves the page (`DATA-012`). The
+  bridge cuts and queues what it is handed like a dispatched statement (`xapiStatements.js` `cut`): the verb,
+  the object ID, the interaction type, the parent and category IDs and the index. The question's text, its
+  options' texts and the feedback text that H5P puts in the statement do not leave the page. A choice carries
+  the attempt it was made in: H5P raises the scenario's root result inside the move that ends a run, before
+  the listener is handed that move's choice, so a choice handed on in the same turn of the event loop as a
+  root result gets the attempt that result closed (the first run of the browser test sent the last choice of
+  a run with the next attempt's number). **Not deviated:** `LTI-011` and `DATA-012`. The server takes the
+  statement by the schema and the rules it had (`answered` of a part with a UUID `subContentId`; a `choice`
+  response is kept), and stores the same fields in the same table. No migration, no new column.
+- **Decision — what the view shows (`INS-004`).** For a BranchingScenario the report has one entry per decision
+  (a BranchingQuestion node with a `subContentId`), in the content's order: the question, each option with the
+  number of learners whose **first** choice at that decision it was, and the number of learners who **chose
+  again** there, which is `INS-004`'s retry path: a learner with more than one stored choice at the decision
+  in the view, through a loop, the back button or a new run. A stored answer counts as a choice only when it
+  is a whole-number index of one of the decision's options. The decisions of the current content are not
+  questions: they are in no row of the question list (`INS-002`) and have no share right. A decision that is
+  no longer in the content can only have answers in an older version; in a view of that version it is, like
+  a question that was removed, a row without a name once *k* learners answered (D-121, D-136). Like
+  `INS-003`'s distributions the entries are shown for the current version only, since the option texts come
+  from the current content. The CSV export has the same figures (`INS-009`). The summary sentence names the
+  option most learners chose first; options with the same highest count are named as a tie.
+- **PRIVACY — the rules of the new figures (`INS-006`, D-106).** A decision's options are one additive group:
+  the first choices divide the learners who chose there, so the cells follow `additiveGroupCells` (a cell of
+  1 to *k* − 1 is hidden, and a complement with it). «Chose again» is a count of learners, hidden below *k*
+  and with a hidden decision. A view whose starters are hidden hides every cell. The view never shows one
+  learner's choices or path, no figure across two decisions (no "of those who chose A, …"), and no time of a
+  choice.
+- **PRIVACY — what is new in storage (`DATA-012`).** Before, a BranchingScenario left a learner's start, the
+  completion and the end score. Now each choice is a row: the pseudonym, the activity, version and course, the
+  decision's `subContentId`, the option's index (never a text), the attempt ID and the time the server
+  received it; no score, no `completion` and no duration. The yearly purge (`DATA-003`) and a data subject's
+  export and erasure (`DATA-008`) cover the rows as they cover every `XapiStatement` row. Three things go to
+  the data protection officer in the DPIA input, as residuals **R42** and **R43** and its question 9. R42: a
+  cell holds first choices, and a part of the scenario that can be reached only through one option was
+  reached only by learners who chose that option at some time. So the learners of a later decision there,
+  less the earlier decision's «chose again», bound that option's cell from below, also when it is hidden;
+  with nobody choosing again and no drop-out they give it, and the small cell beside it follows. A question
+  on a page there and the completion count bound the same way. The reader must know the scenario's graph.
+  Nothing in the code closes this: hiding every cell such a bound touches would empty the section for most
+  small groups, so it is recorded, not closed. R43: from the stored rows, not from any view, one pseudonym's
+  path through a scenario can be put together; and a choice in a dilemma can show an attitude, not only
+  knowledge, which a quiz answer rarely does.
+- **Decision — a decision's options are part of the answer key (`PROD-013`, D-137).** Insight counts by the
+  option's index and shows the option's current text. The structure signature (D-093) already makes a save
+  that adds or removes an option, or points one at another node, a structural change: it asks first and
+  resets the learners' progress, as before. A save that rewords an option or swaps two options that lead to
+  the same node kept the version, and earlier choices would stand under another text. The answer key of a
+  decision is therefore its options' whole plain texts in stored order (`src/insight/content/answerKeys.ts`;
+  the text is compared whole, also past the 300 characters the view shows): such a save starts a new version
+  and keeps the learners' progress, as a changed answer key does. A reworded question keeps the version.
+  Unlike a choice question, whose key is only which options are right, a decision has nothing else to be
+  judged by than the options themselves.
+- **Decision — a decision's table fits a phone.** The tab's tables are held at least 36 rem wide and scroll in
+  their own region, which a table of several columns needs (`UD-008`). A decision's table has two columns, so
+  it takes the width it is given and wraps its texts (`ScrollTable`'s `fit`); at 390 px nothing scrolls
+  sideways.
+- **Verified:** tests that failed first. `packages/hvl-h5p-theme/test/xapiBranchingChoices.test.ts`: each
+  choice is handed on once, a choice made again too, nothing on a resume or for an entry that is not this
+  choice, and what is handed on is a copy with the index alone. `xapiBranchingChoicesBridge.test.ts`: the item
+  that leaves the page holds no text, no time and no `completion`, and the attempt it was made in. In Chromium
+  with the real libraries (`apps/server/test/h5p/xapiBranchingChoices.browser.int.test.ts`): an upstream pin
+  of what the scenario keeps and does not dispatch, then the bridge's items through a loop, the last
+  decision, the back button, a reload while a feedback screen shows (H5P then presses the option again
+  itself) and a restart: each choice once, also after the bridge's next batch, in the attempt it was made in.
+  `test/insight/branchingChoices.test.ts`: the figures of a fixture of 20 learners worked out by hand
+  (`test/insight/fixtures/README.md`), a decision that is no question, the complement of a single small cell,
+  a hidden decision that hides its 0; against the report builder as it was, five of its six tests failed.
+  `branchingSuppression.property.test.ts`: for random plays and *k* from 3 to 7 no figure is about 1 to
+  *k* − 1 learners, no hidden option follows from its decision's learners, every shown figure is the true
+  one, and the CSV rows carry the same cells; the checker looks at each decision by itself, not at the graph
+  (R42). `branchingDecisions.test.ts`: the real example's decisions, and the answer key over the whole text.
+  `test/learningDesign/safeEditing/answerKeyVersions.int.test.ts`: through the save route, a reworded option
+  starts a new version and keeps every state, a reworded question does not (it failed against the key as it
+  was). `test/xapi/xapiStatementRow.test.ts`: the cut statement is stored with its index and nothing else of
+  a result. `e2e/branchingInsight.e2e.test.ts`: five Canvas learners play the real scenario, and the
+  teacher's view and the author's tab show the counts. `a11y/axeInsightBranching.a11y.test.ts` and
+  `apps/web/test/features/insight/InsightBranching.test.tsx`. Not tested with the real library: a scenario
+  whose page is itself a question (the example has none; the unit test's stand-in covers it). The three
+  browser tests also ran with every answer 1.5 s late and with every processor busy before the first push;
+  the slow run found a one-second wait in the end-to-end test, which is corrected. Step 38 in `PROGRESS.md`
+  has the gate's output and what the second reader found.
+- **Consequences:** `INS-004` is built; its amendment in spec 05 says what the view shows, and `LTI-010` (spec
+  02) and `DATA-012` (spec 05) carry theirs. The DPIA input has O4, O7, R42, R43 and question 9, and the data
+  inventory the two fields' new use; the threat model, the ROS analysis and the human-review checklist point
+  there. `docs/handoff/branching-paths.md` is now a record of what was built, and the hand-off index, the
+  meeting brief, the READMEs, the glossary and the Evaluator Guide follow. A report for H5P is drafted
+  (`docs/upstream/h5p-branching-scenario-choice-statement.md`). No migration and no new stored field. Plays
+  from before this step have no stored choices, so their decisions show no learners. One figure of
+  `INS-001` changes for a scenario: the median time on task is measured from a page load's first to its last
+  stored statement, so a learner who chose at least once without finishing now has a measured time, where
+  such a play had none. The status overview counts 38 steps.

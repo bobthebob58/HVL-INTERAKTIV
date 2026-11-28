@@ -38,8 +38,8 @@
   `/laeringsdesign`, `/mappe`, `/app/*` (LTI views). Insight is an «Innsikt» tab, not a page (D-101, D-106).
 - `packages/design-tokens`: `tokens.json` → CSS variables + Tailwind preset, with a contrast test.
 - `packages/hvl-h5p-theme`: `hvl-h5p-theme.css` and plain-JS client scripts, injected into H5P player and editor
-  iframes; the xAPI bridge (`xapiSingleChoiceSet.js`, `xapiStatements.js`, `xapiBatching.js`, `xapiBridge.js`) runs
-  only in the top player document, for learners (D-102).
+  iframes; the xAPI bridge (`xapiSingleChoiceSet.js`, `xapiBranchingChoices.js`, `xapiStatements.js`,
+  `xapiBatching.js`, `xapiBridge.js`) runs only in the top player document, for learners (D-102).
 - `content/`: ALU-editable YAML/Markdown (phases, patterns, guide text, portfolio templates; D-083). No code.
 - `tools/`: `spec-trace`, `spec-site`, `doc-lint`, `dependency-check`, `privacy`, `h5p-core`, `seed`,
   `mock-platform` (S3: mock OIDC + LTI platform for tests).
@@ -76,6 +76,14 @@ Operational rules:
   makes a page or view look different, take Playwright screenshots in `nn` at desktop (1280 px) and mobile
   (390 px) width and send them to the owner as images during the session (not only at the end). Keep them in
   the scratchpad; commit none unless the owner asks.
+- **Browser tests before the first push (owner's decision, 2026-11-28):** run every new or changed browser test
+  (`*.browser.int.test.ts`, `apps/server/e2e/`, `apps/server/a11y/`) also with every answer delayed about 1.5 s
+  and with every processor busy. GitHub's runner is slower and exposes waits that rely on timing
+  (`docs/EVALUATOR-GUIDE.md` §5.1).
+- **Two papers kept true (owner's request, 2026-11-28):** a step that changes what the service does about security
+  or privacy updates the row it touches in `docs/assurance/compared-with-h5p.md`, or adds one, in the same pull
+  request; a row states only what a named file or test shows. A new residual in `docs/privacy/DPIA-INPUT.md` §12
+  also goes into the theme table of `docs/privacy/dpo-first-meeting.md` (`npm run privacy:dpia-check` fails otherwise).
 - Values marked *(verify)* in specs must be confirmed from `docs/reference/` or by the owner before you depend on them.
 
 ## 5. KNOWN TRAPS (verified 2026-10-16; details in docs/DECISIONS.md)

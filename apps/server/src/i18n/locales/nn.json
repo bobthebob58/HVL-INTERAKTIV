@@ -287,7 +287,8 @@
         "items": "Spørsmål",
         "choices": "Svarfordeling",
         "gaps": "Luker",
-        "video": "Video"
+        "video": "Video",
+        "decisions": "Avgjerder"
       },
       "note": {
         "formative": "Undervegsvurdering",
@@ -332,7 +333,10 @@
         "otherWrong": "Andre feil svar (studentar, første svar)",
         "empty": "Tom luke (studentar, første svar)",
         "answered": "Studentar som svarte",
-        "share": "Del av dei som starta"
+        "share": "Del av dei som starta",
+        "choosers": "Studentar som valde",
+        "firstChoice": "Første val (studentar)",
+        "choseAgain": "Valde på nytt (studentar)"
       }
     }
   }

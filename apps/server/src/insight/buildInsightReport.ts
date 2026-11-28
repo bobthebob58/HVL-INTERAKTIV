@@ -1,12 +1,12 @@
 /**
  * buildInsightReport — assembles one insight view from the scope, the activity's parameters and the view's
- * statements: participation, item difficulty, misconceptions and, for an InteractiveVideo, video engagement, every
- * number already suppressed.
+ * statements: participation, item difficulty, misconceptions and, for an InteractiveVideo, video engagement, for a
+ * BranchingScenario the choices at its decisions, every number already suppressed.
  *
  * Why: the aggregates are pure functions of what the view covers; keeping them apart from the database and the
  *      content store lets the hand-calculated 30-learner fixture (INS-001's acceptance) and the INS-006 property tests
  *      run on exactly what the service sends.
- * Spec: INS-001, INS-002, INS-003, INS-005, INS-006
+ * Spec: INS-001, INS-002, INS-003, INS-004, INS-005, INS-006
  * Invariants:
  *   - PRIVACY: the statements carry learner numbers, not keys (./data/insightStatements.ts), and the report holds
  *     only cells from ./suppression/insightCells.ts and texts from the parameters or given by k learners (INS-006).
@@ -21,13 +21,16 @@
  *     INS-002's stored verdicts and INS-003's marks agree; the two-group suppression of
  *     ./aggregate/choiceDistribution.ts and ./aggregate/gapMisconceptions.ts relies on that (INS-006).
  *   - ImageHotspots sends no learning data: its report says so, with started 0 and no questions (D-115).
- * Collaborators: ./content/questionCatalogue.ts, ./content/activityCapabilities.ts, ./aggregate/*,
- *   ./InsightService.ts.
+ *   - A BranchingScenario's decisions are not questions: their stored choices are in no question row (INS-002) and
+ *     are counted per decision, for the current version only, like the misconceptions (INS-004, D-154).
+ * Collaborators: ./content/questionCatalogue.ts, ./content/activityCapabilities.ts,
+ *   ./content/branchingDecisions.ts, ./aggregate/*, ./InsightService.ts.
  * Tests: apps/server/test/insight/thirtyLearners.test.ts, apps/server/test/insight/videoLearners.test.ts,
- *   apps/server/test/insight/insightSuppression.property.test.ts
+ *   apps/server/test/insight/branchingChoices.test.ts, apps/server/test/insight/insightSuppression.property.test.ts
  */
 import type { InsightScope } from '@hvl-interaktiv/api-contract';
 import type { MinimumGroupSize } from '../privacy/minimumGroupSize.js';
+import { branchingChoices } from './aggregate/branchingChoices.js';
 import { choiceDistribution } from './aggregate/choiceDistribution.js';
 import { gapMisconceptions } from './aggregate/gapMisconceptions.js';
 import { itemDifficultyInsights } from './aggregate/itemDifficulty.js';
@@ -35,6 +38,7 @@ import { answersByItem, learnersOf, type AnswersByItem } from './aggregate/learn
 import { participationInsight } from './aggregate/participation.js';
 import { videoEngagement } from './aggregate/videoEngagement.js';
 import { activityCapabilities, videoInteractions } from './content/activityCapabilities.js';
+import { BRANCHING_SCENARIO, branchingDecisions } from './content/branchingDecisions.js';
 import { questionCatalogue, type CatalogueQuestion } from './content/questionCatalogue.js';
 import type { InsightStatement } from './data/insightStatements.js';
 import type { InsightReport, MisconceptionInsight } from './insightReport.js';
@@ -79,7 +83,10 @@ export function buildInsightReport(input: InsightReportInput): InsightReport {
   const { size, mainLibrary, params, statements } = input;
   const capabilities = activityCapabilities(mainLibrary, params);
   const questions = questionCatalogue(mainLibrary, params);
-  const answers = answersByItem(statements);
+  const decisions = branchingDecisions(mainLibrary, params);
+  // WHY: a scenario's decisions are no questions (INS-004): they have no right answer and no row in INS-002.
+  const decided = new Set<string | null>(decisions.map(({ item }) => item));
+  const answers = answersByItem(statements.filter(({ item }) => !decided.has(item)));
   const started = learnersOf(statements).size;
   // PRIVACY: a hidden group of starters hides every cell about them (INS-006).
   const within = <T>(part: T): T => (isShowableCount(size, started) ? part : suppressEveryCell(part));
@@ -103,5 +110,12 @@ export function buildInsightReport(input: InsightReportInput): InsightReport {
       mainLibrary === 'H5P.InteractiveVideo'
         ? videoEngagement(size, videoInteractions(params), answers, started)
         : null,
+    // SPEC-DEVIATION: D-106 — like INS-003, for the current version only: the options' texts are the current ones.
+    branching:
+      mainLibrary !== BRANCHING_SCENARIO
+        ? null
+        : current
+          ? within(branchingChoices(size, decisions, statements))
+          : [],
   };
 }

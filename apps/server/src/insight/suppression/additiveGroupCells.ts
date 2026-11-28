@@ -22,9 +22,11 @@
  *     of its own («no answer»). A part whose total a reader knows from elsewhere (INS-002's share correct) is a group
  *     of its own (`partitionedGroupCells`).
  *   - The order of the cells is kept; nothing tells a primary hidden cell from a complementary one.
- * Collaborators: ./insightCells.ts, ../aggregate/choiceDistribution.ts, ../aggregate/gapMisconceptions.ts.
+ * Collaborators: ./insightCells.ts, ../aggregate/choiceDistribution.ts, ../aggregate/gapMisconceptions.ts,
+ *   ../aggregate/branchingChoices.ts.
  * Tests: apps/server/test/insight/insightCells.test.ts, apps/server/test/insight/additiveGroupExhaustive.test.ts,
- *   apps/server/test/insight/insightSuppression.property.test.ts
+ *   apps/server/test/insight/insightSuppression.property.test.ts,
+ *   apps/server/test/insight/branchingSuppression.property.test.ts
  */
 import type { InsightCountCell } from '@hvl-interaktiv/api-contract';
 import type { MinimumGroupSize } from '../../privacy/minimumGroupSize.js';

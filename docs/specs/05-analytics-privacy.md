@@ -83,6 +83,21 @@ many learners used a retry path.
   choice before an end screen sends nothing at all. Building it needs statements that the bridge makes itself, a
   `SPEC-DEVIATION` from `LTI-010` and `LTI-011` that needs its own decision, after a probe shows that retried choices
   are kept. It passes to HVL's bachelor students through the hand-off index (D-101).
+- **Amended (D-154, 2026-11-28, a probe of BranchingScenario 1.10):** built. For each decision (a branching question
+  with a `subContentId`), in the content's order, the view shows the number of learners whose **first** choice each
+  option was, and the number of learners who **chose again** there: a learner with more than one choice at the
+  decision in the view (a loop back, the back button or a new run), which is this requirement's retry path. The
+  probe showed that H5P makes the question's own `answered` statement for every choice and keeps it without
+  dispatching it; the bridge sends that statement (`SPEC-DEVIATION` from `LTI-010` only; `LTI-011` and `DATA-012`
+  are not deviated). A decision's options are one additive group under `INS-006`, and «chose again» is a count of
+  learners, hidden below *k* and with a hidden decision. The entries are shown for the current version only, as
+  `INS-003`'s; a decision of the current content is no question and has no row in `INS-002` (one that is no longer
+  in the content is, in a view of an older version, a row without a name like any removed question); the CSV
+  export (`INS-009`) has the same figures. Never shown: one learner's choices or path, a figure that joins two
+  decisions, the time of a choice. A decision's options, their whole texts in stored order, are part of the answer
+  key (`PROD-013`, D-137): a reworded option starts a new version and keeps progress. What it leaves open is
+  residuals R42 and R43 of the DPIA input. Verify: unit tests against a hand-calculated fixture of 20 learners,
+  property tests, the real library in Chromium, an end-to-end flow and the accessibility suite.
 
 #### INS-005 · COULD · S6 · Video engagement
 For InteractiveVideo, it shows the share of learners who answered each embedded interaction. This
@@ -317,6 +332,11 @@ else is dropped, including actor names, mailboxes and extensions.
   launch, never from the statement; database default false. Like `academicYear` it holds no statement data. Insight,
   the mappe and the yearly purge's snapshots never read a flagged row, so *k* − 1 test students cannot make a group of
   *k* around one real learner; the grade worker does read them, so a teacher can test the score passback.
+- **Amended (D-154, 2026-11-28):** the field list is unchanged. A choice at a decision of a BranchingScenario is a
+  stored row like any part's `answered`: the decision's `subContentId`, and in `response` the index of the option
+  chosen (interaction type `choice`), with no score, no `completion` and no `durationMs`. The statement is H5P's
+  own, of which the bridge sends the index alone (`LTI-010` as amended); the option's text and the time spent at
+  the decision are never stored.
 - **Amended (D-138, 2026-11-22):** "only learner principals' statements" means the learners `LTI-011` records as
   amended: an HVL member in the portal, the `Learner` role in Canvas. `contentVersion` is the version the page was
   rendered with, and an older one only for a learner who was already in it.

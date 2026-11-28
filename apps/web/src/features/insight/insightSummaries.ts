@@ -25,6 +25,8 @@ import { t, type Locale } from '../../i18n/translate';
 import { cellText, formatValue, shownValue, videoTime } from './insightFormat';
 import { plainText, quotedSentence, type QuotedText } from './quotedText';
 import type {
+  BranchingDecisionInsight,
+  BranchingOptionInsight,
   ChoiceMisconception,
   GapInsight,
   ItemDifficultyInsight,
@@ -144,4 +146,44 @@ export function videoSummary(interactions: readonly VideoInteractionInsight[], l
   };
   const named = (lowest.label ?? lowest.questionText) !== null;
   return quotedSentence('insight.video.summary', locale, params, named ? 'task' : undefined);
+}
+
+/**
+ * The name of a decision: its question, or its place in the scenario when it has no text.
+ * @param text - The decision's question; '' when the parameters hold none.
+ * @param number - The decision's place among the scenario's decisions, from 1.
+ * @param locale - The page locale.
+ * @returns The name.
+ */
+export const decisionLabel = (text: string, number: number, locale: Locale): string =>
+  text === '' ? t('insight.branching.untitled', locale, { number }) : text;
+
+/**
+ * The name of a decision's option: its text, or its place when it has none.
+ * @param option - The option.
+ * @param locale - The page locale.
+ * @returns The name.
+ */
+export const optionLabel = (option: BranchingOptionInsight, locale: Locale): string =>
+  option.text === ''
+    ? t('insight.branching.untitledOption', locale, { number: option.index + 1 })
+    : option.text;
+
+/**
+ * INS-004: the option most learners chose first at a decision, among the shown counts.
+ * @param decision - The decision.
+ * @param locale - The page locale.
+ * @returns The summary; the option's own text is its quoted part, the name of one without text is not. Options
+ *   with the same highest count are named as a tie, never one of them as the most chosen.
+ */
+export function decisionSummary(decision: BranchingDecisionInsight, locale: Locale): QuotedText {
+  const counts = decision.options.map((option) => shownValue(option.learners) ?? 0);
+  const highest = Math.max(0, ...counts);
+  if (highest === 0) return plainText(t('insight.branching.summaryNone', locale));
+  const count = formatValue(highest, 'count', locale);
+  const leaders = decision.options.filter((_, index) => counts[index] === highest);
+  const [best] = leaders;
+  if (!best || leaders.length > 1) return plainText(t('insight.branching.summaryTie', locale, { count }));
+  const params = { option: optionLabel(best, locale), count };
+  return quotedSentence('insight.branching.summary', locale, params, best.text ? 'option' : undefined);
 }

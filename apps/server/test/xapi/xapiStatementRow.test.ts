@@ -1,9 +1,9 @@
 /**
  * Unit tests of the DATA-012 mapper's caps and parsed fields: the answer kept per interaction type with D-115's caps,
  * the duration read from ISO 8601, the platform-scoped context key (D-103), and that a part's answer is stored only
- * under a UUID sub-content ID (D-121).
+ * under a UUID sub-content ID (D-121); and that a Branching Scenario's choice, as the bridge sends it, is stored (D-154).
  *
- * Spec: DATA-012, LTI-011
+ * Spec: DATA-012, LTI-011, INS-004
  */
 import { randomUUID } from 'node:crypto';
 import { H5P_SUBCONTENT_ID_EXTENSION, xapiStatementItemSchema } from '@hvl-interaktiv/api-contract';
@@ -67,6 +67,30 @@ describe('[LTI-011] which answers of a part are stored (D-121)', () => {
       expect(classified(`${C}?subContentId=${text}`), text).toEqual({ kind: 'discard', reason: 'invalid' });
       expect(classified(C, text), text).toEqual({ kind: 'discard', reason: 'invalid' });
     }
+  });
+});
+
+describe('[INS-004] a Branching Scenario’s choice (D-154)', () => {
+  it('[INS-004] as the bridge cuts it, is stored as the decision’s answer with the option’s index and no score', () => {
+    // Arrange: what packages/hvl-h5p-theme/src/xapiStatements.js leaves of H5P.BranchingQuestion's own statement
+    const decision = randomUUID();
+    const category = [{ id: 'http://h5p.org/libraries/H5P.BranchingQuestion-1.0' }];
+    const item = xapiStatementItemSchema.parse({
+      statementId: randomUUID(),
+      attemptId: `${randomUUID()}:1`,
+      verb: { id: 'http://adlnet.gov/expapi/verbs/answered' },
+      object: { id: `${C}?subContentId=${decision}`, definition: { interactionType: 'choice' } },
+      context: { contextActivities: { parent: [{ id: C }], category } },
+      result: { response: '1' },
+    });
+    // Act
+    const row = xapiStatementRow(item, FACTS, new Date());
+    // Assert
+    expect(classifyXapiItem(item, FACTS)).toEqual({ kind: 'store', rootResult: false });
+    expect(row).toMatchObject({ subContentId: decision, verb: 'answered', response: '1' });
+    // PRIVACY: nothing but the index: no score, no verdict, and not the time spent at the decision (D-154).
+    const rest = [row.scoreRaw, row.scoreMax, row.scaled, row.success, row.completion, row.durationMs];
+    expect(rest).toEqual([null, null, null, null, null, null]);
   });
 });
 

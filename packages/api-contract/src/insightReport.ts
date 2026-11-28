@@ -1,13 +1,13 @@
 /**
  * insightReport — the answer of one insight view (`GET /api/content/:contentId/insight`): participation (INS-001),
- * item difficulty (INS-002), misconceptions (INS-003) and video engagement (INS-005), each number a shown or
- * suppressed cell.
+ * item difficulty (INS-002), misconceptions (INS-003), the choices at a Branching Scenario's decisions (INS-004) and
+ * video engagement (INS-005), each number a shown or suppressed cell.
  *
  * Why: the Innsikt tab (D-101, D-106) and the CSV export (INS-009) read one already suppressed answer; describing it
  *      here lets the OpenAPI document show it (DOC-012), the server check its own answer against it in tests, and the
  *      web app type the tab from it. "Not available" (an activity type that cannot send the data, D-115) is `null`;
  *      "suppressed" (fewer than k learners, INS-006) is the cell `{ suppressed: true }`, so the two never mix.
- * Spec: INS-001, INS-002, INS-003, INS-005, INS-006, PROD-013
+ * Spec: INS-001, INS-002, INS-003, INS-004, INS-005, INS-006, PROD-013
  * Invariants:
  *   - Mirrors apps/server/src/insight/insightReport.ts field for field; the server's API tests parse every answer of
  *     the view with `insightReportSchema`, including the property test's random datasets.
@@ -121,6 +121,28 @@ export const videoInteractionSchema = z.strictObject({
 /** One video interaction. */
 export type VideoInteractionResponse = z.infer<typeof videoInteractionSchema>;
 
+/** INS-004: one decision of a BranchingScenario, with the learners' first choices and how many chose again. */
+export const branchingDecisionSchema = z.strictObject({
+  /** The decision's `subContentId`. */
+  item: z.string(),
+  questionText: z.string(),
+  /** Learners who chose at the decision. */
+  learners: insightCountCellSchema,
+  options: z.array(
+    z.strictObject({
+      /** The option's place in the stored parameters, from 0. */
+      index: z.int().min(0),
+      text: z.string(),
+      /** Learners whose first choice at the decision this option was. */
+      learners: insightCountCellSchema,
+    }),
+  ),
+  /** Learners who chose at the decision more than once (a loop, the back button or a new run). */
+  choseAgain: insightCountCellSchema,
+});
+/** One decision. */
+export type BranchingDecisionResponse = z.infer<typeof branchingDecisionSchema>;
+
 /**
  * `GET /api/content/:contentId/insight` → 200: one view of one activity, version, context and period, already
  * suppressed (INS-006).
@@ -142,6 +164,8 @@ export const insightReportSchema = z.strictObject({
   misconceptions: z.array(misconceptionSchema),
   /** Only for an InteractiveVideo; null otherwise. */
   videoEngagement: z.array(videoInteractionSchema).nullable(),
+  /** Only for a BranchingScenario, null otherwise; empty for an older version and for a scenario without decisions. */
+  branching: z.array(branchingDecisionSchema).nullable(),
 });
 /** One insight view. */
 export type InsightReportResponse = z.infer<typeof insightReportSchema>;

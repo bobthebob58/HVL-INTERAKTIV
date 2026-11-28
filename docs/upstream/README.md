@@ -76,6 +76,7 @@ the content as an exported `.h5p` file.
 | [h5p-questionset-retry-several-sets.md](h5p-questionset-retry-several-sets.md) | H5P.QuestionSet 1.21.13 | Not a barrier: "Retry" throws when a page holds several sets (D-115, Q20) | Ready |
 | [h5p-single-choice-set-xapi-response.md](h5p-single-choice-set-xapi-response.md) | H5P.SingleChoiceSet 1.11.89 | Not a barrier: a question's xAPI `answered` gives the alternative's place on screen as the response and judges by it (D-151) | Ready |
 | [h5p-editor-cropper-loader.md](h5p-editor-cropper-loader.md) | H5P editor, `h5p-editor-php-library` ab2daa18 | Not a barrier: «Edit image» loads its script in a way that needs inline script, so a page policy without `'unsafe-inline'` gets `Cropper is not defined` (D-153) | Needs the owner's check: `master` not read |
+| [h5p-branching-scenario-choice-statement.md](h5p-branching-scenario-choice-statement.md) | H5P.BranchingScenario 1.10.1, H5P.BranchingQuestion 1.0 | Not a barrier: no dispatched xAPI statement says which alternative was chosen at a branching question; the `answered` statement exists only for the report contract (D-154) | Needs the owner's check: newer releases not read |
 
 These cover every entry of D-080's register (`apps/server/a11y/support/upstreamRegister.ts`: its two findings and
 three English texts; InteractiveVideo's was found by D-111's review and added at step 7's integration), every run-time repair of `a11yRepairs.js` and `a11yEditorRepairs.js`, the theme's upstream

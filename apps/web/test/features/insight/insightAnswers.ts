@@ -133,6 +133,7 @@ export const REPORT: InsightReport = {
     },
   ],
   videoEngagement: null,
+  branching: null,
 };
 
 /**

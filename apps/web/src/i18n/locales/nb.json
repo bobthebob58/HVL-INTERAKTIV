@@ -666,6 +666,22 @@
       "summary": "Luke {{number}}: vanligste feilsvar av dem som kan vises, er «{{answer}}» ({{count}} studenter).",
       "summaryNone": "Luke {{number}}: ingen feil svar er gitt av nok studenter til at de kan vises."
     },
+    "branching": {
+      "heading": "Valg ved hver avgjørelse",
+      "intro": "For hver avgjørelse i scenarioet: hvor mange studenter som valgte hvert alternativ første gangen de kom til avgjørelsen. «Valgte på nytt» er studenter som kom tilbake til avgjørelsen og valgte én gang til, i samme gjennomspilling eller i en ny.",
+      "none": "Scenarioet har ingen avgjørelser.",
+      "olderVersion": "Valgene vises bare for den gjeldende versjonen av aktiviteten, fordi alternativene kan ha endret seg siden. Velg den gjeldende versjonen for å se dem.",
+      "untitled": "Avgjørelse {{number}} (uten tekst)",
+      "untitledOption": "Alternativ {{number}} (uten tekst)",
+      "learners": "Studenter som valgte:",
+      "choseAgain": "Valgte på nytt:",
+      "caption": "Første valg ved «{{question}}»",
+      "colOption": "Alternativ",
+      "colLearners": "Studenter (første valg)",
+      "summary": "Mest valgt først av dem som kan vises: «{{option}}», valgt av {{count}} studenter.",
+      "summaryNone": "Ingen alternativer er valgt av nok studenter til at de kan vises.",
+      "summaryTie": "Flere alternativer ble valgt først av like mange av dem som kan vises: {{count}} studenter hver."
+    },
     "video": {
       "heading": "Video: hvor mange svarte på oppgavene",
       "intro": "Hvor stor del av dem som startet, som svarte på hver oppgave i videoen. Det sier omtrent hvor langt de så.",

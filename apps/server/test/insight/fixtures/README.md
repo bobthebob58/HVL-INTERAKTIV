@@ -98,3 +98,28 @@ Hardest first: **Q1, Q3, Q2**.
 
 No statements: started **0**, completed **not available**, no questions, and the report says it sends no learning
 data (D-115).
+
+## The Branching Scenario: twenty learners and two decisions (INS-004)
+
+`twentyDeciders.ts` holds a scenario with two decisions and the rows of L01–L20, as D-154 stores a choice: one
+`answered` per choice under the decision's `subContentId`, with the option's index as the response. **D1** has two
+options; option 1 leads to a page that loops back to D1. **D2** has three options, each an ending. *k* = 5.
+
+| Group | Learners | At D1 | At D2 |
+|---|---|---|---|
+| A | L01–L09 (9) | option 0 | L01–L06 option 0, L07–L08 option 1, L09 option 2 |
+| B | L10–L16 (7) | option 1, then (after the loop) option 0 | L10–L14 option 0, L15–L16 option 1 |
+| C | L17–L18 (2) | option 1, then they stop | — |
+| D | L19 (1) | option 0; in a second page load option 1 | — |
+| E | L20 (1) | starts, and sends three answers that are no choice (`7`, empty, `ein`) | — |
+
+- Started: **20**.
+- **D1**: learners who chose 9 + 7 + 2 + 1 = **19** (L20 made no choice). First choice: option 0 A 9 + D 1 = **10**;
+  option 1 B 7 + C 2 = **9**. Chose again: B 7 + D 1 = **8**.
+- **D2**: learners 9 + 7 = **16**. First choice: option 0 6 + 5 = **11**; option 1 2 + 2 = 4 → **«< 5»**; option 2
+  1 → **«< 5»**. Two hidden cells that are not alike (4 and 1) cannot be worked out from 16 − 11 = 5, so nothing more
+  is hidden. Chose again: **0**.
+- The decisions are no questions: the list of questions (INS-002) is **empty**, although 19 and 16 learners
+  answered under the two IDs.
+- With L01–L06 and L09–L14 only, D2 holds 11, 0 and 1: the single hidden 1 would follow from the total 12, so the 0
+  is hidden with it (`branchingChoices.test.ts`).

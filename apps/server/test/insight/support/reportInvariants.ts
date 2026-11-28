@@ -3,12 +3,14 @@
  * about 1 to k − 1 learners, no shown share or median is about fewer than k, a suppressed cell carries no value, a
  * hidden group hides all its cells (a hidden number of starters hides every question cell, a 0 too), and no hidden
  * count of an additive group follows from its total, also when INS-002's share correct gives away how many chose a
- * right option. That last check assumes single-answer choice questions, as the property datasets have.
+ * right option. That last check assumes single-answer choice questions, as the property datasets have. A Branching
+ * Scenario's decisions (INS-004) are groups too: the options under the decision's learners, «chose again» with them.
  *
  * Why: the `[INS-006]` property tests (D-114) run this on reports built from random datasets; it must not reuse the
  *      code it checks, so it reads only the report's cells and the relations between them.
  * Spec: INS-006
- * Tests: apps/server/test/insight/insightSuppression.property.test.ts, apps/server/test/insight/insightService.int.test.ts
+ * Tests: apps/server/test/insight/insightSuppression.property.test.ts, apps/server/test/insight/insightService.int.test.ts,
+ *   apps/server/test/insight/branchingSuppression.property.test.ts
  */
 import type { InsightReport } from '../../../src/insight/insightReport.js';
 
@@ -38,8 +40,17 @@ function countCells(report: InsightReport): [string, Cell | null][] {
     ...report.misconceptions.flatMap((entry) => groupsOf(entry).flatMap(({ cells }) => cells)),
     ...report.misconceptions.map((entry): [string, Cell] => [`question ${entry.item}`, entry.learners]),
     ...(report.videoEngagement ?? []).map((entry): [string, Cell] => [`video ${entry.item}`, entry.answered]),
+    ...(report.branching ?? []).flatMap((entry): [string, Cell][] => [
+      [`decision ${entry.item}`, entry.learners],
+      [`decision ${entry.item} choseAgain`, entry.choseAgain],
+      ...decisionCells(entry),
+    ]),
   ];
 }
+
+/** The option cells of one decision: one additive group under the decision's learners. */
+const decisionCells = (entry: NonNullable<InsightReport['branching']>[number]): [string, Cell][] =>
+  entry.options.map((option): [string, Cell] => [`decision option ${option.index}`, option.learners]);
 
 /** The additive groups of one misconception entry, with their total cell. */
 function groupsOf(
@@ -112,7 +123,7 @@ function wrongPartOf(
 
 /** The count cells about the learners who started: every question cell. */
 const questionCells = (report: InsightReport): Cell[] =>
-  cellsIn([report.items, report.misconceptions, report.videoEngagement]);
+  cellsIn([report.items, report.misconceptions, report.videoEngagement, report.branching]);
 
 /**
  * Lists every way a report breaks INS-006.
@@ -155,6 +166,17 @@ export function insightInvariantViolations(report: InsightReport): string[] {
       if (derived)
         problems.push(`question ${entry.item}: a hidden value follows from the total (${derived})`);
     }
+  }
+  for (const entry of report.branching ?? []) {
+    const cells = decisionCells(entry);
+    const all = valueOf(entry.learners);
+    // PRIVACY: a hidden decision hides its options and «chose again», a 0 too; a shown one gives no option away.
+    if (all === undefined && [...cells.map(([, cell]) => cell), entry.choseAgain].some((c) => !c.suppressed))
+      problems.push(`decision ${entry.item}: a hidden total shows a cell`);
+    const derived = all === undefined ? undefined : derivation(all, cells);
+    if (derived) problems.push(`decision ${entry.item}: a hidden value follows from the total (${derived})`);
+    if ((valueOf(entry.choseAgain) ?? 0) > (all ?? Infinity))
+      problems.push(`decision ${entry.item}: more learners chose again than chose`);
   }
   return problems;
 }

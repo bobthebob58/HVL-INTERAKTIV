@@ -8,6 +8,7 @@ import { describe, expect, it } from 'vitest';
 import { csvValue, insightCsvRows } from '../../src/insight/export/insightCsvRows.js';
 import { INTERACTIVE_VIDEO, IV3, Q1, Q3, QUESTION_SET } from './fixtures/insightActivities.js';
 import { questionSetRows, videoRows } from './fixtures/thirtyLearners.js';
+import { BRANCHING_SCENARIO_ACTIVITY, D1, D2, deciderRows } from './fixtures/twentyDeciders.js';
 import { reportOf } from './support/insightFixtureReport.js';
 
 const rows = insightCsvRows(reportOf(QUESTION_SET, questionSetRows(), { courseLearners: 40 }));
@@ -50,6 +51,28 @@ describe('[INS-009] CSV rows', () => {
       label: 'Til slutt',
       value: '< 5',
     });
+  });
+
+  it('[INS-009] writes a scenario’s decisions: who chose, each option’s first choices, and who chose again', () => {
+    // Act
+    const decisions = insightCsvRows(reportOf(BRANCHING_SCENARIO_ACTIVITY, deciderRows())).filter(
+      ({ section }) => section === 'decisions',
+    );
+    // Assert
+    expect(
+      decisions.map(({ item, part, label, measure, value }) => [item, part, label, measure, value]),
+    ).toEqual([
+      [D1, '', 'Korleis vil du bruke tida før samlinga?', 'choosers', '19'],
+      [D1, '1', 'Ein kort video og ein quiz', 'firstChoice', '10'],
+      [D1, '2', 'Ei lang pensumliste', 'firstChoice', '9'],
+      [D1, '', '', 'choseAgain', '8'],
+      [D2, '', 'Korleis gjer du materiellet tilgjengeleg?', 'choosers', '16'],
+      [D2, '1', 'Tekstar videoen', 'firstChoice', '11'],
+      [D2, '2', 'Eigne versjonar på førespurnad', 'firstChoice', '< 5'],
+      [D2, '3', 'Papir på samlinga', 'firstChoice', '< 5'],
+      [D2, '', '', 'choseAgain', '0'],
+    ]);
+    expect(rows.some(({ section }) => section === 'decisions')).toBe(false);
   });
 
   it('[INS-006] never writes a hidden value in any form', () => {

@@ -16,7 +16,7 @@ what is done, what is verified, and what is blocked.
 | S4+ | Whole-code-base simplification pass (owner decision, 2026-10-24) | — | ✅ Done (2026-10-25): 59 changes, 569 lines shorter, every test kept, S4 gate green again; a second round is the owner's call |
 | S5 | Læringsdesign studio, patterns, planner, pedagogisk mappe export | 04; 00 S5 rows | ✅ Gate passed (2026-10-30); the ALU and pilot review (Q17), the bank consent text and the manual PDF check open; the Canvas side in S6 |
 | S6 | xAPI → AGS grade bridge, insight, privacy jobs, Docker, conformance report | 02 §4–§8; 05; 00 §3 (journeys J1–J5), §6; 01 `H5P-009`, `H5P-010`, `SEC-004`, `SEC-006`; 03 `UD-003`, §6 (`UD-040`); 04 `MAPPE-003`, `MAPPE-004` (D-101) | ✅ Done (gate passed 2026-11-06; started 2026-10-30; D-101…D-116) |
-| SR | Security repairs after the S6 gate: 37 steps, each with tests, a gate run and a decision entry | The spec a step names | ✅ Done (2026-11-20 to 2026-11-28; D-117…D-153; session log, steps 1–37); open: HVL IT's and the owner's questions Q32, Q33 and Q34, with the earlier ones |
+| SR | Security repairs after the S6 gate: 38 steps, each with tests, a gate run and a decision entry | The spec a step names | ✅ Done (2026-11-20 to 2026-11-28; D-117…D-154; session log, steps 1–38); open: HVL IT's and the owner's questions Q32, Q33 and Q34, with the earlier ones |
 
 Legend: ⬜ not started · 🟨 in progress · ✅ done (gate passed, output pasted below) · ⛔ blocked
 
@@ -974,7 +974,7 @@ under the step that does it):
 | Q4 | Paste `docs/reference/canvas-lti13-developer-key.json` into HVL's test Canvas; report client ID, deployment ID, which instance TeCopp uses (test/beta/production), and whether `feide_login` arrives under `privacy_level` anonymous and equals the Feide ID; only then set `"feideLinking": true` for that platform in `LTI_PLATFORMS` (AUTH-005, D-063) | TeCopp | S3 |
 | Q16 | ~~The repository has no `main` branch, and CI (`.github/workflows/ci.yml`) runs only on pushes to `main` and on pull requests, so GitHub has never run the gate: every session's gate ran locally only. Create `main` from `ccr-07f63266-6cere5` or open a pull request, and decide what to do with the open Dependabot update branches (pins stay exact). **Required before the pilot (owner, 2026-10-24).**~~ Resolved 2026-10-30 (D-101): GitHub CI runs on `main` and on pull requests. `main` is protected by a ruleset that requires a pull request and CI's «Session gate» check; that check passed on pull request #8 (run 41066236672, on `72e5516`), which was then merged (`47e235e`); Dependabot opens one grouped monthly pull request per ecosystem (S5 start). The push run on the merge (run 41075981429) was red: its end-to-end step failed in `appPlayEditor.e2e`, which pressed «Lagre» before the editor could save, a real slow-device fault. It is fixed in S6 step 0; GitHub's confirmation comes with that step's push | — | — |
 | Q5 | Hosting: HVL on-premises or Sikt, both in the EEA (`DATA-004`). The container runtime must allow Playwright's seccomp profile and `CAP_SYS_CHROOT` for the PDF export's sandbox (OpenShift's `restricted-v2` allows neither), a DNS name and certificate for the files host (`files.<host>`, or a separate registrable domain), and a clamd with daily signatures (D-110's step-6 amendments) | HVL IT | S6 |
-| Q6 | Data protection officer confirms the legal basis and reviews DPIA input (`DATA-005`). **Input complete 2026-11-05:** `docs/privacy/DPIA-INPUT.md` (purposes, operations, data flows with a diagram, the Canvas key's `privacy_level` and custom fields, recipients, retention, rights, security measures, residuals R1–R40, and the DPO's questions in its §13) | HVL DPO | S6, pilot |
+| Q6 | Data protection officer confirms the legal basis and reviews DPIA input (`DATA-005`). **Input complete 2026-11-05:** `docs/privacy/DPIA-INPUT.md` (purposes, operations, data flows with a diagram, the Canvas key's `privacy_level` and custom fields, recipients, retention, rights, security measures, residuals R1–R43, and the DPO's questions in its §13). A short way in for a first meeting: `docs/privacy/dpo-first-meeting.md` | HVL DPO | S6, pilot |
 | Q17 | Review the studio's drafts: phase labels and texts, the guide and its references, the nine patterns, the mappe template, criteria and limits, and the content bank's consent text (with HVL's lawyers); pilot teachers try the patterns; from S6 also the H5P texts and the video guidance in `content/h5p-tekstar/` (§9a, D-111). Packet: `docs/reference/alu-review-s5.md` (D-100). **Required before the pilot.** | ALU, Pedagogisk akademi, HVL legal | The pilot |
 | Q18 | Should InteractiveBook and InteractiveVideo send a score to Canvas? H5P sends none unless asked. Default until answered (D-115): InteractiveBook does, through H5P's own «Send inn rapport» on the summary page (`reportingIsEnabled`, set for learners only, so an author's preview never offers it; the library then says «Svara dine er sende inn til vurdering», which the language overlay can reword, D-111); an InteractiveVideo only when its author adds a submit screen, so the `fa-video` pattern sends none | ALU / owner | The pilot |
 | Q19 | Every ending of the `uv-case` pattern scores 10 of 10, as the pattern intends, so Canvas gets 100 for any completed case. Keep that as a completion mark (the default, D-115), score the choices (a pattern change ALU reviews), or give `uv-case` no Canvas score? | ALU | The pilot |
@@ -3814,3 +3814,129 @@ Append one entry per session: date, session, what was done, gate output, and any
     editor in a page of its own and waits for a file's answer where one is due. Both pass with the late answers,
     twice as they are, and once with every processor busy. One thing the slowed run showed about H5P's tool:
     pressed before the form's picture is drawn, its controls lay outside the part of the editor frame that shows.
+
+- **2026-11-28 · Security repairs, step 38 (D-154)** — for a Branching Scenario the **Innsikt** tab now shows the
+  learners' choices at each decision (`INS-004`). The owner chose to build it and approved the design after the
+  probe.
+  - A browser test came first, as D-115 asked. It played the real example in four ways: through its loop back to
+    a decision, with the back button, with a reload after the first choice, and with «Start på nytt». H5P sends
+    no statement that says which option was chosen, but for every choice it makes the question's own `answered`
+    statement and keeps it in the page; a decision made again is kept again; a reload and the back button add
+    no choice. So nothing had to be invented.
+  - The player (`LTI-010`): a fifth small script hands the bridge what H5P kept about each choice, and the
+    bridge cuts and sends it like any answer: the decision's ID and the option's number, never a text, and not
+    the time spent at the decision, which H5P's record also holds. If the script cannot read the record it sends
+    nothing. The server stores it with the rules and the table it had: no
+    migration and no new field. This is a `SPEC-DEVIATION` from `LTI-010` only.
+  - The real-browser test of the script found a fault in it before anything was pushed: the last choice before an
+    end screen was sent with the next attempt's number, because H5P raises the scenario's result inside the same
+    move, before the script is handed the choice. A choice now carries the attempt it was made in.
+  - The view (`INS-004`, `INS-006`): per decision, how many learners chose there, how many chose each option the
+    first time they met the decision, and how many chose there again. A decision's options are hidden below *k*
+    as one group, with a complement; a decision with fewer than *k* learners is hidden whole. The current
+    content's decisions are not in the list of questions. The CSV file has the same figures. Never shown: one learner's choices or path,
+    a figure that joins two decisions, the time of a choice.
+  - Editing (`PROD-013`): a decision's options are part of the answer key, so a save that rewords an option, or
+    swaps two that lead to the same place, starts a new version and keeps the learners' progress. A count
+    cannot land under another text. Adding, removing or re-pointing an option was a structural save already: it
+    asks first and resets progress, as before.
+  - The page: the new part «Val ved kvar avgjerd» in Nynorsk, Bokmål and English, each decision with a summary
+    sentence, a chart and a table. The table has two columns and fits a phone without sideways scrolling.
+  - Privacy: each choice is now a stored row under the learner's pseudonym, deleted in the yearly purge and
+    covered by a data subject's export and erasure like every answer. The DPIA input says what is stored, why,
+    for how long and what a teacher can and cannot see, and gives the data protection officer two new residuals
+    and a question: the figures of a part that can be reached only through one option bound that option's
+    hidden cell for a reader who knows how the scenario is built (R42), and the stored rows give one pseudonym's
+    path, where a choice in a dilemma can show an attitude (R43). The threat model, the ROS analysis and the human-review checklist point there.
+  - As promised after step 37, the three new browser tests ran with every answer 1.5 s late and with every
+    processor busy before the first push. The slow run found a wait of one second in the end-to-end test (the
+    list of courses is fetched after the page); it is 30 s now. All three then passed both ways.
+  - A report for H5P is drafted (`docs/upstream/h5p-branching-scenario-choice-statement.md`): dispatch the
+    statement the libraries already build.
+  - Plays from before this step have no stored choices, so their decisions show no learners.
+  - The owner asked that the two machines be written down (2026-11-28): the Evaluator Guide has a new §5.1 on
+    what this container and GitHub's runner each check and why the slower one matters, and the project rules
+    (`CLAUDE.md`) now ask every later session to run a new or changed browser test delayed and under load
+    before its first push.
+  - The owner asked for a record of where the service is safer than the H5P software it builds on, and where
+    it is not (2026-11-28; "honesty is key"). `docs/assurance/compared-with-h5p.md` is its first version:
+    fourteen rows, each with what the H5P software does as it comes, what this service does, the file or test
+    that shows it, and what limits the claim; a section on where the service is not better or is more limited
+    (it stores learning events the bare library does not, it carries the library's unpatched flaw, it accepts
+    SVG and larger files than the library's defaults); and a section on what was not verified, H5P.com above
+    all. The comparison is with the software only: H5P Core, the server library and ltijs as installed here,
+    read in their own files. A project rule asks later steps to keep it true.
+  - The owner asked for a short paper for the data protection officer's first meeting (2026-11-28).
+    `docs/privacy/dpo-first-meeting.md` says what the service does with personal data, lists the nine questions,
+    sorts the 43 residuals of the DPIA input into seven themes, suggests which to look at first and what the
+    meeting should decide. It adds nothing to the DPIA input, which stays the authority.
+    `npm run privacy:dpia-check` now also fails when the brief's table does not name every residual of §12
+    exactly once, when a theme's count is wrong, or when the brief cites a residual §12 does not list
+    (`tools/privacy/dpoBriefProblems.mjs`, with tests).
+  - The gate found two things that GitHub would have refused. A document test in the server suite still
+    expected the DPO to be asked about «R1–R41» (`dpiaRecordedLearners.test.ts`): it had not been run again
+    after the DPIA input gained R42 and R43, and it now reads the table's last residual instead of a number
+    typed by hand. And `npm run docs:api` stopped on a warning: the type of the text reader that the second
+    read's correction gave `branchingDecisions` was not exported, so the API documentation named a type it did
+    not hold. It is exported and described now (`DecisionTextReader`).
+  - The browser test that changed after the second read (a reload while a feedback screen shows) then ran with
+    every answer 1.5 s late and with every processor busy, and passed both ways.
+  - The gate: the build, the Docker smoke test, the server suite, the end-to-end tests, the accessibility
+    suites and the live seam ran on commit `da19b855c649`. The five smaller suites and the static checks ran
+    after the corrections and the two papers, on the files of this commit: the session's own run script had
+    passed those five suites a wrong name the first time, so they had not run. Apart from the two things above,
+    nothing failed that does not fail in this container for every step. The accessibility run is recorded in
+    the conformance report (578 tests, 183 scans) on commit `da19b855c649`. Gate output:
+
+  ```
+  $ npm run build                                      exit 0
+  $ HVLI_DOCKER_SANDBOX=1 bash deploy/smoke/dockerSmoke.sh   passed in 232 s (the PDF printed in the app
+      container with the sandbox seen in /proc; the standstill and restart checks passed)
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run lint:css                                   exit 0
+  $ npm run doc:lint && npm run check:filesize         11 checks passed; file-size passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run privacy:dpia-check                         13 sections, the developer key, the residuals and the DPO's brief agree
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins && npm run check:licences       every version pinned; 489 production packages compatible
+  $ npm run check:lockfile                             949 packages from the registry with sha512; 4 install scripts reviewed
+  $ npm run check:workflows                            3 workflows: actions by commit, images by digest
+  $ npm run check:audit                                2 high/critical advisories, both covered by reviewed exceptions
+  $ npm run sbom -- --check                            current: 478 npm packages, 12 H5P components, 3 images
+  $ npm run content:check && npm run tokens:check      exit 0
+  $ node tools/spec-site/buildSpecSite.mjs --check     up to date
+  $ node tools/deploy-check/checkDeployFiles.mjs       exit 0
+  $ npm run docs:api                                   exit 0 (after the correction; the first run stopped on the warning)
+  $ npm run a11y:report -- --check                     exit 0
+  $ npx vitest run --project web                       693 passed (107 files)
+  $ npx vitest run --project api-contract              124 passed (15 files)
+  $ npx vitest run --project tools                     609 passed (82 files)
+  $ npx vitest run --project design-tokens             162 passed
+  $ npx vitest run --project hvl-h5p-theme             226 passed
+  $ LIVE_TARGET=mock npm run test:live                 36 passed
+  $ npm run test:a11y                                  578 passed (19 files)
+  $ npm run test:e2e                                   43 passed, 1 skipped; 1 file failed: learnerDataRights
+      (needs the privileged database, like DATA-010's tests)
+  $ npx vitest run --project server                    27203 passed, 31 skipped; 2 failed in 5 files: a
+      privileged database (three files) and the seccomp PDF sandbox, limits of this container (DATA-010,
+      MAPPE-004), and the document test named above
+  $ npx vitest run --project server apps/server/test/insight apps/server/test/privacy \
+      apps/server/test/learningDesign/safeEditing/answerKeyVersions.int.test.ts
+                                                       after both corrections: 404 passed, 5 skipped; 1 file
+      failed: operationsClis (the privileged database)
+  ```
+  - One existing figure changes for a scenario: «median tid» is measured from a page load's first to its last
+    stored statement, so a learner who chose at least once without finishing now has a measured time.
+  - A second reader, not the writer, read the whole change and ran nothing. No fault in what is sent, stored,
+    counted or hidden; fourteen points, all acted on or answered. The ones that changed something: the DPIA
+    input's R42 stated the bound wrongly (a cell holds first choices, so the bound runs through «Valde på nytt»),
+    and is restated with the other figures that bound the same way; each choice also carried H5P's time spent
+    at the decision and `completion`, which no document named and insight does not read, so the script now
+    hands on the index alone; the answer key compared an option's text only up to the 300 characters the view
+    shows, and compares it whole now; two options chosen first by equally many were named as one «most
+    chosen», and are named as a tie; four documents said decisions are never rows of the question list, and a
+    removed decision is one in a view of an older version; "the back button and a reload add nothing to the
+    list" was true of choices only. New tests from the read: a reload while a feedback screen shows, where H5P
+    presses the option again itself (the choice is sent once), a check for a late duplicate after the bridge's
+    next batch, and a reworded option through the real save route.

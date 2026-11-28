@@ -45,7 +45,7 @@ The server serves the document at `GET /api/docs` when `NODE_ENV` is not `produc
 | `src/xapiResponseCaps.ts` | Which answers are stored, each gap cut to 100 characters and an answer over 1 000 dropped (`DATA-012`, `INS-003`, D-115) |
 | `src/gradeSync.ts` | `GET …/grade-sync` and `POST …/grade-sync/retry`: job counts per placement, not *k*-suppressed (`LTI-012`, D-104) |
 | `src/insight.ts` | What every insight answer shares: the fixed periods, the context and version, and a cell that is shown or `{ suppressed: true }` with no value (`INS-006`, D-106) |
-| `src/insightReport.ts` | `GET …/insight`: one view's participation, item difficulty, misconceptions and video engagement, every number a cell from `insight.ts`, "not available" as `null` (`INS-001`…`INS-003`, `INS-005`, `INS-006`, D-115); mirrors the server's `insightReport.ts` |
+| `src/insightReport.ts` | `GET …/insight`: one view's participation, item difficulty, misconceptions, video engagement and, for a Branching Scenario, `branching` (each decision's first choices and «Valde på nytt»), every number a cell from `insight.ts`, "not available" as `null` (`INS-001`…`INS-006`, D-115, D-154); mirrors the server's `insightReport.ts` |
 | `src/insightContextList.ts` | `GET …/insight/contexts`: the contexts the person may view, key and label only, no count (`INS-007`, D-106) |
 | `src/insightFindings.ts` | `GET …/insight/findings`: the validator's findings for every insight reader, an acknowledgement's reason only for editors (`INS-010`, `UD-022`) |
 | `src/routes/routeResponses.ts` | The answers every area shares (401, 400, 404, 403) and the `:contentId` parameter |
@@ -111,4 +111,4 @@ None. The server decides whether to serve `/api/docs` from `NODE_ENV` (see `apps
 `DOC-012` (schemas and document), and the shapes of `PROD-003`, `UD-022`, `PROD-011`, `PROD-006`, `DATA-002`,
 `PED-001`, `PED-002`, `PED-010`, `PED-030`, `PED-031`, `PED-032`, `PROD-001`, `PROD-007`, `MAPPE-001`, and from S6
 `LTI-011`, `DATA-012`, `LTI-012`, and the insight answers of `INS-001`…`INS-003`, `INS-005`, `INS-006`, `INS-007`,
-`INS-009` and `INS-010`.
+`INS-009` and `INS-010`, and from step 38 `INS-004` (D-154).
