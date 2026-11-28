@@ -1,7 +1,8 @@
 /**
  * Unit tests of the decisions insight reads from a Branching Scenario's parameters (INS-004): the real example's two
  * decisions with their options in stored order, what is no decision, and that a reworded, moved, added or removed
- * option is a changed answer key, so the save starts a new version (D-154).
+ * option is a changed answer key (D-154). What a save then does is the save gate's:
+ * apps/server/test/learningDesign/safeEditing/answerKeyVersions.int.test.ts.
  *
  * Spec: INS-004, PROD-013
  */
@@ -68,7 +69,7 @@ describe('[INS-004] the decisions of a Branching Scenario', () => {
     expect(questionCatalogue(SCENARIO, example.params)).toEqual([]);
   });
 
-  it('[PROD-013] a decision’s options are its answer key: reworded, swapped, added or removed is a new version', () => {
+  it('[PROD-013] a decision’s options are its answer key: reworded, swapped, added or removed is another key', () => {
     // Arrange
     const before = keys(BRANCHING_SCENARIO_ACTIVITY.params);
     const changed = [
@@ -86,5 +87,17 @@ describe('[INS-004] the decisions of a Branching Scenario', () => {
     expect(differs).toEqual([true, true, true, true]);
     expect(answerKeysDiffer(before, keys(sameText))).toBe(false);
     expect(answerKeysDiffer(before, keys(structuredClone(BRANCHING_SCENARIO_ACTIVITY.params)))).toBe(false);
+  });
+
+  it('[PROD-013] the key compares the whole text of an option, also past the length insight shows', () => {
+    // Arrange: two options that differ only after the 300 characters the view shows
+    const long = (end: string) => `<p>${'Eit langt alternativ. '.repeat(20)}${end}</p>`;
+    const first = withOptions(([a, b]) => [a!, { ...b!, text: long('Ja') }]);
+    const second = withOptions(([a, b]) => [a!, { ...b!, text: long('Nei') }]);
+    // Act
+    const shown = [first, second].map((params) => branchingDecisions(SCENARIO, params)[0]?.options[1]);
+    // Assert
+    expect(shown[0]).toBe(shown[1]);
+    expect(answerKeysDiffer(keys(first), keys(second))).toBe(true);
   });
 });

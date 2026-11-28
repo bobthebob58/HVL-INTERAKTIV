@@ -18,8 +18,9 @@
  *     and whether the task is case-sensitive. Any other question has no key.
  *   - Question texts, option texts, tips and feedback are not part of a key, nor is the order of a gap's accepted
  *     alternatives.
- *   - A decision's key is its options' texts in stored order (./branchingDecisions.ts, D-154): a stored choice is
- *     an index, and the option is all a choice can be read by, so a reworded or moved option is a changed key.
+ *   - A decision's key is its options' whole plain texts in stored order (./branchingDecisions.ts, D-154): a
+ *     stored choice is an index, and the option is all a choice can be read by, so a reworded or moved option is a
+ *     changed key, also when the change lies past the length insight shows.
  *   - Questions are matched by their item ID, never by order: PostgreSQL's jsonb orders object keys its own way,
  *     so the stored parameters and the editor's may list the same questions differently.
  *   - Pure; never throws on author data.
@@ -27,7 +28,11 @@
  *   ../../learningDesign/safeEditing/LearnerStateGate.ts (asks on every save of an existing activity).
  * Tests: apps/server/test/insight/answerKeys.test.ts
  */
-import { libraryKey, machineNameOf } from '../../learningDesign/safeEditing/subContentNodes.js';
+import {
+  libraryKey,
+  machineNameOf,
+  plainTextOfValue,
+} from '../../learningDesign/safeEditing/subContentNodes.js';
 import { branchingDecisions } from './branchingDecisions.js';
 import { normaliseGapAnswer } from './gapSolutions.js';
 import { questionCatalogue } from './questionCatalogue.js';
@@ -71,7 +76,7 @@ export function answerKeys(mainLibrary: string, params: unknown): AnswerKeys {
     const key = answerKeyOf(question.shape);
     if (key !== null) keys.set(question.item, key);
   }
-  for (const { item, options } of branchingDecisions(machineName, params))
+  for (const { item, options } of branchingDecisions(machineName, params, plainTextOfValue))
     keys.set(item, JSON.stringify(['decision', options]));
   return keys;
 }

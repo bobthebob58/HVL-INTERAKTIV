@@ -173,18 +173,17 @@ export const optionLabel = (option: BranchingOptionInsight, locale: Locale): str
  * INS-004: the option most learners chose first at a decision, among the shown counts.
  * @param decision - The decision.
  * @param locale - The page locale.
- * @returns The summary; the option's own text is its quoted part, the name of one without text is not.
+ * @returns The summary; the option's own text is its quoted part, the name of one without text is not. Options
+ *   with the same highest count are named as a tie, never one of them as the most chosen.
  */
 export function decisionSummary(decision: BranchingDecisionInsight, locale: Locale): QuotedText {
-  let best: BranchingOptionInsight | undefined;
-  for (const option of decision.options) {
-    const count = shownValue(option.learners) ?? 0;
-    if (count > 0 && count > (shownValue(best?.learners ?? null) ?? 0)) best = option;
-  }
-  if (!best) return plainText(t('insight.branching.summaryNone', locale));
-  const params = {
-    option: optionLabel(best, locale),
-    count: formatValue(shownValue(best.learners) ?? 0, 'count', locale),
-  };
+  const counts = decision.options.map((option) => shownValue(option.learners) ?? 0);
+  const highest = Math.max(0, ...counts);
+  if (highest === 0) return plainText(t('insight.branching.summaryNone', locale));
+  const count = formatValue(highest, 'count', locale);
+  const leaders = decision.options.filter((_, index) => counts[index] === highest);
+  const [best] = leaders;
+  if (!best || leaders.length > 1) return plainText(t('insight.branching.summaryTie', locale, { count }));
+  const params = { option: optionLabel(best, locale), count };
   return quotedSentence('insight.branching.summary', locale, params, best.text ? 'option' : undefined);
 }

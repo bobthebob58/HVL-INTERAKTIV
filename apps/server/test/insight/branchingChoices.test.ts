@@ -64,7 +64,7 @@ describe('[INS-004] the choices at each decision', () => {
   });
 
   it('[INS-006] one option below k hides a second cell, and a decision with fewer than k learners hides all', () => {
-    // Arrange: L01–L14 only: D2's options hold 11, 2 and 1; then without L15–L16 and L07–L08, 11, 0 and 1
+    // Arrange: L01–L14 without L07 and L08, so D2's options hold 11, 0 and 1; and L01–L03 alone
     const fourteen = deciderRows().filter(
       ({ learnerKey }) => learnersOf(14)(learnerKey) && !['07', '08'].includes(learnerKey.slice(-2)),
     );

@@ -19,7 +19,7 @@
  *     decisions, and none is about one learner's path (D-154).
  * Collaborators: ../content/branchingDecisions.ts, ../suppression/additiveGroupCells.ts, ../buildInsightReport.ts.
  * Tests: apps/server/test/insight/branchingChoices.test.ts,
- *   apps/server/test/insight/insightSuppression.property.test.ts
+ *   apps/server/test/insight/branchingSuppression.property.test.ts
  */
 import type { MinimumGroupSize } from '../../privacy/minimumGroupSize.js';
 import type { BranchingDecision } from '../content/branchingDecisions.js';

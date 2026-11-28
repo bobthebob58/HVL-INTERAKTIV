@@ -13,7 +13,16 @@ import { BranchingSection } from '../../../src/features/insight/BranchingSection
 import { InsightPanel } from '../../../src/features/insight/InsightPanel';
 import { LocaleProvider } from '../../../src/i18n/LocaleContext';
 import { fakeFetch } from '../../support/fakeFetch';
-import { CONTEXTS, CONTEXTS_PATH, FINDINGS_PATH, ID, plain, PORTAL_PATH, REPORT } from './insightAnswers';
+import {
+  CONTEXTS,
+  CONTEXTS_PATH,
+  FINDINGS_PATH,
+  ID,
+  plain,
+  PORTAL_PATH,
+  REPORT,
+  shown,
+} from './insightAnswers';
 import { BRANCHING_REPORT } from './insightBranchingAnswers';
 import { FINDINGS } from './insightOtherAnswers';
 
@@ -92,6 +101,18 @@ describe('[INS-004] the decisions of a Branching Scenario on the Innsikt tab', (
       );
     expect(bars(figures[0])).toEqual([1, 1]);
     expect(bars(figures[1])).toEqual([1, 0, 0]);
+  });
+
+  it('[INS-008] two options chosen first by equally many are named as a tie, not one of them as the most chosen', () => {
+    // Arrange
+    const [first] = decisions;
+    const tied = { ...first!, options: first!.options.map((option) => ({ ...option, learners: shown(9) })) };
+    // Act
+    render(<BranchingSection decisions={[tied]} k={5} olderVersion={false} />);
+    // Assert
+    expect(plain(screen.getByRole('figure').querySelector('figcaption')?.textContent)).toBe(
+      'Fleire alternativ vart valde først av like mange av dei som kan visast: 9 studentar kvar.',
+    );
   });
 
   it('[UD-010] the activity’s own texts carry its language; a decision or option without text is named by its place', () => {

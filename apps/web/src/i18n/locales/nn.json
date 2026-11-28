@@ -679,7 +679,8 @@
       "colOption": "Alternativ",
       "colLearners": "Studentar (første val)",
       "summary": "Mest valt først av dei som kan visast: «{{option}}», valt av {{count}} studentar.",
-      "summaryNone": "Ingen alternativ er valde av nok studentar til at dei kan visast."
+      "summaryNone": "Ingen alternativ er valde av nok studentar til at dei kan visast.",
+      "summaryTie": "Fleire alternativ vart valde først av like mange av dei som kan visast: {{count}} studentar kvar."
     },
     "video": {
       "heading": "Video: kor mange svarte på oppgåvene",

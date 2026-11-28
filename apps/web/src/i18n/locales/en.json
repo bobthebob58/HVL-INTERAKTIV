@@ -679,7 +679,8 @@
       "colOption": "Option",
       "colLearners": "Students (first choice)",
       "summary": "Most chosen first, of those that can be shown: “{{option}}”, chosen by {{count}} students.",
-      "summaryNone": "No option was chosen by enough students to be shown."
+      "summaryNone": "No option was chosen by enough students to be shown.",
+      "summaryTie": "Several options were chosen first by equally many of those that can be shown: {{count}} students each."
     },
     "video": {
       "heading": "Video: how many answered the tasks",

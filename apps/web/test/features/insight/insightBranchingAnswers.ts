@@ -1,10 +1,11 @@
 /**
- * insightBranchingAnswers — the insight view of a Branching Scenario the Innsikt tab's tests fake (INS-004): two
- * decisions with shown and hidden first choices, a decision and an option without text, and the count of learners
- * who chose again.
+ * insightBranchingAnswers — the insight view of a Branching Scenario the Innsikt tab's tests fake (INS-004): three
+ * decisions, two with shown and hidden first choices and one, with an option, without text, each with the count of
+ * learners who chose again.
  *
- * Why: the numbers are the server fixture's (apps/server/test/insight/fixtures/README.md, twenty learners), so what
- *      the tab shows here is what a real view holds; the third decision has no text, which the tab must still name.
+ * Why: the first two decisions' numbers are the server fixture's (apps/server/test/insight/fixtures/README.md,
+ *      twenty learners), so what the tab shows here is what a real view holds; the third decision has no text,
+ *      which the tab must still name.
  * Spec: INS-004, INS-006
  * Collaborators: ./insightAnswers.ts.
  * Tests: apps/web/test/features/insight/InsightBranching.test.tsx

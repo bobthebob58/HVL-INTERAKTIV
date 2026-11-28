@@ -11,7 +11,8 @@
  *     `type` is an H5P.BranchingQuestion with a `subContentId`. A node without one is left out: the server stores
  *     no answer without an ID (D-121). A repeated ID counts once, the first.
  *   - The options are in stored order, since a choice is stored as the option's index.
- *   - Texts are plain text, cut to insight's length (./questionShapes.ts). Never throws on author data.
+ *   - Texts are plain text, cut to insight's length (./questionShapes.ts) unless the caller reads them whole, as
+ *     the answer key does (./answerKeys.ts). Never throws on author data.
  *   - A decision is not a question: it is in no question catalogue (./questionCatalogue.ts) and has no right answer.
  * Collaborators: ../aggregate/branchingChoices.ts, ../buildInsightReport.ts, ./answerKeys.ts,
  *   ../../learningDesign/safeEditing/subContentNodes.ts.
@@ -24,6 +25,9 @@ import {
   objectOf,
 } from '../../learningDesign/safeEditing/subContentNodes.js';
 import { insightText } from './questionShapes.js';
+
+/** Reads one text of the parameters as plain text. */
+type TextReader = (value: unknown) => string;
 
 /** The main library whose activities have decisions. */
 export const BRANCHING_SCENARIO = 'H5P.BranchingScenario';
@@ -42,13 +46,18 @@ export interface BranchingDecision {
  * Lists a scenario's decisions.
  * @param mainLibrary - The main library's machine name, e.g. `H5P.BranchingScenario`.
  * @param params - The activity's parameters (content.json).
+ * @param text - How a text is read: cut to insight's length by default.
  * @returns The decisions in the content's order; none for any other main library.
  * @example
  * branchingDecisions('H5P.BranchingScenario', params);
  * // → [{ item: 'b3a7…3c02', text: 'Korleis vil du bruke tida før samlinga?', options: ['Eg lagar …', 'Eg sender …'] }]
  * @spec INS-004
  */
-export function branchingDecisions(mainLibrary: string, params: unknown): BranchingDecision[] {
+export function branchingDecisions(
+  mainLibrary: string,
+  params: unknown,
+  text: TextReader = insightText,
+): BranchingDecision[] {
   if (mainLibrary !== BRANCHING_SCENARIO) return [];
   const found = new Map<string, BranchingDecision>();
   for (const node of listOf(objectOf(objectOf(params).branchingScenario).content)) {
@@ -60,8 +69,8 @@ export function branchingDecisions(mainLibrary: string, params: unknown): Branch
     const question = objectOf(objectOf(type.params).branchingQuestion);
     found.set(item, {
       item,
-      text: insightText(question.question),
-      options: listOf(question.alternatives).map((alternative) => insightText(objectOf(alternative).text)),
+      text: text(question.question),
+      options: listOf(question.alternatives).map((alternative) => text(objectOf(alternative).text)),
     });
   }
   return [...found.values()];

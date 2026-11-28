@@ -16,7 +16,8 @@
  *     shown only when at least k learners gave it.
  * Collaborators: @hvl-interaktiv/api-contract (`insight.ts`: the cells and the scope), ./buildInsightReport.ts,
  *   ./InsightService.ts, ./export/insightCsvRows.ts, the API workstream (apps/server/src/insight/http).
- * Tests: apps/server/test/insight/thirtyLearners.test.ts, apps/server/test/insight/insightSuppression.property.test.ts
+ * Tests: apps/server/test/insight/thirtyLearners.test.ts, apps/server/test/insight/insightSuppression.property.test.ts,
+ *   apps/server/test/insight/branchingChoices.test.ts
  */
 import type {
   InsightCountCell,
