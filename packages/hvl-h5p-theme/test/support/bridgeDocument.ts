@@ -9,8 +9,8 @@
  * Invariants:
  *   - Scripts run only through `window.eval` of the package's own files, in the player's order.
  *   - The timer never runs by itself: `tick()` is the bridge's 2-second interval; answers come only from `answer()`.
- * Collaborators: ../../src/xapiSingleChoiceSet.js, ../../src/xapiStatements.js, ../../src/xapiBatching.js,
- *   ../../src/xapiBridge.js.
+ * Collaborators: ../../src/xapiSingleChoiceSet.js, ../../src/xapiBranchingChoices.js, ../../src/xapiStatements.js,
+ *   ../../src/xapiBatching.js, ../../src/xapiBridge.js.
  * Tests: packages/hvl-h5p-theme/test/xapiBridge.test.ts, packages/hvl-h5p-theme/test/xapiBridgeSending.test.ts,
  *   packages/hvl-h5p-theme/test/xapiBridgeRecovery.test.ts, packages/hvl-h5p-theme/test/xapiStatements.test.ts,
  *   packages/hvl-h5p-theme/test/xapiBatching.test.ts
@@ -22,6 +22,7 @@ const source = (name: string) => readFileSync(new URL(`../../src/${name}`, impor
 /** The bridge's scripts, in the player's order. */
 export const BRIDGE_SCRIPTS = [
   'xapiSingleChoiceSet.js',
+  'xapiBranchingChoices.js',
   'xapiStatements.js',
   'xapiBatching.js',
   'xapiBridge.js',

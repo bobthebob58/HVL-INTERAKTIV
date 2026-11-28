@@ -52,11 +52,12 @@ describeWithServices('[LTI-010] the xAPI bridge on the Canvas player page', () =
     });
     expect(bridge.scripts).toEqual([
       'xapiSingleChoiceSet.js',
+      'xapiBranchingChoices.js',
       'xapiStatements.js',
       'xapiBatching.js',
       'xapiBridge.js',
     ]);
-    expect(bridge.coreScripts).toHaveLength(4);
+    expect(bridge.coreScripts).toHaveLength(5);
     expect(bridge.bridgeAfterTheme).toBe(true);
     expect(bridge.reporting).toBe(true);
   });
