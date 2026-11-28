@@ -59,7 +59,7 @@ describeWithServices('signed upload URLs', () => {
   it('[SEC-004] a file name no stored upload can have is refused, never a server error and never a file', async () => {
     // Arrange: a dot segment, a NUL byte and a backslash, each behind the owner's own grant
     const own = `/h5p/uploads/${grantFor(author.actor.accountId)}/${author.actor.accountId}`;
-    const names = ['..%2F..%2Fsecret.png', `${file}%00.svg`, file.replace('/', '%5C')];
+    const names = ['..%2F..%2Fsecret.png', `${file}%00.svg`, file.replaceAll('/', '%5C')];
     // Act
     const answers = await Promise.all(names.map((name) => request(tb.app).get(`${own}/${name}`)));
     // Assert

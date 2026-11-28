@@ -185,12 +185,12 @@ describeWithServices('[SEC-004] the editor’s files on the files origin', () =>
       .map((directive) => directive.split(' ')[0]);
     expect(naming).toEqual(['img-src', 'media-src']);
     expect(integration?.crossorigin).toBe('anonymous');
-    const grant = '[\\w-]+\\.\\d+\\.[\\w-]{43}';
-    const escaped = origin.replace(/\./g, '\\.');
-    expect(contentUrl).toMatch(new RegExp(`^${escaped}/h5p/editor-files/${grant}/${owned}$`));
-    expect(integration?.editor.filesPath).toMatch(
-      new RegExp(`^${escaped}/h5p/uploads/${grant}/${principal.userId}$`),
-    );
+    // WHY: an address is `<files origin>/h5p/<kind>/<grant>/<subject>`; its parts are compared one by one.
+    const parts = (url = '') => [new URL(url).origin, ...new URL(url).pathname.split('/').slice(1)];
+    const grant = expect.stringMatching(/^[\w-]+\.\d+\.[\w-]{43}$/) as unknown;
+    const prefix = [origin, 'h5p'];
+    expect(parts(contentUrl)).toEqual([...prefix, 'editor-files', grant, owned]);
+    expect(parts(integration?.editor.filesPath)).toEqual([...prefix, 'uploads', grant, principal.userId]);
     const file = await onFilesOrigin(tb, `${contentUrl.slice(origin.length)}/${STORED.image}`);
     expect(file.status).toBe(200);
     expect(Buffer.compare(file.body as Buffer, PNG_1X1)).toBe(0);
