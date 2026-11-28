@@ -1,43 +1,61 @@
-# Design note: branching paths in insight (`INS-004`)
+# Record: branching paths in insight (`INS-004`)
 
 | | |
 |---|---|
-| **Status** | Not built (SHOULD). Deferred by D-115 (probe P1, 2026-10-30) and passed on by D-101 |
+| **Status** | Built on 2026-11-28 (step 38, D-154). The owner chose to build it and approved the design that day, after the probe |
 | **Requirement** | Spec 05 `INS-004`: for BranchingScenario, the distribution of choices at each decision node and how many learners used a retry path |
-| **Decisions to read first** | D-102 (the bridge, learners only), D-106 and its amendments (suppression, periods, additive groups), D-115 (what H5P really sends) |
-| **Code to read first** | `packages/hvl-h5p-theme/src/xapiBridge.js`, `xapiStatements.js`; `apps/server/src/xapi/`; `apps/server/src/insight/aggregate/`, `insight/suppression/`; the probe `apps/server/test/h5p/xapiContainerTypes.browser.int.test.ts` |
+| **Decisions to read first** | D-154 (the probe, the bridge's `SPEC-DEVIATION` from `LTI-010`, the view, the privacy rules), D-102 (the bridge, learners only), D-106 and its amendments (suppression, additive groups), D-115 (probe P1), D-137 (a changed answer key) |
+| **Privacy input** | [docs/privacy/DPIA-INPUT.md](../privacy/DPIA-INPUT.md) §12, residuals R42 and R43, and question 9 of its §13 |
 
-## What probe P1 found
+## What was built
 
-BranchingScenario does not tell the outside world which choice a learner made. Its branching question sends an
-`interacted` statement **without a response**; the choices exist only in the content type's `getXAPIData()` and in its
-saved state; and the last choice before an end screen sends nothing at all. So no stored statement can say "at node 3,
-7 learners chose B". D-115 also notes that `uv-case` scores 10 of 10 on every path (Q19), so the score says nothing
-about the path either.
+For a Branching Scenario the **Innsikt** tab has the part «Val ved kvar avgjerd»: per decision (a BranchingQuestion
+node), how many learners chose there («Studentar som valde»), how many chose each option **the first time** they met
+the decision, and how many **chose again** there, through a loop, the back button or a new run («Valde på nytt»). Groups under *k* are
+hidden as elsewhere («< 5»; a decision's options are one additive group). The CSV has the same figures (section
+`decisions`, measures `choosers`, `firstChoice`, `choseAgain`). The figures are for the current version only, and the
+decisions are in no row of the question list (`INS-002`). A decision's options, their texts in order, are part of the
+answer key: a save that rewords or moves an option starts a new version and keeps progress (D-137).
 
-## Options
+## The option taken
 
-| Option | How | For | Against |
-|---|---|---|---|
-| **A. A statement the bridge makes** (recommended, after a probe) | When a branching question is answered, the bridge reads the choice from the content type (its `getXAPIData()` or the event's target) and adds a `response` to the statement H5P sent, or sends one statement of its own, marked as bridge-made | Stays inside the existing pipeline: learners only, batching, replay rules, `academicYear`, the purge | A `SPEC-DEVIATION` from `LTI-010` and `LTI-011` (statements are H5P's own today); depends on BranchingScenario's internals (`UPSTREAM:`), so the probe must pin them |
-| B. Read the saved learner state on the server | The resume state (`PROD-008`) holds the path | No change in the browser | Uses state kept for resuming for a second purpose (a DPIA question, `DATA-012`); the state's format is internal to H5P and changes with versions |
-| C. Ask upstream to send the response | A report to H5P (D-112's channel) | The right fix | Months at best; nothing for the pilot |
+A variant of the old note's option A, "a statement the bridge makes": the bridge does not compose a statement, it
+sends the one H5P made and kept. Options B (read the saved learner state) and C (wait for upstream) were not taken.
 
-## Before any code
+## What the probe found (2026-11-28)
 
-1. **A probe, kept as a test,** in the manner of `xapiContainerTypes.browser.int.test.ts`: play `uv-case` and one
-   activity with a retry path in full Chromium as a learner; record what `getXAPIData()` gives at each node, whether a
-   retried choice is kept or replaced, and what the end screen sends. D-115 requires this before a decision.
-2. **A decision** (or an amendment to D-102 and D-115): the statement's shape, the marker, the caps, and the
-   `SPEC-DEVIATION`. Spec 05's `INS-004` note then points to it.
-3. **The privacy rules:** each node's choices are one additive group under D-106's rule (a hidden count must not be
-   recoverable from the node's total or from the next node's counts); a retry count is a count of learners, suppressed
-   below *k*; the paths of one learner are never shown. Ask whether the DPIA input needs a new residual.
+H5P.BranchingScenario 1.10.1 with H5P.BranchingQuestion 1.0, in Chromium. P1 stands: a choice dispatches `interacted`
+without a response, and the last choice before an end screen dispatches nothing. But the scenario keeps the
+question's own `answered` statement for every choice last on its list `xAPIData` (interaction type `choice`, the
+node's `subContentId`, the option's index as `result.response`), and fires its own `navigated` event with
+`chosenAlternative`. A choice made again is a new entry; the back button and a resume after a reload add none; a
+restart empties the list.
 
-## Tests it needs
+## Where it is
 
-- The probe above (an `upstream pin:` where it pins H5P's behaviour, DOC-004).
-- Unit tests of the aggregator, with hand-calculated fixtures, and fast-check property tests that no hidden count can
-  be worked out from what is shown (as `insightSuppression.property.test.ts` does).
-- The bridge's own tests (`packages/hvl-h5p-theme/test/`), the ingestion's (`apps/server/test/xapi/`), an end-to-end
-  test through `/app/play`, and the **Innsikt** tab in the accessibility suite.
+- Browser: `packages/hvl-h5p-theme/src/xapiBranchingChoices.js`, the bridge's fifth player-only script, hands the
+  kept statement to `xapiBridge.js`, which cuts and queues it like a dispatched one (`SPEC-DEVIATION: D-154`, from
+  `LTI-010` only). The server stores it with the schema, rules and table it had: no migration, no new column.
+- Server: `apps/server/src/insight/content/branchingDecisions.ts`, `insight/aggregate/branchingChoices.ts`, the field
+  `branching` in `insight/insightReport.ts` and `buildInsightReport.ts`, the CSV rows in
+  `insight/export/insightCsvRows.ts`, the answer key in `insight/content/answerKeys.ts`; the contract in
+  `packages/api-contract/src/insightReport.ts`.
+- Web: `apps/web/src/features/insight/BranchingSection.tsx`, texts under `insight.branching.*`, `ScrollTable`'s `fit`.
+- Tests: `packages/hvl-h5p-theme/test/xapiBranchingChoices.test.ts`;
+  `apps/server/test/h5p/xapiBranchingChoices.browser.int.test.ts` (the probe kept as an `upstream pin:`, and what the
+  bridge sends through a loop, the back button, a reload and a restart);
+  `apps/server/test/insight/branchingChoices.test.ts`, `branchingDecisions.test.ts`,
+  `branchingSuppression.property.test.ts` (the hand-calculated fixture
+  `fixtures/twentyDeciders.ts`, described in `fixtures/README.md`); `apps/server/e2e/branchingInsight.e2e.test.ts`;
+  `apps/server/a11y/axeInsightBranching.a11y.test.ts`; `apps/web/test/features/insight/InsightBranching.test.tsx`.
+
+## What stays open
+
+- **The DPO:** residuals R42 and R43 and question 9 in [docs/privacy/DPIA-INPUT.md](../privacy/DPIA-INPUT.md). R42:
+  a decision reached through one option only bounds a hidden cell of the earlier one. R43: one pseudonym's path can
+  be put together from the stored rows (not from any view), and a choice in a dilemma can show an attitude.
+- **Upstream:** the report draft `docs/upstream/h5p-branching-scenario-choice-statement.md`, asking H5P to dispatch
+  the choice. The script depends on the library's internals; another version that keeps its record elsewhere sends
+  nothing, so a decision then shows no learners, never a wrong count.
+- **By design:** no view of one learner's path, no figure across two decisions, no time of a choice.
+- **Earlier plays:** plays before the change have no stored choices, so their decisions show no learners.

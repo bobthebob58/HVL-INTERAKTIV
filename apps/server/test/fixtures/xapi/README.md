@@ -33,7 +33,7 @@ in the recording run.
 | `H5P.CoursePresentation.json` | to the MultiChoice slide, «Sjekk», to the summary slide, then a reload | root `progressed` per slide; root `completed` 1/1 on the summary; in view 2, root `attempted`, `progressed` and the same `completed` again with no learner action (a replay) |
 | `H5P.InteractiveBook.json` | «Les», «Sjekk» in chapter 1, to the summary page, «Send inn rapport» | nothing before «Les»; chapter (Column 1.22) `completed` without a parent; «Send inn rapport», which `reportingIsEnabled` shows on a learner's page since step 3 (D-115, Q18), sends the root `completed` 1/4, the sum of the chapters, without `success` |
 | `H5P.ImageHotspots.json` | opens and closes three hotspots | no statements at all |
-| `H5P.BranchingScenario.json` | two first alternatives to the end screen | root `attempted` and the start node on load; the BranchingQuestion's `interacted` carries no response; root `completed` 10/10 without `success` |
+| `H5P.BranchingScenario.json` | two first alternatives to the end screen | root `attempted` and the start node on load; the BranchingQuestion's `interacted` carries no response; root `completed` 10/10 without `success`. The choices are kept by the library (its `answered` statement per choice on its list `xAPIData`) and not dispatched; since D-154 the bridge sends those kept `answered` statements, which this fixture of what H5P dispatches does not hold |
 | `H5P.InteractiveVideo.json` | plays to the question at 3 s, «Sjekk» | root `attempted`; sub `attempted` and `answered` with the ending-point extension; no root score and no `progressed` |
 
 ## Regenerating

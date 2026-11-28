@@ -154,7 +154,7 @@ and the hand-off index says the tasks that need a person or system at HVL "are n
 | Why each choice was made (D-001…D-116, with dated amendments) | [docs/DECISIONS.md](../DECISIONS.md) |
 | Requirement → code → test (generated) | [docs/TRACEABILITY.md](../TRACEABILITY.md) |
 | How to check the code against the specs, and its known limitations | [docs/EVALUATOR-GUIDE.md](../EVALUATOR-GUIDE.md) (§2, §6) |
-| Personal data, legal basis, residual risks R1–R41, the DPO's questions | [docs/privacy/DPIA-INPUT.md](../privacy/DPIA-INPUT.md) |
+| Personal data, legal basis, residual risks R1–R43, the DPO's questions | [docs/privacy/DPIA-INPUT.md](../privacy/DPIA-INPUT.md) |
 | Every stored field, Redis key and log field | [docs/privacy/DATA-INVENTORY.md](../privacy/DATA-INVENTORY.md) |
 | Operations: what IT provides, secrets, backups, monitoring, the deployment checklist | [docs/ops/runbook.md](../ops/runbook.md) and [docs/ops/](../ops/README.md) |
 | Accessibility conformance (automated results; manual pending) | [docs/accessibility/WCAG-CONFORMANCE-REPORT.md](../accessibility/WCAG-CONFORMANCE-REPORT.md) |

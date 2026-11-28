@@ -313,7 +313,7 @@ One learning event, reduced to the DATA-012 fields (D-115: only what insight and
 |---|---|---|---|---|---|
 | `id` | The bridge's random `statementId`, so a statement sent twice is stored once (D-115) | None | n/a | Yearly purge | PG |
 | `contentId` | The activity | None | n/a | Yearly purge | PG |
-| `subContentId` | The question inside it | None | n/a | Yearly purge | PG |
+| `subContentId` | The question inside it, or the decision of a Branching Scenario (D-154) | None | n/a | Yearly purge | PG |
 | `contentVersion` | Compare like with like across edits | None | n/a | Yearly purge | PG |
 | `contextId` | Canvas course, for per-course insight, as `<LtiPlatform.id>:<context ID>` so courses of two Canvas instances never merge (D-103); null for a portal play. A database CHECK refuses any other shape | None | n/a | Yearly purge | PG |
 | `learnerKey` | Counts distinct learners for *k*-suppression (insight numbers each view's learners and never returns the key; the mappe groups by it the same way, D-095's amendment of 2026-11-04); the grade worker reads a learner's own gradable results by it when it sends their score to Canvas (D-104 amendment of 2026-11-04) | Pseudonymous | 6(1)(e) | Yearly purge | PG |
@@ -323,7 +323,7 @@ One learning event, reduced to the DATA-012 fields (D-115: only what insight and
 | `scaled` | Item difficulty; for a gradable root result, its formative score, from which the grade worker computes the placement's policy score when it sends (D-115, D-104 amendment of 2026-11-04) | Pseudonymous | 6(1)(e) | Yearly purge | PG |
 | `success` | Correct or not | Pseudonymous | 6(1)(e) | Yearly purge | PG |
 | `completion` | Completed or not | Pseudonymous | 6(1)(e) | Yearly purge | PG |
-| `response` | Choice indices or short gap text, for misconceptions (INS-003); a wrong gap answer is shown only when *k* or more learners gave it, and only for the current content version (D-106's amendment of 2026-11-04) | Pseudonymous | 6(1)(e) | Yearly purge | PG |
+| `response` | Choice indices or short gap text, for misconceptions (INS-003); a wrong gap answer is shown only when *k* or more learners gave it, and only for the current content version (D-106's amendment of 2026-11-04). For a decision of a Branching Scenario, the number of the option chosen, for the choices per option (INS-004, D-154; DPIA input R42, R43) | Pseudonymous | 6(1)(e) | Yearly purge | PG |
 | `durationMs` | Time on task | Pseudonymous | 6(1)(e) | Yearly purge | PG |
 | `attemptId` | Groups events of one attempt: `<viewId>:<n>`, a random page-load ID and a counter made by the bridge (D-115) | None | n/a | Yearly purge | PG |
 | `timestamp` | When the server received the statement (plus its place in the batch in milliseconds, never the browser's clock, D-115); insight periods and time on task; orders a learner's results for the `latest` policy and bounds the grade worker's reconciling pass (D-104 amendment of 2026-11-04) | None | n/a | Yearly purge | PG |

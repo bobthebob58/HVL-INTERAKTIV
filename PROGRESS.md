@@ -16,7 +16,7 @@ what is done, what is verified, and what is blocked.
 | S4+ | Whole-code-base simplification pass (owner decision, 2026-10-24) | — | ✅ Done (2026-10-25): 59 changes, 569 lines shorter, every test kept, S4 gate green again; a second round is the owner's call |
 | S5 | Læringsdesign studio, patterns, planner, pedagogisk mappe export | 04; 00 S5 rows | ✅ Gate passed (2026-10-30); the ALU and pilot review (Q17), the bank consent text and the manual PDF check open; the Canvas side in S6 |
 | S6 | xAPI → AGS grade bridge, insight, privacy jobs, Docker, conformance report | 02 §4–§8; 05; 00 §3 (journeys J1–J5), §6; 01 `H5P-009`, `H5P-010`, `SEC-004`, `SEC-006`; 03 `UD-003`, §6 (`UD-040`); 04 `MAPPE-003`, `MAPPE-004` (D-101) | ✅ Done (gate passed 2026-11-06; started 2026-10-30; D-101…D-116) |
-| SR | Security repairs after the S6 gate: 37 steps, each with tests, a gate run and a decision entry | The spec a step names | ✅ Done (2026-11-20 to 2026-11-28; D-117…D-153; session log, steps 1–37); open: HVL IT's and the owner's questions Q32, Q33 and Q34, with the earlier ones |
+| SR | Security repairs after the S6 gate: 38 steps, each with tests, a gate run and a decision entry | The spec a step names | ✅ Done (2026-11-20 to 2026-11-28; D-117…D-154; session log, steps 1–38); open: HVL IT's and the owner's questions Q32, Q33 and Q34, with the earlier ones |
 
 Legend: ⬜ not started · 🟨 in progress · ✅ done (gate passed, output pasted below) · ⛔ blocked
 
@@ -3814,3 +3814,40 @@ Append one entry per session: date, session, what was done, gate output, and any
     editor in a page of its own and waits for a file's answer where one is due. Both pass with the late answers,
     twice as they are, and once with every processor busy. One thing the slowed run showed about H5P's tool:
     pressed before the form's picture is drawn, its controls lay outside the part of the editor frame that shows.
+
+- **2026-11-28 · Security repairs, step 38 (D-154)** — for a Branching Scenario the **Innsikt** tab now shows the
+  learners' choices at each decision (`INS-004`). The owner chose to build it and approved the design after the
+  probe.
+  - A browser test came first, as D-115 asked. It played the real example in four ways: through its loop back to
+    a decision, with the back button, with a reload after the first choice, and with «Start på nytt». H5P sends
+    no statement that says which option was chosen, but for every choice it makes the question's own `answered`
+    statement and keeps it in the page; a decision made again is kept again; a reload and the back button add
+    nothing. So nothing had to be invented.
+  - The player (`LTI-010`): a fifth small script hands the bridge the statement H5P kept for each choice, and the
+    bridge cuts and sends it like any answer: the decision's ID and the option's number, never a text. If the
+    script cannot read the record it sends nothing. The server stores it with the rules and the table it had: no
+    migration and no new field. This is a `SPEC-DEVIATION` from `LTI-010` only.
+  - The real-browser test of the script found a fault in it before anything was pushed: the last choice before an
+    end screen was sent with the next attempt's number, because H5P raises the scenario's result inside the same
+    move, before the script is handed the choice. A choice now carries the attempt it was made in.
+  - The view (`INS-004`, `INS-006`): per decision, how many learners chose there, how many chose each option the
+    first time they met the decision, and how many chose there again. A decision's options are hidden below *k*
+    as one group, with a complement; a decision with fewer than *k* learners is hidden whole. The decisions are
+    not in the list of questions. The CSV file has the same figures. Never shown: one learner's choices or path,
+    a figure that joins two decisions, the time of a choice.
+  - Editing (`PROD-013`): a decision's options are part of the answer key, so a save that rewords or moves an
+    option starts a new version and keeps the learners' progress. A count cannot land under another text.
+  - The page: the new part «Val ved kvar avgjerd» in Nynorsk, Bokmål and English, each decision with a summary
+    sentence, a chart and a table. The table has two columns and fits a phone without sideways scrolling.
+  - Privacy: each choice is now a stored row under the learner's pseudonym, deleted in the yearly purge and
+    covered by a data subject's export and erasure like every answer. The DPIA input says what is stored, why,
+    for how long and what a teacher can and cannot see, and gives the data protection officer two new residuals
+    and a question: a later decision's figures bound an earlier decision's hidden cell for a reader who knows
+    how the scenario is built (R42), and the stored rows give one pseudonym's path, where a choice in a dilemma
+    can show an attitude (R43). The threat model, the ROS analysis and the human-review checklist point there.
+  - As promised after step 37, the three new browser tests ran with every answer 1.5 s late and with every
+    processor busy before the first push. The slow run found a wait of one second in the end-to-end test (the
+    list of courses is fetched after the page); it is 30 s now. All three then passed both ways.
+  - A report for H5P is drafted (`docs/upstream/h5p-branching-scenario-choice-statement.md`): dispatch the
+    statement the libraries already build.
+  - Plays from before this step have no stored choices, so their decisions show no learners.

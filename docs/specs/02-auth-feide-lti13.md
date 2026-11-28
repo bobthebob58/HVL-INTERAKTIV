@@ -348,6 +348,17 @@ in-memory queue. They never block or slow down the activity.
   the player's global assets, never the editor's. It registers only in a document that is not one of Core's iframes,
   and at event time does nothing in a document that H5P marks as one (`H5P.isFramed` with `H5P.externalEmbed ===
   false`), so each statement is queued once, by the parent document's bridge, also if H5P's iframe embedding is used.
+- **Amended (D-154, 2026-11-28, a probe of BranchingScenario 1.10):** `SPEC-DEVIATION` from "subscribes with
+  `H5P.externalDispatcher.on('xAPI', …)`" for one statement: a choice at a decision of a BranchingScenario
+  (`INS-004`). H5P dispatches no statement that names the option chosen, but makes the question's own `answered`
+  statement for every choice and keeps it on the scenario's list. A fifth player-only script
+  (`packages/hvl-h5p-theme/src/xapiBranchingChoices.js`) watches the scenario's `navigated` event from the first
+  event the instance raises, and hands the bridge the kept statement of each choice made from then on. The bridge
+  cuts and queues it as it does a dispatched `answered`: the same fields and caps, a `statementId` of its own, and
+  the `attemptId` of the attempt the choice was made in (a choice handed on in the same turn as the root result
+  that ends its run takes that result's attempt). Nothing is sent for a move that is no choice, for a resume, or
+  for a kept entry the script cannot read as that choice. `LTI-011` is not deviated: the server takes the
+  statement by the schema and the rules it had.
 
 #### LTI-011 · MUST · S6 · Validate and store statements
 `/api/h5p/xapi` validates statements with a zod schema. It accepts only verbs it uses

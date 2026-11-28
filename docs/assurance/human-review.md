@@ -116,7 +116,7 @@ that depended on test order (`92ca2c5`, `5a5b8c3`), and CI's fresh runner found 
 | The deployment files and CI | `deploy/` and `.github/workflows/` were read only by AI reviewers (among them step 6's security review, step 10's review of everything since `47e235e` and pull request #21's reviewers, who added CI's second, lax clamd). `docker.yml` has now run on GitHub and passed, also on `main` (§2.3), which shows that the image builds and its smoke test passes there, not that a person has read the files | `PROGRESS.md`, S6 steps 6 and 10; GitHub runs 42166052745, 42170423045, 42205391749 and 42253214575 |
 | Pull requests #18 (S6) and #21 (security follow-ups) | No review on GitHub; the owner merged both on 2026-11-06. CI ran on each head (CI tests the head merged into `main`, not each commit on its own): on #18, run 42166052880 on `3eeea8d` failed one test, and runs 42170423046 on `8d4eaf0` and 42183630447 on `eb79b30` passed; on #21, run 42253214678 on `9bfa1b2` passed; on `main`, runs 42205391766 after #18's merge and 42266303529 after #21's passed (§2.3). A green run is not a review (§6) | GitHub's API, 2026-11-06 (0 reviews on each); `git log`; `.github/workflows/ci.yml`, lines 10–13 |
 | The threat model, the ROS-analyse and this pack | Drafts by the AI | [threat-model.md](threat-model.md), [ros-analyse.md](ros-analyse.md) |
-| The DPIA input (residuals R1–R41) | Not reviewed by the DPO | Q6; `docs/privacy/DPIA-INPUT.md` |
+| The DPIA input (residuals R1–R43) | Not reviewed by the DPO | Q6; `docs/privacy/DPIA-INPUT.md` |
 | Accessibility for real users | No manual run recorded; all 56 verdicts are *Not yet determined* | `docs/accessibility/results/README.md`; [conformance report](../accessibility/WCAG-CONFORMANCE-REPORT.md) |
 | The studio's texts (phases, guide, patterns, mappe template, the content bank's consent text) | Requested from ALU, not done | Q17; `docs/reference/alu-review-s5.md` |
 | Canvas and Feide | Tested against the mocks in `tools/mock-platform` only; the live-contract seam has never run against a real Canvas or Feide | `docs/EVALUATOR-GUIDE.md` §6, limitation 5; [live-contract-seam.md](../handoff/live-contract-seam.md) |
@@ -306,9 +306,9 @@ gradebook. Its claim bug was found only by a full test run (`PROGRESS.md`, S6 st
 
 #### B1. *k*-suppression in insight and the mappe (about 1,100 lines; estimate 1.5 days, plus time with the DPO)
 
-**Paths:** `insight/suppression/`, `insight/aggregate/gapMisconceptions.ts`, `insight/scope/insightPeriod.ts`,
-`insight/http/insightAccess.ts`, `insight/http/insightRoutes.ts`, `learningDesign/mappe/storedActivityResults.ts`,
-`learningDesign/mappe/activityResults.ts`.
+**Paths:** `insight/suppression/`, `insight/aggregate/gapMisconceptions.ts`, `insight/aggregate/branchingChoices.ts`,
+`insight/scope/insightPeriod.ts`, `insight/http/insightAccess.ts`, `insight/http/insightRoutes.ts`,
+`learningDesign/mappe/storedActivityResults.ts`, `learningDesign/mappe/activityResults.ts`.
 
 **Why:** a teacher must never learn one student's answers, and the AI reviews found several ways to work out hidden
 counts (D-106's amendments). A reviewer who knows statistical disclosure control helps here.
@@ -319,11 +319,14 @@ counts (D-106's amendments). A reviewer who knows statistical disclosure control
 - [ ] Only an activity's owner, its co-authors and the course's Canvas authors see insight; admins see none (`INS-007`).
 - [ ] Every view and export is audited before the answer is sent (`DATA-007`).
 - [ ] With the DPO, judge residuals R1–R4, R6–R14 and R36 (`docs/privacy/DPIA-INPUT.md` §12).
+- [ ] For a Branching Scenario, try to work out a hidden option count from the figures of a later decision or from
+      «Valde på nytt», and judge R42 and R43 with the DPO (`INS-004`, D-154).
 - [ ] Try your own differencing attacks ([hand-off](../handoff/README.md) §4 lists some).
 
 **Tests that claim it:** `test/insight/insightSuppression.property.test.ts`,
 `test/insight/http/insightSuppressionApi.property.test.ts`, `additiveGroupExhaustive.test.ts`,
-`thirtyLearners.test.ts`, `insightPeriodEnd.int.test.ts`, `test/insight/http/insightPermissions.int.test.ts`.
+`thirtyLearners.test.ts`, `branchingChoices.test.ts`, `branchingSuppression.property.test.ts`,
+`insightPeriodEnd.int.test.ts`, `test/insight/http/insightPermissions.int.test.ts`.
 
 #### B2. Pseudonyms, keys and log redaction (about 1,300 lines; estimate 2 days)
 
@@ -403,7 +406,7 @@ tools, but it is a one-term student project and does not replace IT's security r
 **Known open items** that reviewers should judge rather than report as new (each is recorded): CVE-2025-7062 in Lumi
 10.0.4 (D-003); the files host on the same site as the app (D-110); scores computed in the browser
 (limitation 1 in `docs/EVALUATOR-GUIDE.md` §6); tokens in some URLs, so the proxy must not log query strings (limitation 9); only a
-backstop ceiling on login and launch in the app (ROS-07); the residuals R1–R41 in `docs/privacy/DPIA-INPUT.md` §12.
+backstop ceiling on login and launch in the app (ROS-07); the residuals R1–R43 in `docs/privacy/DPIA-INPUT.md` §12.
 
 ## 5. How to report findings
 
