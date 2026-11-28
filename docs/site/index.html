@@ -1927,10 +1927,11 @@ in-memory queue. they never block or slow down the activity.
   (`ins-004`). h5p dispatches no statement that names the option chosen, but makes the question's own `answered`
   statement for every choice and keeps it on the scenario's list. a fifth player-only script
   (`packages/hvl-h5p-theme/src/xapibranchingchoices.js`) watches the scenario's `navigated` event from the first
-  event the instance raises, and hands the bridge the kept statement of each choice made from then on. the bridge
-  cuts and queues it as it does a dispatched `answered`: the same fields and caps, a `statementid` of its own, and
-  the `attemptid` of the attempt the choice was made in (a choice handed on in the same turn as the root result
-  that ends its run takes that result's attempt). nothing is sent for a move that is no choice, for a resume, or
+  event the instance raises, and hands the bridge, for each choice made from then on, the kept statement's verb,
+  object and context with the index as its only result (not h5p's `completion` or the time spent at the decision).
+  the bridge cuts and queues it as it does a dispatched `answered`: the same cut and caps, a `statementid` of its
+  own, and the `attemptid` of the attempt the choice was made in (a choice handed on in the same turn as the root
+  result that ends its run takes that result's attempt). nothing is sent for a move that is no choice, for a resume, or
   for a kept entry the script cannot read as that choice. `lti-011` is not deviated: the server takes the
   statement by the schema and the rules it had.">
 <summary><span class="req-id">LTI-010</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Capture xAPI in the player</span> <span class="status" data-status="tested">● Tested</span></summary>
@@ -1969,10 +1970,11 @@ and at event time does nothing in a document that H5P marks as one (<code>H5P.is
 (<a class="req-ref" href="#r-INS-004"><code>INS-004</code></a>). H5P dispatches no statement that names the option chosen, but makes the question&#39;s own <code>answered</code>
 statement for every choice and keeps it on the scenario&#39;s list. A fifth player-only script
 (<code>packages/hvl-h5p-theme/src/xapiBranchingChoices.js</code>) watches the scenario&#39;s <code>navigated</code> event from the first
-event the instance raises, and hands the bridge the kept statement of each choice made from then on. The bridge
-cuts and queues it as it does a dispatched <code>answered</code>: the same fields and caps, a <code>statementId</code> of its own, and
-the <code>attemptId</code> of the attempt the choice was made in (a choice handed on in the same turn as the root result
-that ends its run takes that result&#39;s attempt). Nothing is sent for a move that is no choice, for a resume, or
+event the instance raises, and hands the bridge, for each choice made from then on, the kept statement&#39;s verb,
+object and context with the index as its only result (not H5P&#39;s <code>completion</code> or the time spent at the decision).
+The bridge cuts and queues it as it does a dispatched <code>answered</code>: the same cut and caps, a <code>statementId</code> of its
+own, and the <code>attemptId</code> of the attempt the choice was made in (a choice handed on in the same turn as the root
+result that ends its run takes that result&#39;s attempt). Nothing is sent for a move that is no choice, for a resume, or
 for a kept entry the script cannot read as that choice. <a class="req-ref" href="#r-LTI-011"><code>LTI-011</code></a> is not deviated: the server takes the
 statement by the schema and the rules it had.</li>
 </ul>
@@ -3002,11 +3004,13 @@ many learners used a retry path.
   dispatching it; the bridge sends that statement (`spec-deviation` from `lti-010` only; `lti-011` and `data-012`
   are not deviated). a decision's options are one additive group under `ins-006`, and «chose again» is a count of
   learners, hidden below *k* and with a hidden decision. the entries are shown for the current version only, as
-  `ins-003`'s; a decision is no question and has no row in `ins-002`; the csv export (`ins-009`) has the same
-  figures. never shown: one learner's choices or path, a figure that joins two decisions, the time of a choice. a
-  decision's options, their texts in stored order, are part of the answer key (`prod-013`, d-137). what it leaves
-  open is residuals r42 and r43 of the dpia input. verify: unit tests against a hand-calculated fixture of 20
-  learners, property tests, the real library in chromium, an end-to-end flow and the accessibility suite.">
+  `ins-003`'s; a decision of the current content is no question and has no row in `ins-002` (one that is no longer
+  in the content is, in a view of an older version, a row without a name like any removed question); the csv
+  export (`ins-009`) has the same figures. never shown: one learner's choices or path, a figure that joins two
+  decisions, the time of a choice. a decision's options, their whole texts in stored order, are part of the answer
+  key (`prod-013`, d-137): a reworded option starts a new version and keeps progress. what it leaves open is
+  residuals r42 and r43 of the dpia input. verify: unit tests against a hand-calculated fixture of 20 learners,
+  property tests, the real library in chromium, an end-to-end flow and the accessibility suite.">
 <summary><span class="req-id">INS-004</span> <span class="badge pri pri-should" title="RFC 2119 SHOULD">Should</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Branching paths</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>For BranchingScenario, the view shows the distribution of choices at each decision node and how
 many learners used a retry path.</p>
@@ -3025,11 +3029,13 @@ probe showed that H5P makes the question&#39;s own <code>answered</code> stateme
 dispatching it; the bridge sends that statement (<code>SPEC-DEVIATION</code> from <a class="req-ref" href="#r-LTI-010"><code>LTI-010</code></a> only; <a class="req-ref" href="#r-LTI-011"><code>LTI-011</code></a> and <a class="req-ref" href="#r-DATA-012"><code>DATA-012</code></a>
 are not deviated). A decision&#39;s options are one additive group under <a class="req-ref" href="#r-INS-006"><code>INS-006</code></a>, and «chose again» is a count of
 learners, hidden below <em>k</em> and with a hidden decision. The entries are shown for the current version only, as
-<a class="req-ref" href="#r-INS-003"><code>INS-003</code></a>&#39;s; a decision is no question and has no row in <a class="req-ref" href="#r-INS-002"><code>INS-002</code></a>; the CSV export (<a class="req-ref" href="#r-INS-009"><code>INS-009</code></a>) has the same
-figures. Never shown: one learner&#39;s choices or path, a figure that joins two decisions, the time of a choice. A
-decision&#39;s options, their texts in stored order, are part of the answer key (<a class="req-ref" href="#r-PROD-013"><code>PROD-013</code></a>, D-137). What it leaves
-open is residuals R42 and R43 of the DPIA input. Verify: unit tests against a hand-calculated fixture of 20
-learners, property tests, the real library in Chromium, an end-to-end flow and the accessibility suite.</li>
+<a class="req-ref" href="#r-INS-003"><code>INS-003</code></a>&#39;s; a decision of the current content is no question and has no row in <a class="req-ref" href="#r-INS-002"><code>INS-002</code></a> (one that is no longer
+in the content is, in a view of an older version, a row without a name like any removed question); the CSV
+export (<a class="req-ref" href="#r-INS-009"><code>INS-009</code></a>) has the same figures. Never shown: one learner&#39;s choices or path, a figure that joins two
+decisions, the time of a choice. A decision&#39;s options, their whole texts in stored order, are part of the answer
+key (<a class="req-ref" href="#r-PROD-013"><code>PROD-013</code></a>, D-137): a reworded option starts a new version and keeps progress. What it leaves open is
+residuals R42 and R43 of the DPIA input. Verify: unit tests against a hand-calculated fixture of 20 learners,
+property tests, the real library in Chromium, an end-to-end flow and the accessibility suite.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-INS-004">05 Insight and privacy, INS-004</a> · Teacher insight</p></div>
 </details>
@@ -3466,8 +3472,9 @@ else is dropped, including actor names, mailboxes and extensions.
   *k* around one real learner; the grade worker does read them, so a teacher can test the score passback.
 - **amended (d-154, 2026-11-28):** the field list is unchanged. a choice at a decision of a branchingscenario is a
   stored row like any part's `answered`: the decision's `subcontentid`, and in `response` the index of the option
-  chosen (interaction type `choice`), with no score. the statement is h5p's own, which the bridge sends (`lti-010`
-  as amended); the option's text is never stored.
+  chosen (interaction type `choice`), with no score, no `completion` and no `durationms`. the statement is h5p's
+  own, of which the bridge sends the index alone (`lti-010` as amended); the option's text and the time spent at
+  the decision are never stored.
 - **amended (d-138, 2026-11-22):** &quot;only learner principals' statements&quot; means the learners `lti-011` records as
   amended: an hvl member in the portal, the `learner` role in canvas. `contentversion` is the version the page was
   rendered with, and an older one only for a learner who was already in it.">
@@ -3507,8 +3514,9 @@ the mappe and the yearly purge&#39;s snapshots never read a flagged row, so <em>
 <em>k</em> around one real learner; the grade worker does read them, so a teacher can test the score passback.</li>
 <li><strong>Amended (D-154, 2026-11-28):</strong> the field list is unchanged. A choice at a decision of a BranchingScenario is a
 stored row like any part&#39;s <code>answered</code>: the decision&#39;s <code>subContentId</code>, and in <code>response</code> the index of the option
-chosen (interaction type <code>choice</code>), with no score. The statement is H5P&#39;s own, which the bridge sends (<a class="req-ref" href="#r-LTI-010"><code>LTI-010</code></a>
-as amended); the option&#39;s text is never stored.</li>
+chosen (interaction type <code>choice</code>), with no score, no <code>completion</code> and no <code>durationMs</code>. The statement is H5P&#39;s
+own, of which the bridge sends the index alone (<a class="req-ref" href="#r-LTI-010"><code>LTI-010</code></a> as amended); the option&#39;s text and the time spent at
+the decision are never stored.</li>
 <li><strong>Amended (D-138, 2026-11-22):</strong> &quot;only learner principals&#39; statements&quot; means the learners <a class="req-ref" href="#r-LTI-011"><code>LTI-011</code></a> records as
 amended: an HVL member in the portal, the <code>Learner</code> role in Canvas. <code>contentVersion</code> is the version the page was
 rendered with, and an older one only for a learner who was already in it.</li>
@@ -5015,10 +5023,11 @@ and at event time does nothing in a document that H5P marks as one (<code>H5P.is
 (<a class="req-ref" href="#r-INS-004"><code>INS-004</code></a>). H5P dispatches no statement that names the option chosen, but makes the question&#39;s own <code>answered</code>
 statement for every choice and keeps it on the scenario&#39;s list. A fifth player-only script
 (<code>packages/hvl-h5p-theme/src/xapiBranchingChoices.js</code>) watches the scenario&#39;s <code>navigated</code> event from the first
-event the instance raises, and hands the bridge the kept statement of each choice made from then on. The bridge
-cuts and queues it as it does a dispatched <code>answered</code>: the same fields and caps, a <code>statementId</code> of its own, and
-the <code>attemptId</code> of the attempt the choice was made in (a choice handed on in the same turn as the root result
-that ends its run takes that result&#39;s attempt). Nothing is sent for a move that is no choice, for a resume, or
+event the instance raises, and hands the bridge, for each choice made from then on, the kept statement&#39;s verb,
+object and context with the index as its only result (not H5P&#39;s <code>completion</code> or the time spent at the decision).
+The bridge cuts and queues it as it does a dispatched <code>answered</code>: the same cut and caps, a <code>statementId</code> of its
+own, and the <code>attemptId</code> of the attempt the choice was made in (a choice handed on in the same turn as the root
+result that ends its run takes that result&#39;s attempt). Nothing is sent for a move that is no choice, for a resume, or
 for a kept entry the script cannot read as that choice. <a class="req-ref" href="#r-LTI-011"><code>LTI-011</code></a> is not deviated: the server takes the
 statement by the schema and the rules it had.</li>
 </ul>
@@ -5919,11 +5928,13 @@ probe showed that H5P makes the question&#39;s own <code>answered</code> stateme
 dispatching it; the bridge sends that statement (<code>SPEC-DEVIATION</code> from <a class="req-ref" href="#r-LTI-010"><code>LTI-010</code></a> only; <a class="req-ref" href="#r-LTI-011"><code>LTI-011</code></a> and <a class="req-ref" href="#r-DATA-012"><code>DATA-012</code></a>
 are not deviated). A decision&#39;s options are one additive group under <a class="req-ref" href="#r-INS-006"><code>INS-006</code></a>, and «chose again» is a count of
 learners, hidden below <em>k</em> and with a hidden decision. The entries are shown for the current version only, as
-<a class="req-ref" href="#r-INS-003"><code>INS-003</code></a>&#39;s; a decision is no question and has no row in <a class="req-ref" href="#r-INS-002"><code>INS-002</code></a>; the CSV export (<a class="req-ref" href="#r-INS-009"><code>INS-009</code></a>) has the same
-figures. Never shown: one learner&#39;s choices or path, a figure that joins two decisions, the time of a choice. A
-decision&#39;s options, their texts in stored order, are part of the answer key (<a class="req-ref" href="#r-PROD-013"><code>PROD-013</code></a>, D-137). What it leaves
-open is residuals R42 and R43 of the DPIA input. Verify: unit tests against a hand-calculated fixture of 20
-learners, property tests, the real library in Chromium, an end-to-end flow and the accessibility suite.</li>
+<a class="req-ref" href="#r-INS-003"><code>INS-003</code></a>&#39;s; a decision of the current content is no question and has no row in <a class="req-ref" href="#r-INS-002"><code>INS-002</code></a> (one that is no longer
+in the content is, in a view of an older version, a row without a name like any removed question); the CSV
+export (<a class="req-ref" href="#r-INS-009"><code>INS-009</code></a>) has the same figures. Never shown: one learner&#39;s choices or path, a figure that joins two
+decisions, the time of a choice. A decision&#39;s options, their whole texts in stored order, are part of the answer
+key (<a class="req-ref" href="#r-PROD-013"><code>PROD-013</code></a>, D-137): a reworded option starts a new version and keeps progress. What it leaves open is
+residuals R42 and R43 of the DPIA input. Verify: unit tests against a hand-calculated fixture of 20 learners,
+property tests, the real library in Chromium, an end-to-end flow and the accessibility suite.</li>
 </ul>
 <h4 id="r-INS-005" class="req-heading" tabindex="-1"><a class="req-id" href="#r-INS-005">INS-005</a> <span class="badge pri pri-could" title="RFC 2119 COULD">Could</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Video engagement</span></h4>
 <p>For InteractiveVideo, it shows the share of learners who answered each embedded interaction. This
@@ -6173,8 +6184,9 @@ the mappe and the yearly purge&#39;s snapshots never read a flagged row, so <em>
 <em>k</em> around one real learner; the grade worker does read them, so a teacher can test the score passback.</li>
 <li><strong>Amended (D-154, 2026-11-28):</strong> the field list is unchanged. A choice at a decision of a BranchingScenario is a
 stored row like any part&#39;s <code>answered</code>: the decision&#39;s <code>subContentId</code>, and in <code>response</code> the index of the option
-chosen (interaction type <code>choice</code>), with no score. The statement is H5P&#39;s own, which the bridge sends (<a class="req-ref" href="#r-LTI-010"><code>LTI-010</code></a>
-as amended); the option&#39;s text is never stored.</li>
+chosen (interaction type <code>choice</code>), with no score, no <code>completion</code> and no <code>durationMs</code>. The statement is H5P&#39;s
+own, of which the bridge sends the index alone (<a class="req-ref" href="#r-LTI-010"><code>LTI-010</code></a> as amended); the option&#39;s text and the time spent at
+the decision are never stored.</li>
 <li><strong>Amended (D-138, 2026-11-22):</strong> &quot;only learner principals&#39; statements&quot; means the learners <a class="req-ref" href="#r-LTI-011"><code>LTI-011</code></a> records as
 amended: an HVL member in the portal, the <code>Learner</code> role in Canvas. <code>contentVersion</code> is the version the page was
 rendered with, and an older one only for a learner who was already in it.</li>
@@ -6777,6 +6789,35 @@ the gate output lists them so (limitation 23).</p>
 <td><a class="req-ref" href="#r-UD-040"><code>UD-040</code></a> Conformance report</td><td><code>npm run a11y:report -- --check</code> and <code>-t &quot;\[UD-040\]&quot;</code> (<code>tools/a11y-report/test/</code>): every criterion present, manual blocks kept, no verdict without a dated HVL evaluation, a failed or partial run never recorded as passed</td><td>HVL/ALU run the manual protocol, set the 56 verdicts (each with a dated <code>**Evaluated by HVL:**</code> line, or the generator stops) and write the uustatus.no notes (<a class="req-ref" href="#r-UD-031"><code>UD-031</code></a>)</td></tr>
 </tbody></table></div>
 <hr>
+<h4 id="evaluator-guide--51-two-machines-run-the-checks-the-development-container-and-github" tabindex="-1">5.1 Two machines run the checks: the development container and GitHub</h4>
+<p>Every step is checked on two machines, which differ on purpose.</p>
+<div class="table-wrap" role="region" aria-label="Table 5, 5.1 Two machines run the checks: the development container and GitHub" tabindex="0"><table><thead><tr>
+<th scope="col"></th><th scope="col">The development container</th><th scope="col">GitHub (<code>.github/workflows/</code>)</th></tr>
+</thead><tbody><tr>
+<td><strong>When</strong></td><td>Before a push, by the session that wrote the change</td><td>On every pull request and every push to <code>main</code> (<code>ci.yml</code>, <code>docker.yml</code>); the advisory check once a day (<code>audit.yml</code>)</td></tr>
+<tr>
+<td><strong>What</strong></td><td>The gate of this section, with the Docker smoke test</td><td>The same gate (the check «Session gate»), the image build with the app stack smoke test, and code scanning (CodeQL, D-150)</td></tr>
+<tr>
+<td><strong>Where the result is</strong></td><td>Pasted into <code>PROGRESS.md</code> by the session; nobody else saw the run</td><td>On the pull request, for anyone with access: each check passed or failed</td></tr>
+<tr>
+<td><strong>What it cannot run</strong></td><td>A few test files that need a privileged database or a kernel sandbox the container lacks; each step&#39;s gate output names them</td><td>Nothing is left out</td></tr>
+</tbody></table></div>
+<p>GitHub&#39;s result is the one that counts: the owner merges a pull request only when its checks are green.</p>
+<p><strong>Why both.</strong> The container answers in minutes while the work is being done. GitHub&#39;s runner starts from nothing
+each time, so nothing left over from earlier work can help a test pass, and it is slower. A slower machine changes
+only <em>when</em> things happen, never what the code does. That is its use: it exposes a test, or a piece of code, that
+was right here by lucky timing. Step 37&#39;s browser test of the picture tool read a list before the server&#39;s answer
+had arrived and failed only on GitHub; the standstill line that step 37 corrected had failed one run there for the
+same kind of reason. The cost of such a find is time (a run is about an hour), not a risk to users.</p>
+<p><strong>The rule that follows (the owner&#39;s decision, 2026-11-28; first used in step 38).</strong> Before its first push, a new
+or changed browser test (<code>*.browser.int.test.ts</code>, <code>apps/server/e2e/</code>, <code>apps/server/a11y/</code>) is run three ways
+here: as it is, with every answer to the browser delayed by about 1.5 s, and with every processor busy. A test
+that waits for the thing itself (an element, a stored row, an answer) passes all three. A test that waits a fixed
+time, or relies on a helper&#39;s default wait of one second, fails one of them. Step 38&#39;s delayed run found such a
+wait before anything was pushed.</p>
+<p><strong>When GitHub fails and the container passed:</strong> read the failed check&#39;s log, reproduce it here with the delay or
+the load, and correct the cause. A wait is never just made longer, and a test is never skipped or switched off to
+get a green check.</p>
 <h3 id="evaluator-guide--6-known-limitations-stated-honestly" tabindex="-1">6. Known limitations (stated honestly)</h3>
 <ol>
 <li><strong>Scores are computed in the browser.</strong> H5P scoring cannot be made tamper-proof. HVL Interaktiv
@@ -14576,91 +14617,114 @@ nothing. But the scenario fires an event of its own, <code>navigated</code>, on 
 scenario has put the question&#39;s own <code>answered</code> statement (H5P&#39;s report contract, <code>getXAPIData()</code>) last on
 its list <code>xAPIData</code>: the interaction type <code>choice</code>, the object ID <code>&lt;content ID&gt;?subContentId=&lt;the node&#39;s&gt;</code>,
 the category <code>H5P.BranchingQuestion-1.0</code> and <code>result.response</code>, the index. A decision made again (after the
-loop or after the back button) is a new entry, in order. The back button adds none (<code>reverse</code>), a resume
-after a reload adds none (<code>isResuming</code>; the list comes back from the saved state), and a restart empties
-the list. The scenario&#39;s own content pages are on the same list, and those dispatch their statements as
-every other content does.</li>
-<li><strong>Decision — the bridge sends the statement H5P made for a choice (<a class="req-ref" href="#r-LTI-010"><code>LTI-010</code></a>; <code>SPEC-DEVIATION</code>).</strong> <a class="req-ref" href="#r-LTI-010"><code>LTI-010</code></a>
-says the bridge sends what <code>H5P.externalDispatcher</code> raises. For a choice it sends what H5P made and kept
-without dispatching. A fifth player-only script (<code>packages/hvl-h5p-theme/src/xapiBranchingChoices.js</code>)
-watches a BranchingScenario from the first event that instance raises (H5P Core calls a listener with the
-raising instance as <code>this</code>, D-151). On <code>navigated</code> with a whole-number <code>chosenAlternative</code> and no
-<code>isResuming</code>, it hands the bridge the list&#39;s last entry when that entry is new since the last move, is an
-<code>answered</code> of a BranchingQuestion and answers with the same index. Anything else (another version of the
-library that keeps its record elsewhere) sends nothing: a decision then shows no learners, never a wrong
-count. The bridge cuts and queues the statement like a dispatched one (<code>xapiStatements.js</code> <code>cut</code>): the verb,
-the object ID, the interaction type, the parent and category IDs, <code>completion</code>, <code>duration</code> and the index.
-The question&#39;s text, its options&#39; texts and the feedback text that H5P puts in the statement do not leave
-the page. A choice carries the attempt it was made in: H5P raises the scenario&#39;s root result inside the move
-that ends a run, before the listener is handed that move&#39;s choice, so a choice handed on in the same turn of
-the event loop as a root result gets the attempt that result closed (the first run of the browser test sent
-the last choice of a run with the next attempt&#39;s number). <strong>Not deviated:</strong> <a class="req-ref" href="#r-LTI-011"><code>LTI-011</code></a> and <a class="req-ref" href="#r-DATA-012"><code>DATA-012</code></a>. The server takes the statement by the schema and the
-rules it had (<code>answered</code> of a part with a UUID <code>subContentId</code>; a <code>choice</code> response is kept), and stores the
-same fields in the same table. No migration, no new column.</li>
+loop or after the back button) is a new entry, in order. The back button (<code>reverse</code>) and a resume after a
+reload (<code>isResuming</code>; the list comes back from the saved state) add no choice, and a restart empties the
+list. The list also holds the entries of the scenario&#39;s content pages: the scenario puts the entry of the
+node it leaves there on every move, a back move and a resume too, and such a page dispatches its own
+statements as every other content does.</li>
+<li><strong>Decision — the bridge sends what H5P kept about a choice (<a class="req-ref" href="#r-LTI-010"><code>LTI-010</code></a>; <code>SPEC-DEVIATION</code>).</strong> <a class="req-ref" href="#r-LTI-010"><code>LTI-010</code></a> says
+the bridge sends what <code>H5P.externalDispatcher</code> raises. For a choice it sends what H5P made and kept without
+dispatching. A fifth player-only script (<code>packages/hvl-h5p-theme/src/xapiBranchingChoices.js</code>) watches a
+BranchingScenario from the first xAPI event that instance raises, the root&#39;s <code>attempted</code> when H5P attaches
+it, which comes before any choice (H5P Core calls a listener with the raising instance as <code>this</code>, D-151; no
+other library&#39;s semantics names a BranchingScenario, so it is never inside another type). On <code>navigated</code>
+with a whole-number <code>chosenAlternative</code> and no <code>isResuming</code>, it reads the list&#39;s last entry when that entry
+is new since the last move, is an <code>answered</code> of a BranchingQuestion and answers with the same index.
+Anything else (another version of the library that keeps its record elsewhere) sends nothing: a decision
+then shows no learners, never a wrong count. It hands the bridge a new object with that statement&#39;s verb,
+object and context and, as its result, the index alone. H5P&#39;s result also holds <code>completion</code> and how long
+the learner stayed at the decision; insight reads neither, so neither leaves the page (<a class="req-ref" href="#r-DATA-012"><code>DATA-012</code></a>). The
+bridge cuts and queues what it is handed like a dispatched statement (<code>xapiStatements.js</code> <code>cut</code>): the verb,
+the object ID, the interaction type, the parent and category IDs and the index. The question&#39;s text, its
+options&#39; texts and the feedback text that H5P puts in the statement do not leave the page. A choice carries
+the attempt it was made in: H5P raises the scenario&#39;s root result inside the move that ends a run, before
+the listener is handed that move&#39;s choice, so a choice handed on in the same turn of the event loop as a
+root result gets the attempt that result closed (the first run of the browser test sent the last choice of
+a run with the next attempt&#39;s number). <strong>Not deviated:</strong> <a class="req-ref" href="#r-LTI-011"><code>LTI-011</code></a> and <a class="req-ref" href="#r-DATA-012"><code>DATA-012</code></a>. The server takes the
+statement by the schema and the rules it had (<code>answered</code> of a part with a UUID <code>subContentId</code>; a <code>choice</code>
+response is kept), and stores the same fields in the same table. No migration, no new column.</li>
 <li><strong>Decision — what the view shows (<a class="req-ref" href="#r-INS-004"><code>INS-004</code></a>).</strong> For a BranchingScenario the report has one entry per decision
 (a BranchingQuestion node with a <code>subContentId</code>), in the content&#39;s order: the question, each option with the
 number of learners whose <strong>first</strong> choice at that decision it was, and the number of learners who <strong>chose
 again</strong> there, which is <a class="req-ref" href="#r-INS-004"><code>INS-004</code></a>&#39;s retry path: a learner with more than one stored choice at the decision
 in the view, through a loop, the back button or a new run. A stored answer counts as a choice only when it
-is a whole-number index of one of the decision&#39;s options. The decisions are not questions: they are not in
-the list of hard questions (<a class="req-ref" href="#r-INS-002"><code>INS-002</code></a>) and have no share right. Like <a class="req-ref" href="#r-INS-003"><code>INS-003</code></a>&#39;s distributions the entries
-are shown for the current version only, since the option texts come from the current content. The CSV
-export has the same figures (<a class="req-ref" href="#r-INS-009"><code>INS-009</code></a>).</li>
+is a whole-number index of one of the decision&#39;s options. The decisions of the current content are not
+questions: they are in no row of the question list (<a class="req-ref" href="#r-INS-002"><code>INS-002</code></a>) and have no share right. A decision that is
+no longer in the content can only have answers in an older version; in a view of that version it is, like
+a question that was removed, a row without a name once <em>k</em> learners answered (D-121, D-136). Like
+<a class="req-ref" href="#r-INS-003"><code>INS-003</code></a>&#39;s distributions the entries are shown for the current version only, since the option texts come
+from the current content. The CSV export has the same figures (<a class="req-ref" href="#r-INS-009"><code>INS-009</code></a>). The summary sentence names the
+option most learners chose first; options with the same highest count are named as a tie.</li>
 <li><strong>PRIVACY — the rules of the new figures (<a class="req-ref" href="#r-INS-006"><code>INS-006</code></a>, D-106).</strong> A decision&#39;s options are one additive group:
 the first choices divide the learners who chose there, so the cells follow <code>additiveGroupCells</code> (a cell of
-1 to <em>k</em> − 1 is hidden, and a complement with it). «Chose again» is a count of learners, hidden below <em>k</em>.
-A view whose starters are hidden hides every cell. The view never shows one learner&#39;s choices or path, no
-figure across two decisions (no &quot;of those who chose A, …&quot;), and no time of a choice.</li>
+1 to <em>k</em> − 1 is hidden, and a complement with it). «Chose again» is a count of learners, hidden below <em>k</em>
+and with a hidden decision. A view whose starters are hidden hides every cell. The view never shows one
+learner&#39;s choices or path, no figure across two decisions (no &quot;of those who chose A, …&quot;), and no time of a
+choice.</li>
 <li><strong>PRIVACY — what is new in storage (<a class="req-ref" href="#r-DATA-012"><code>DATA-012</code></a>).</strong> Before, a BranchingScenario left a learner&#39;s start, the
 completion and the end score. Now each choice is a row: the pseudonym, the activity, version and course, the
-decision&#39;s <code>subContentId</code>, the option&#39;s index (never a text), the attempt ID and the time. The yearly purge
-(<a class="req-ref" href="#r-DATA-003"><code>DATA-003</code></a>) and a data subject&#39;s export and erasure (<a class="req-ref" href="#r-DATA-008"><code>DATA-008</code></a>) cover the rows as they cover every
-<code>XapiStatement</code> row. Three things go to the data protection officer in the DPIA input, as residuals <strong>R42</strong>
-and <strong>R43</strong> and its question 9. R42: a decision that can be reached only through one option was reached by
-at most that option&#39;s learners, so its figures bound, and with no drop-out give, a hidden cell of the
-earlier decision to a reader who knows the scenario&#39;s graph. Hiding every cell such a bound touches would
-empty the section for most small groups, so it is recorded, not closed. R43: from the stored rows, not from
-any view, one pseudonym&#39;s path through a scenario can be put together; and a choice in a dilemma can show
-an attitude, not only knowledge, which a quiz answer rarely does.</li>
+decision&#39;s <code>subContentId</code>, the option&#39;s index (never a text), the attempt ID and the time the server
+received it; no score, no <code>completion</code> and no duration. The yearly purge (<a class="req-ref" href="#r-DATA-003"><code>DATA-003</code></a>) and a data subject&#39;s
+export and erasure (<a class="req-ref" href="#r-DATA-008"><code>DATA-008</code></a>) cover the rows as they cover every <code>XapiStatement</code> row. Three things go to
+the data protection officer in the DPIA input, as residuals <strong>R42</strong> and <strong>R43</strong> and its question 9. R42: a
+cell holds first choices, and a part of the scenario that can be reached only through one option was
+reached only by learners who chose that option at some time. So the learners of a later decision there,
+less the earlier decision&#39;s «chose again», bound that option&#39;s cell from below, also when it is hidden;
+with nobody choosing again and no drop-out they give it, and the small cell beside it follows. A question
+on a page there and the completion count bound the same way. The reader must know the scenario&#39;s graph.
+Nothing in the code closes this: hiding every cell such a bound touches would empty the section for most
+small groups, so it is recorded, not closed. R43: from the stored rows, not from any view, one pseudonym&#39;s
+path through a scenario can be put together; and a choice in a dilemma can show an attitude, not only
+knowledge, which a quiz answer rarely does.</li>
 <li><strong>Decision — a decision&#39;s options are part of the answer key (<a class="req-ref" href="#r-PROD-013"><code>PROD-013</code></a>, D-137).</strong> Insight counts by the
 option&#39;s index and shows the option&#39;s current text. The structure signature (D-093) already makes a save
-that adds, removes or re-points an option a structural change. A save that rewords an option or swaps two
-options that lead to the same node kept the version, and earlier choices would stand under another text.
-The answer key of a decision is therefore its options&#39; texts in stored order
-(<code>src/insight/content/answerKeys.ts</code>): such a save starts a new version and keeps the learners&#39; progress,
-as a changed answer key does. Unlike a choice question, whose key is only which options are right, a
-decision has nothing else to be judged by than the options themselves.</li>
+that adds or removes an option, or points one at another node, a structural change: it asks first and
+resets the learners&#39; progress, as before. A save that rewords an option or swaps two options that lead to
+the same node kept the version, and earlier choices would stand under another text. The answer key of a
+decision is therefore its options&#39; whole plain texts in stored order (<code>src/insight/content/answerKeys.ts</code>;
+the text is compared whole, also past the 300 characters the view shows): such a save starts a new version
+and keeps the learners&#39; progress, as a changed answer key does. A reworded question keeps the version.
+Unlike a choice question, whose key is only which options are right, a decision has nothing else to be
+judged by than the options themselves.</li>
 <li><strong>Decision — a decision&#39;s table fits a phone.</strong> The tab&#39;s tables are held at least 36 rem wide and scroll in
 their own region, which a table of several columns needs (<a class="req-ref" href="#r-UD-008"><code>UD-008</code></a>). A decision&#39;s table has two columns, so
 it takes the width it is given and wraps its texts (<code>ScrollTable</code>&#39;s <code>fit</code>); at 390 px nothing scrolls
 sideways.</li>
 <li><strong>Verified:</strong> tests that failed first. <code>packages/hvl-h5p-theme/test/xapiBranchingChoices.test.ts</code>: each
 choice is handed on once, a choice made again too, nothing on a resume or for an entry that is not this
-choice, and the item that leaves the page holds the index and no text. In Chromium with the real libraries
-(<code>apps/server/test/h5p/xapiBranchingChoices.browser.int.test.ts</code>): an upstream pin of what the scenario
-keeps and does not dispatch, then the bridge&#39;s items through a loop, the last decision, the back button, a
-reload and a restart, each in the attempt it was made in. <code>test/insight/branchingChoices.test.ts</code>: the
-figures of a fixture of 20 learners worked out by hand (<code>test/insight/fixtures/README.md</code>), a decision that
-is no question, the complement of a single small cell, a hidden decision that hides its 0; against the
-report builder as it was, five of its six tests failed. <code>branchingSuppression.property.test.ts</code>: for random
-plays and <em>k</em> from 3 to 7 no figure is about 1 to <em>k</em> − 1 learners, no hidden option follows from its
-decision&#39;s learners, every shown figure is the true one, and the CSV rows carry the same cells; the checker
-looks at each decision by itself, not at the graph (R42). <code>branchingDecisions.test.ts</code>: the real example&#39;s
-decisions, and the answer key. <code>test/xapi/xapiStatementRow.test.ts</code>: the cut statement is stored with its
-index. <code>e2e/branchingInsight.e2e.test.ts</code>: five Canvas learners play the real scenario, and the teacher&#39;s
-view and the author&#39;s tab show the counts. <code>a11y/axeInsightBranching.a11y.test.ts</code> and
-<code>apps/web/test/features/insight/InsightBranching.test.tsx</code>. The three browser tests also ran with every
-answer 1.5 s late and with every processor busy before the first push; the slow run found a one-second wait
-in the end-to-end test, which is corrected. Step 38 in <code>PROGRESS.md</code> has the gate&#39;s output and what the
-other readers found.</li>
+choice, and what is handed on is a copy with the index alone. <code>xapiBranchingChoicesBridge.test.ts</code>: the item
+that leaves the page holds no text, no time and no <code>completion</code>, and the attempt it was made in. In Chromium
+with the real libraries (<code>apps/server/test/h5p/xapiBranchingChoices.browser.int.test.ts</code>): an upstream pin
+of what the scenario keeps and does not dispatch, then the bridge&#39;s items through a loop, the last
+decision, the back button, a reload while a feedback screen shows (H5P then presses the option again
+itself) and a restart: each choice once, also after the bridge&#39;s next batch, in the attempt it was made in.
+<code>test/insight/branchingChoices.test.ts</code>: the figures of a fixture of 20 learners worked out by hand
+(<code>test/insight/fixtures/README.md</code>), a decision that is no question, the complement of a single small cell,
+a hidden decision that hides its 0; against the report builder as it was, five of its six tests failed.
+<code>branchingSuppression.property.test.ts</code>: for random plays and <em>k</em> from 3 to 7 no figure is about 1 to
+<em>k</em> − 1 learners, no hidden option follows from its decision&#39;s learners, every shown figure is the true
+one, and the CSV rows carry the same cells; the checker looks at each decision by itself, not at the graph
+(R42). <code>branchingDecisions.test.ts</code>: the real example&#39;s decisions, and the answer key over the whole text.
+<code>test/learningDesign/safeEditing/answerKeyVersions.int.test.ts</code>: through the save route, a reworded option
+starts a new version and keeps every state, a reworded question does not (it failed against the key as it
+was). <code>test/xapi/xapiStatementRow.test.ts</code>: the cut statement is stored with its index and nothing else of
+a result. <code>e2e/branchingInsight.e2e.test.ts</code>: five Canvas learners play the real scenario, and the
+teacher&#39;s view and the author&#39;s tab show the counts. <code>a11y/axeInsightBranching.a11y.test.ts</code> and
+<code>apps/web/test/features/insight/InsightBranching.test.tsx</code>. Not tested with the real library: a scenario
+whose page is itself a question (the example has none; the unit test&#39;s stand-in covers it). The three
+browser tests also ran with every answer 1.5 s late and with every processor busy before the first push;
+the slow run found a one-second wait in the end-to-end test, which is corrected. Step 38 in <code>PROGRESS.md</code>
+has the gate&#39;s output and what the second reader found.</li>
 <li><strong>Consequences:</strong> <a class="req-ref" href="#r-INS-004"><code>INS-004</code></a> is built; its amendment in spec 05 says what the view shows, and <a class="req-ref" href="#r-LTI-010"><code>LTI-010</code></a> (spec<ol start="2">
 <li>and <a class="req-ref" href="#r-DATA-012"><code>DATA-012</code></a> (spec 05) carry theirs. The DPIA input has O4, O7, R42, R43 and question 9, and the data
 inventory the two fields&#39; new use; the threat model, the ROS analysis and the human-review checklist point
 there. <code>docs/handoff/branching-paths.md</code> is now a record of what was built, and the hand-off index, the
 meeting brief, the READMEs, the glossary and the Evaluator Guide follow. A report for H5P is drafted
 (<code>docs/upstream/h5p-branching-scenario-choice-statement.md</code>). No migration and no new stored field. Plays
-from before this step have no stored choices, so their decisions show no learners. The status overview
-counts 38 steps.</li>
+from before this step have no stored choices, so their decisions show no learners. One figure of
+<a class="req-ref" href="#r-INS-001"><code>INS-001</code></a> changes for a scenario: the median time on task is measured from a page load&#39;s first to its last
+stored statement, so a learner who chose at least once without finishing now has a measured time, where
+such a play had none. The status overview counts 38 steps.</li>
 </ol>
 </li>
 </ul>
@@ -18581,35 +18645,56 @@ probe.</p>
 a decision, with the back button, with a reload after the first choice, and with «Start på nytt». H5P sends
 no statement that says which option was chosen, but for every choice it makes the question&#39;s own <code>answered</code>
 statement and keeps it in the page; a decision made again is kept again; a reload and the back button add
-nothing. So nothing had to be invented.</li>
-<li>The player (<a class="req-ref" href="#r-LTI-010"><code>LTI-010</code></a>): a fifth small script hands the bridge the statement H5P kept for each choice, and the
-bridge cuts and sends it like any answer: the decision&#39;s ID and the option&#39;s number, never a text. If the
-script cannot read the record it sends nothing. The server stores it with the rules and the table it had: no
+no choice. So nothing had to be invented.</li>
+<li>The player (<a class="req-ref" href="#r-LTI-010"><code>LTI-010</code></a>): a fifth small script hands the bridge what H5P kept about each choice, and the
+bridge cuts and sends it like any answer: the decision&#39;s ID and the option&#39;s number, never a text, and not
+the time spent at the decision, which H5P&#39;s record also holds. If the script cannot read the record it sends
+nothing. The server stores it with the rules and the table it had: no
 migration and no new field. This is a <code>SPEC-DEVIATION</code> from <a class="req-ref" href="#r-LTI-010"><code>LTI-010</code></a> only.</li>
 <li>The real-browser test of the script found a fault in it before anything was pushed: the last choice before an
 end screen was sent with the next attempt&#39;s number, because H5P raises the scenario&#39;s result inside the same
 move, before the script is handed the choice. A choice now carries the attempt it was made in.</li>
 <li>The view (<a class="req-ref" href="#r-INS-004"><code>INS-004</code></a>, <a class="req-ref" href="#r-INS-006"><code>INS-006</code></a>): per decision, how many learners chose there, how many chose each option the
 first time they met the decision, and how many chose there again. A decision&#39;s options are hidden below <em>k</em>
-as one group, with a complement; a decision with fewer than <em>k</em> learners is hidden whole. The decisions are
-not in the list of questions. The CSV file has the same figures. Never shown: one learner&#39;s choices or path,
+as one group, with a complement; a decision with fewer than <em>k</em> learners is hidden whole. The current
+content&#39;s decisions are not in the list of questions. The CSV file has the same figures. Never shown: one learner&#39;s choices or path,
 a figure that joins two decisions, the time of a choice.</li>
-<li>Editing (<a class="req-ref" href="#r-PROD-013"><code>PROD-013</code></a>): a decision&#39;s options are part of the answer key, so a save that rewords or moves an
-option starts a new version and keeps the learners&#39; progress. A count cannot land under another text.</li>
+<li>Editing (<a class="req-ref" href="#r-PROD-013"><code>PROD-013</code></a>): a decision&#39;s options are part of the answer key, so a save that rewords an option, or
+swaps two that lead to the same place, starts a new version and keeps the learners&#39; progress. A count
+cannot land under another text. Adding, removing or re-pointing an option was a structural save already: it
+asks first and resets progress, as before.</li>
 <li>The page: the new part «Val ved kvar avgjerd» in Nynorsk, Bokmål and English, each decision with a summary
 sentence, a chart and a table. The table has two columns and fits a phone without sideways scrolling.</li>
 <li>Privacy: each choice is now a stored row under the learner&#39;s pseudonym, deleted in the yearly purge and
 covered by a data subject&#39;s export and erasure like every answer. The DPIA input says what is stored, why,
 for how long and what a teacher can and cannot see, and gives the data protection officer two new residuals
-and a question: a later decision&#39;s figures bound an earlier decision&#39;s hidden cell for a reader who knows
-how the scenario is built (R42), and the stored rows give one pseudonym&#39;s path, where a choice in a dilemma
-can show an attitude (R43). The threat model, the ROS analysis and the human-review checklist point there.</li>
+and a question: the figures of a part that can be reached only through one option bound that option&#39;s
+hidden cell for a reader who knows how the scenario is built (R42), and the stored rows give one pseudonym&#39;s
+path, where a choice in a dilemma can show an attitude (R43). The threat model, the ROS analysis and the human-review checklist point there.</li>
 <li>As promised after step 37, the three new browser tests ran with every answer 1.5 s late and with every
 processor busy before the first push. The slow run found a wait of one second in the end-to-end test (the
 list of courses is fetched after the page); it is 30 s now. All three then passed both ways.</li>
 <li>A report for H5P is drafted (<code>docs/upstream/h5p-branching-scenario-choice-statement.md</code>): dispatch the
 statement the libraries already build.</li>
 <li>Plays from before this step have no stored choices, so their decisions show no learners.</li>
+<li>The owner asked that the two machines be written down (2026-11-28): the Evaluator Guide has a new §5.1 on
+what this container and GitHub&#39;s runner each check and why the slower one matters, and the project rules
+(<code>CLAUDE.md</code>) now ask every later session to run a new or changed browser test delayed and under load
+before its first push.</li>
+<li>One existing figure changes for a scenario: «median tid» is measured from a page load&#39;s first to its last
+stored statement, so a learner who chose at least once without finishing now has a measured time.</li>
+<li>A second reader, not the writer, read the whole change and ran nothing. No fault in what is sent, stored,
+counted or hidden; fourteen points, all acted on or answered. The ones that changed something: the DPIA
+input&#39;s R42 stated the bound wrongly (a cell holds first choices, so the bound runs through «Valde på nytt»),
+and is restated with the other figures that bound the same way; each choice also carried H5P&#39;s time spent
+at the decision and <code>completion</code>, which no document named and insight does not read, so the script now
+hands on the index alone; the answer key compared an option&#39;s text only up to the 300 characters the view
+shows, and compares it whole now; two options chosen first by equally many were named as one «most
+chosen», and are named as a tie; four documents said decisions are never rows of the question list, and a
+removed decision is one in a view of an older version; &quot;the back button and a reload add nothing to the
+list&quot; was true of choices only. New tests from the read: a reload while a feedback screen shows, where H5P
+presses the option again itself (the choice is sent once), a check for a late duplicate after the bridge&#39;s
+next batch, and a reworded option through the real save route.</li>
 </ul>
 </li>
 </ul>

@@ -76,6 +76,10 @@ Operational rules:
   makes a page or view look different, take Playwright screenshots in `nn` at desktop (1280 px) and mobile
   (390 px) width and send them to the owner as images during the session (not only at the end). Keep them in
   the scratchpad; commit none unless the owner asks.
+- **Browser tests before the first push (owner's decision, 2026-11-28):** run every new or changed browser test
+  (`*.browser.int.test.ts`, `apps/server/e2e/`, `apps/server/a11y/`) also with every answer delayed about 1.5 s
+  and with every processor busy. GitHub's runner is slower and exposes waits that rely on timing
+  (`docs/EVALUATOR-GUIDE.md` §5.1).
 - Values marked *(verify)* in specs must be confirmed from `docs/reference/` or by the owner before you depend on them.
 
 ## 5. KNOWN TRAPS (verified 2026-10-16; details in docs/DECISIONS.md)

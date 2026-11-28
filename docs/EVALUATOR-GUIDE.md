@@ -286,6 +286,37 @@ the gate output lists them so (limitation 23).
 
 ---
 
+### 5.1 Two machines run the checks: the development container and GitHub
+
+Every step is checked on two machines, which differ on purpose.
+
+| | The development container | GitHub (`.github/workflows/`) |
+|---|---|---|
+| **When** | Before a push, by the session that wrote the change | On every pull request and every push to `main` (`ci.yml`, `docker.yml`); the advisory check once a day (`audit.yml`) |
+| **What** | The gate of this section, with the Docker smoke test | The same gate (the check «Session gate»), the image build with the app stack smoke test, and code scanning (CodeQL, D-150) |
+| **Where the result is** | Pasted into `PROGRESS.md` by the session; nobody else saw the run | On the pull request, for anyone with access: each check passed or failed |
+| **What it cannot run** | A few test files that need a privileged database or a kernel sandbox the container lacks; each step's gate output names them | Nothing is left out |
+
+GitHub's result is the one that counts: the owner merges a pull request only when its checks are green.
+
+**Why both.** The container answers in minutes while the work is being done. GitHub's runner starts from nothing
+each time, so nothing left over from earlier work can help a test pass, and it is slower. A slower machine changes
+only *when* things happen, never what the code does. That is its use: it exposes a test, or a piece of code, that
+was right here by lucky timing. Step 37's browser test of the picture tool read a list before the server's answer
+had arrived and failed only on GitHub; the standstill line that step 37 corrected had failed one run there for the
+same kind of reason. The cost of such a find is time (a run is about an hour), not a risk to users.
+
+**The rule that follows (the owner's decision, 2026-11-28; first used in step 38).** Before its first push, a new
+or changed browser test (`*.browser.int.test.ts`, `apps/server/e2e/`, `apps/server/a11y/`) is run three ways
+here: as it is, with every answer to the browser delayed by about 1.5 s, and with every processor busy. A test
+that waits for the thing itself (an element, a stored row, an answer) passes all three. A test that waits a fixed
+time, or relies on a helper's default wait of one second, fails one of them. Step 38's delayed run found such a
+wait before anything was pushed.
+
+**When GitHub fails and the container passed:** read the failed check's log, reproduce it here with the delay or
+the load, and correct the cause. A wait is never just made longer, and a test is never skipped or switched off to
+get a green check.
+
 ## 6. Known limitations (stated honestly)
 
 1. **Scores are computed in the browser.** H5P scoring cannot be made tamper-proof. HVL Interaktiv

@@ -353,10 +353,11 @@ in-memory queue. They never block or slow down the activity.
   (`INS-004`). H5P dispatches no statement that names the option chosen, but makes the question's own `answered`
   statement for every choice and keeps it on the scenario's list. A fifth player-only script
   (`packages/hvl-h5p-theme/src/xapiBranchingChoices.js`) watches the scenario's `navigated` event from the first
-  event the instance raises, and hands the bridge the kept statement of each choice made from then on. The bridge
-  cuts and queues it as it does a dispatched `answered`: the same fields and caps, a `statementId` of its own, and
-  the `attemptId` of the attempt the choice was made in (a choice handed on in the same turn as the root result
-  that ends its run takes that result's attempt). Nothing is sent for a move that is no choice, for a resume, or
+  event the instance raises, and hands the bridge, for each choice made from then on, the kept statement's verb,
+  object and context with the index as its only result (not H5P's `completion` or the time spent at the decision).
+  The bridge cuts and queues it as it does a dispatched `answered`: the same cut and caps, a `statementId` of its
+  own, and the `attemptId` of the attempt the choice was made in (a choice handed on in the same turn as the root
+  result that ends its run takes that result's attempt). Nothing is sent for a move that is no choice, for a resume, or
   for a kept entry the script cannot read as that choice. `LTI-011` is not deviated: the server takes the
   statement by the schema and the rules it had.
 

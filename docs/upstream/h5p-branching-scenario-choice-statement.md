@@ -75,7 +75,8 @@ if (xAPIData && (!isBranching || isBranchingQuestionAndAnswered)) {
 ```
 
 A choice made again (after a loop back to the question, or after the back button) is pushed again, so the list
-holds every choice in order. The scenario's own `navigated` event also carries `chosenAlternative`.
+holds every choice in order, among the entries of the other nodes. The scenario's own `navigated` event also
+carries `chosenAlternative`.
 
 ### Suggested change
 
@@ -86,8 +87,9 @@ in the scenario's `navigated` handler. The statement is already built; only the 
 ### Our workaround
 
 Our xAPI bridge (the script that forwards statements to our server) listens to the scenario instance's
-`navigated` event and, for a move with `chosenAlternative`, sends the statement the scenario has just put last on
-`xAPIData` (`packages/hvl-h5p-theme/src/xapiBranchingChoices.js`, D-154). It reads two internals of the library,
+`navigated` event and, for a move with `chosenAlternative`, sends the verb, the object and the index of the
+statement the scenario has just put last on `xAPIData` (`packages/hvl-h5p-theme/src/xapiBranchingChoices.js`,
+D-154). It reads two internals of the library,
 so our test `apps/server/test/h5p/xapiBranchingChoices.browser.int.test.ts` plays the real libraries and fails,
 with the words «upstream pin», if they stop keeping that statement or start dispatching an `answered` themselves;
 the workaround goes when a pinned Branching Scenario dispatches it.

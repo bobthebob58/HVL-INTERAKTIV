@@ -14,8 +14,11 @@ node), how many learners chose there («Studentar som valde»), how many chose e
 the decision, and how many **chose again** there, through a loop, the back button or a new run («Valde på nytt»). Groups under *k* are
 hidden as elsewhere («< 5»; a decision's options are one additive group). The CSV has the same figures (section
 `decisions`, measures `choosers`, `firstChoice`, `choseAgain`). The figures are for the current version only, and the
-decisions are in no row of the question list (`INS-002`). A decision's options, their texts in order, are part of the
-answer key: a save that rewords or moves an option starts a new version and keeps progress (D-137).
+current content's decisions are in no row of the question list (`INS-002`); a decision that was removed is, in a
+view of an older version, a row without a name like any removed question. A decision's options, their whole texts
+in order, are part of the answer key: a save that rewords an option, or swaps two that lead to the same node, starts
+a new version and keeps progress (D-137). Adding, removing or re-pointing an option is a structural save, as
+before: it asks first and resets progress (D-093).
 
 ## The option taken
 
@@ -28,14 +31,15 @@ H5P.BranchingScenario 1.10.1 with H5P.BranchingQuestion 1.0, in Chromium. P1 sta
 without a response, and the last choice before an end screen dispatches nothing. But the scenario keeps the
 question's own `answered` statement for every choice last on its list `xAPIData` (interaction type `choice`, the
 node's `subContentId`, the option's index as `result.response`), and fires its own `navigated` event with
-`chosenAlternative`. A choice made again is a new entry; the back button and a resume after a reload add none; a
-restart empties the list.
+`chosenAlternative`. A choice made again is a new entry; the back button and a resume after a reload add no choice
+(they can add a page's own entry, which is never sent); a restart empties the list.
 
 ## Where it is
 
-- Browser: `packages/hvl-h5p-theme/src/xapiBranchingChoices.js`, the bridge's fifth player-only script, hands the
-  kept statement to `xapiBridge.js`, which cuts and queues it like a dispatched one (`SPEC-DEVIATION: D-154`, from
-  `LTI-010` only). The server stores it with the schema, rules and table it had: no migration, no new column.
+- Browser: `packages/hvl-h5p-theme/src/xapiBranchingChoices.js`, the bridge's fifth player-only script, hands
+  `xapiBridge.js` the kept statement's verb, object and context with the index alone (not the time spent at the
+  decision), and the bridge cuts and queues it like a dispatched one (`SPEC-DEVIATION: D-154`, from `LTI-010`
+  only). The server stores it with the schema, rules and table it had: no migration, no new column.
 - Server: `apps/server/src/insight/content/branchingDecisions.ts`, `insight/aggregate/branchingChoices.ts`, the field
   `branching` in `insight/insightReport.ts` and `buildInsightReport.ts`, the CSV rows in
   `insight/export/insightCsvRows.ts`, the answer key in `insight/content/answerKeys.ts`; the contract in
@@ -52,8 +56,9 @@ restart empties the list.
 ## What stays open
 
 - **The DPO:** residuals R42 and R43 and question 9 in [docs/privacy/DPIA-INPUT.md](../privacy/DPIA-INPUT.md). R42:
-  a decision reached through one option only bounds a hidden cell of the earlier one. R43: one pseudonym's path can
-  be put together from the stored rows (not from any view), and a choice in a dilemma can show an attitude.
+  the learners of a part reached through one option only, less the earlier decision's «Valde på nytt», bound that
+  option's hidden cell; nothing in the code closes it. R43: one pseudonym's path can be put together from the
+  stored rows (not from any view), and a choice in a dilemma can show an attitude.
 - **Upstream:** the report draft `docs/upstream/h5p-branching-scenario-choice-statement.md`, asking H5P to dispatch
   the choice. The script depends on the library's internals; another version that keeps its record elsewhere sends
   nothing, so a decision then shows no learners, never a wrong count.

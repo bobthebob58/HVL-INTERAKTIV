@@ -3822,32 +3822,53 @@ Append one entry per session: date, session, what was done, gate output, and any
     a decision, with the back button, with a reload after the first choice, and with «Start på nytt». H5P sends
     no statement that says which option was chosen, but for every choice it makes the question's own `answered`
     statement and keeps it in the page; a decision made again is kept again; a reload and the back button add
-    nothing. So nothing had to be invented.
-  - The player (`LTI-010`): a fifth small script hands the bridge the statement H5P kept for each choice, and the
-    bridge cuts and sends it like any answer: the decision's ID and the option's number, never a text. If the
-    script cannot read the record it sends nothing. The server stores it with the rules and the table it had: no
+    no choice. So nothing had to be invented.
+  - The player (`LTI-010`): a fifth small script hands the bridge what H5P kept about each choice, and the
+    bridge cuts and sends it like any answer: the decision's ID and the option's number, never a text, and not
+    the time spent at the decision, which H5P's record also holds. If the script cannot read the record it sends
+    nothing. The server stores it with the rules and the table it had: no
     migration and no new field. This is a `SPEC-DEVIATION` from `LTI-010` only.
   - The real-browser test of the script found a fault in it before anything was pushed: the last choice before an
     end screen was sent with the next attempt's number, because H5P raises the scenario's result inside the same
     move, before the script is handed the choice. A choice now carries the attempt it was made in.
   - The view (`INS-004`, `INS-006`): per decision, how many learners chose there, how many chose each option the
     first time they met the decision, and how many chose there again. A decision's options are hidden below *k*
-    as one group, with a complement; a decision with fewer than *k* learners is hidden whole. The decisions are
-    not in the list of questions. The CSV file has the same figures. Never shown: one learner's choices or path,
+    as one group, with a complement; a decision with fewer than *k* learners is hidden whole. The current
+    content's decisions are not in the list of questions. The CSV file has the same figures. Never shown: one learner's choices or path,
     a figure that joins two decisions, the time of a choice.
-  - Editing (`PROD-013`): a decision's options are part of the answer key, so a save that rewords or moves an
-    option starts a new version and keeps the learners' progress. A count cannot land under another text.
+  - Editing (`PROD-013`): a decision's options are part of the answer key, so a save that rewords an option, or
+    swaps two that lead to the same place, starts a new version and keeps the learners' progress. A count
+    cannot land under another text. Adding, removing or re-pointing an option was a structural save already: it
+    asks first and resets progress, as before.
   - The page: the new part «Val ved kvar avgjerd» in Nynorsk, Bokmål and English, each decision with a summary
     sentence, a chart and a table. The table has two columns and fits a phone without sideways scrolling.
   - Privacy: each choice is now a stored row under the learner's pseudonym, deleted in the yearly purge and
     covered by a data subject's export and erasure like every answer. The DPIA input says what is stored, why,
     for how long and what a teacher can and cannot see, and gives the data protection officer two new residuals
-    and a question: a later decision's figures bound an earlier decision's hidden cell for a reader who knows
-    how the scenario is built (R42), and the stored rows give one pseudonym's path, where a choice in a dilemma
-    can show an attitude (R43). The threat model, the ROS analysis and the human-review checklist point there.
+    and a question: the figures of a part that can be reached only through one option bound that option's
+    hidden cell for a reader who knows how the scenario is built (R42), and the stored rows give one pseudonym's
+    path, where a choice in a dilemma can show an attitude (R43). The threat model, the ROS analysis and the human-review checklist point there.
   - As promised after step 37, the three new browser tests ran with every answer 1.5 s late and with every
     processor busy before the first push. The slow run found a wait of one second in the end-to-end test (the
     list of courses is fetched after the page); it is 30 s now. All three then passed both ways.
   - A report for H5P is drafted (`docs/upstream/h5p-branching-scenario-choice-statement.md`): dispatch the
     statement the libraries already build.
   - Plays from before this step have no stored choices, so their decisions show no learners.
+  - The owner asked that the two machines be written down (2026-11-28): the Evaluator Guide has a new §5.1 on
+    what this container and GitHub's runner each check and why the slower one matters, and the project rules
+    (`CLAUDE.md`) now ask every later session to run a new or changed browser test delayed and under load
+    before its first push.
+  - One existing figure changes for a scenario: «median tid» is measured from a page load's first to its last
+    stored statement, so a learner who chose at least once without finishing now has a measured time.
+  - A second reader, not the writer, read the whole change and ran nothing. No fault in what is sent, stored,
+    counted or hidden; fourteen points, all acted on or answered. The ones that changed something: the DPIA
+    input's R42 stated the bound wrongly (a cell holds first choices, so the bound runs through «Valde på nytt»),
+    and is restated with the other figures that bound the same way; each choice also carried H5P's time spent
+    at the decision and `completion`, which no document named and insight does not read, so the script now
+    hands on the index alone; the answer key compared an option's text only up to the 300 characters the view
+    shows, and compares it whole now; two options chosen first by equally many were named as one «most
+    chosen», and are named as a tie; four documents said decisions are never rows of the question list, and a
+    removed decision is one in a view of an older version; "the back button and a reload add nothing to the
+    list" was true of choices only. New tests from the read: a reload while a feedback screen shows, where H5P
+    presses the option again itself (the choice is sent once), a check for a late duplicate after the bridge's
+    next batch, and a reworded option through the real save route.
