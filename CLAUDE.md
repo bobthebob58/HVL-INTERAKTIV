@@ -80,6 +80,10 @@ Operational rules:
   (`*.browser.int.test.ts`, `apps/server/e2e/`, `apps/server/a11y/`) also with every answer delayed about 1.5 s
   and with every processor busy. GitHub's runner is slower and exposes waits that rely on timing
   (`docs/EVALUATOR-GUIDE.md` §5.1).
+- **Two papers kept true (owner's request, 2026-11-28):** a step that changes what the service does about security
+  or privacy updates the row it touches in `docs/assurance/compared-with-h5p.md`, or adds one, in the same pull
+  request; a row states only what a named file or test shows. A new residual in `docs/privacy/DPIA-INPUT.md` §12
+  also goes into the theme table of `docs/privacy/dpo-first-meeting.md` (`npm run privacy:dpia-check` fails otherwise).
 - Values marked *(verify)* in specs must be confirmed from `docs/reference/` or by the owner before you depend on them.
 
 ## 5. KNOWN TRAPS (verified 2026-10-16; details in docs/DECISIONS.md)

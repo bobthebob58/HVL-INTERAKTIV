@@ -45,8 +45,8 @@
 | **E** | Elevation of privilege: gaining rights one should not have | Authorisation |
 
 **Evidence.** Paths that start with `src/` are under `apps/server/src/`; `test/`, `e2e/` and `a11y/` are under
-`apps/server/`. `D-nnn` is a decision in [docs/DECISIONS.md](../DECISIONS.md). `R1`–`R40` are the residual risks in
-[docs/privacy/DPIA-INPUT.md](../privacy/DPIA-INPUT.md) §12. `Q1`–`Q31` are the questions in
+`apps/server/`. `D-nnn` is a decision in [docs/DECISIONS.md](../DECISIONS.md). `R1`–`R43` are the residual risks in
+[docs/privacy/DPIA-INPUT.md](../privacy/DPIA-INPUT.md) §12. `Q1`–`Q34` are the questions in
 [PROGRESS.md](../../PROGRESS.md) (there is no Q11). A bracketed ID such as `[SEC-001]` is the requirement a test's title
 names.
 

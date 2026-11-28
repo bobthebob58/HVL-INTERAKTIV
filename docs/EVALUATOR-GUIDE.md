@@ -151,7 +151,7 @@ whose results HVL records (D-079); `UD-031`'s own check, a dated result file for
 | `npx vitest run -t "LTI-00"` *(from S3)* | LTI 1.3 against the mock Canvas: launches and their refusals (foreign signature, replay, unknown deployment), ltijs storage on PostgreSQL, the cookie-less ltik transport, role mapping that never grants `admin`, Deep Linking with a JWT the mock verifies, resource links and course copy (`LTI-001`…`LTI-007`). Needs the services |
 | `npx vitest run -t "PROD-004\|PROD-005\|PROD-006\|H5P-007"` *(from S3)* | One 404 page for unknown, draft and invisible activities; placing activities in Canvas; sharing that applies at once, only for those who may edit; H5P AJAX and learner-state calls refused without an ltik or CSRF token, and signed content-file URLs. Needs the services |
 | `npm run seed:libraries` *(from S2)* | Installs the content types offline from the verified seed packages (`H5P-003`); needs the packages (Q7). From S4, `npm run seed:libraries -- var/h5p-real/packages` installs the real types that `npm run h5p:fetch-libraries` built (D-078) |
-| `npm run privacy:dpia-check` *(from S6)* | The DPIA input has its 13 sections, its §6 matches the Canvas developer key (privacy level, scopes, every placement's custom fields), and its residuals R1…Rn are whole and every one cited exists (`DATA-005`, the document check of D-113) |
+| `npm run privacy:dpia-check` *(from S6)* | The DPIA input has its 13 sections, its §6 matches the Canvas developer key (privacy level, scopes, every placement's custom fields), its residuals R1…Rn are whole and every one cited exists, and the brief for the DPO's first meeting ([privacy/dpo-first-meeting.md](privacy/dpo-first-meeting.md)) sorts each residual into one theme (`DATA-005`, the document check of D-113) |
 | `npx vitest run -t "DATA-0"` *(from S6)* | The privacy operations: the yearly purge and its dry run (`DATA-003`), the production checks for TLS and the EEA (`DATA-004`), the DPIA check (`DATA-005`), the append-only audit (`DATA-007`), the data-subject CLI (`DATA-008`), the database roles on a throwaway database (`DATA-010`) and the xAPI fields (`DATA-012`); needs the services and a local PostgreSQL superuser for the role tests |
 | `npm run --silent privacy:purge -- --dry-run` *(from S6, in `apps/server`)* | What the yearly purge would delete and write, as counts per table and year; nothing is deleted, and the run is audited (`DATA-003`, D-107, [ops/yearly-purge.md](ops/yearly-purge.md)) |
 | `npx vitest run apps/server/test/privacy/operationsClis.int.test.ts` *(from S6)* | The operations CLIs together, each through its npm script, on a database only they set up: `db:roles` (roles and the migrate step), a data-subject export, the purge's dry run and real run as `hvli_app`, then an erasure; every run audited with counts only (`DATA-010`, `DATA-003`, `DATA-008`, `DATA-007`) |
@@ -288,7 +288,8 @@ the gate output lists them so (limitation 23).
 
 ### 5.1 Two machines run the checks: the development container and GitHub
 
-Every step is checked on two machines, which differ on purpose.
+Every step is checked on two machines, which differ on purpose. What each has caught that the other did not is in
+[assurance/how-it-was-built.md](assurance/how-it-was-built.md) §5.
 
 | | The development container | GitHub (`.github/workflows/`) |
 |---|---|---|

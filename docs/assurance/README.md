@@ -144,6 +144,7 @@ and the hand-off index says the tasks that need a person or system at HVL "are n
 | [ros-analyse.md](ros-analyse.md) | A draft ROS-analyse (risk and vulnerability analysis) for IT to correct |
 | [human-review.md](human-review.md) | What has and has not been reviewed, by whom, and what people should review first |
 | [how-it-was-built.md](how-it-was-built.md) | The method: the plan, build, test, verify cycle; fixes as experiments; adversarial AI review; the local gate and GitHub CI compared; the evidence, and what people still need to check |
+| [compared-with-h5p.md](compared-with-h5p.md) | What the service adds to the H5P software in security and privacy, row by row with the file or test that shows it; where it is not better; and what is not verified (H5P.com) |
 | [test-environment.md](test-environment.md) | The stage-1 request: an isolated test install with made-up data only |
 | [sbom.cdx.json](sbom.cdx.json) | A CycloneDX software bill of materials, made by `npm run sbom` ([tools/sbom/](../../tools/sbom/README.md)) |
 
@@ -155,6 +156,7 @@ and the hand-off index says the tasks that need a person or system at HVL "are n
 | Requirement → code → test (generated) | [docs/TRACEABILITY.md](../TRACEABILITY.md) |
 | How to check the code against the specs, and its known limitations | [docs/EVALUATOR-GUIDE.md](../EVALUATOR-GUIDE.md) (§2, §6) |
 | Personal data, legal basis, residual risks R1–R43, the DPO's questions | [docs/privacy/DPIA-INPUT.md](../privacy/DPIA-INPUT.md) |
+| A short way into the DPIA input for the DPO's first meeting: the residuals by theme | [docs/privacy/dpo-first-meeting.md](../privacy/dpo-first-meeting.md) |
 | Every stored field, Redis key and log field | [docs/privacy/DATA-INVENTORY.md](../privacy/DATA-INVENTORY.md) |
 | Operations: what IT provides, secrets, backups, monitoring, the deployment checklist | [docs/ops/runbook.md](../ops/runbook.md) and [docs/ops/](../ops/README.md) |
 | Accessibility conformance (automated results; manual pending) | [docs/accessibility/WCAG-CONFORMANCE-REPORT.md](../accessibility/WCAG-CONFORMANCE-REPORT.md) |

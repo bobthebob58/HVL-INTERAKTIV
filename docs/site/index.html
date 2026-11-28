@@ -6626,7 +6626,7 @@ whose results HVL records (D-079); <a class="req-ref" href="#r-UD-031"><code>UD-
 <tr>
 <td><code>npm run seed:libraries</code> <em>(from S2)</em></td><td>Installs the content types offline from the verified seed packages (<a class="req-ref" href="#r-H5P-003"><code>H5P-003</code></a>); needs the packages (Q7). From S4, <code>npm run seed:libraries -- var/h5p-real/packages</code> installs the real types that <code>npm run h5p:fetch-libraries</code> built (D-078)</td></tr>
 <tr>
-<td><code>npm run privacy:dpia-check</code> <em>(from S6)</em></td><td>The DPIA input has its 13 sections, its §6 matches the Canvas developer key (privacy level, scopes, every placement&#39;s custom fields), and its residuals R1…Rn are whole and every one cited exists (<a class="req-ref" href="#r-DATA-005"><code>DATA-005</code></a>, the document check of D-113)</td></tr>
+<td><code>npm run privacy:dpia-check</code> <em>(from S6)</em></td><td>The DPIA input has its 13 sections, its §6 matches the Canvas developer key (privacy level, scopes, every placement&#39;s custom fields), its residuals R1…Rn are whole and every one cited exists, and the brief for the DPO&#39;s first meeting (<a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/privacy/dpo-first-meeting.md" rel="noopener" class="ext">privacy/dpo-first-meeting.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>) sorts each residual into one theme (<a class="req-ref" href="#r-DATA-005"><code>DATA-005</code></a>, the document check of D-113)</td></tr>
 <tr>
 <td><code>npx vitest run -t &quot;DATA-0&quot;</code> <em>(from S6)</em></td><td>The privacy operations: the yearly purge and its dry run (<a class="req-ref" href="#r-DATA-003"><code>DATA-003</code></a>), the production checks for TLS and the EEA (<a class="req-ref" href="#r-DATA-004"><code>DATA-004</code></a>), the DPIA check (<a class="req-ref" href="#r-DATA-005"><code>DATA-005</code></a>), the append-only audit (<a class="req-ref" href="#r-DATA-007"><code>DATA-007</code></a>), the data-subject CLI (<a class="req-ref" href="#r-DATA-008"><code>DATA-008</code></a>), the database roles on a throwaway database (<a class="req-ref" href="#r-DATA-010"><code>DATA-010</code></a>) and the xAPI fields (<a class="req-ref" href="#r-DATA-012"><code>DATA-012</code></a>); needs the services and a local PostgreSQL superuser for the role tests</td></tr>
 <tr>
@@ -6790,7 +6790,8 @@ the gate output lists them so (limitation 23).</p>
 </tbody></table></div>
 <hr>
 <h4 id="evaluator-guide--51-two-machines-run-the-checks-the-development-container-and-github" tabindex="-1">5.1 Two machines run the checks: the development container and GitHub</h4>
-<p>Every step is checked on two machines, which differ on purpose.</p>
+<p>Every step is checked on two machines, which differ on purpose. What each has caught that the other did not is in
+<a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/assurance/how-it-was-built.md" rel="noopener" class="ext">assurance/how-it-was-built.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> §5.</p>
 <div class="table-wrap" role="region" aria-label="Table 5, 5.1 Two machines run the checks: the development container and GitHub" tabindex="0"><table><thead><tr>
 <th scope="col"></th><th scope="col">The development container</th><th scope="col">GitHub (<code>.github/workflows/</code>)</th></tr>
 </thead><tbody><tr>
@@ -15825,7 +15826,7 @@ log, «2026-11-06 · S6 gate»)</li>
 <tr>
 <td>Q5</td><td>Hosting: HVL on-premises or Sikt, both in the EEA (<a class="req-ref" href="#r-DATA-004"><code>DATA-004</code></a>). The container runtime must allow Playwright&#39;s seccomp profile and <code>CAP_SYS_CHROOT</code> for the PDF export&#39;s sandbox (OpenShift&#39;s <code>restricted-v2</code> allows neither), a DNS name and certificate for the files host (<code>files.&lt;host&gt;</code>, or a separate registrable domain), and a clamd with daily signatures (D-110&#39;s step-6 amendments)</td><td>HVL IT</td><td>S6</td></tr>
 <tr>
-<td>Q6</td><td>Data protection officer confirms the legal basis and reviews DPIA input (<a class="req-ref" href="#r-DATA-005"><code>DATA-005</code></a>). <strong>Input complete 2026-11-05:</strong> <code>docs/privacy/DPIA-INPUT.md</code> (purposes, operations, data flows with a diagram, the Canvas key&#39;s <code>privacy_level</code> and custom fields, recipients, retention, rights, security measures, residuals R1–R40, and the DPO&#39;s questions in its §13)</td><td>HVL DPO</td><td>S6, pilot</td></tr>
+<td>Q6</td><td>Data protection officer confirms the legal basis and reviews DPIA input (<a class="req-ref" href="#r-DATA-005"><code>DATA-005</code></a>). <strong>Input complete 2026-11-05:</strong> <code>docs/privacy/DPIA-INPUT.md</code> (purposes, operations, data flows with a diagram, the Canvas key&#39;s <code>privacy_level</code> and custom fields, recipients, retention, rights, security measures, residuals R1–R43, and the DPO&#39;s questions in its §13). A short way in for a first meeting: <code>docs/privacy/dpo-first-meeting.md</code></td><td>HVL DPO</td><td>S6, pilot</td></tr>
 <tr>
 <td>Q17</td><td>Review the studio&#39;s drafts: phase labels and texts, the guide and its references, the nine patterns, the mappe template, criteria and limits, and the content bank&#39;s consent text (with HVL&#39;s lawyers); pilot teachers try the patterns; from S6 also the H5P texts and the video guidance in <code>content/h5p-tekstar/</code> (§9a, D-111). Packet: <code>docs/reference/alu-review-s5.md</code> (D-100). <strong>Required before the pilot.</strong></td><td>ALU, Pedagogisk akademi, HVL legal</td><td>The pilot</td></tr>
 <tr>
@@ -18681,6 +18682,24 @@ statement the libraries already build.</li>
 what this container and GitHub&#39;s runner each check and why the slower one matters, and the project rules
 (<code>CLAUDE.md</code>) now ask every later session to run a new or changed browser test delayed and under load
 before its first push.</li>
+<li>The owner asked for a record of where the service is safer than the H5P software it builds on, and where
+it is not (2026-11-28; &quot;honesty is key&quot;). <code>docs/assurance/compared-with-h5p.md</code> is its first version:
+fourteen rows, each with what the H5P software does as it comes, what this service does, the file or test
+that shows it, and what limits the claim; a section on where the service is not better or is more limited
+(it stores learning events the bare library does not, it carries the library&#39;s unpatched flaw, it accepts
+SVG and larger files than the library&#39;s defaults); and a section on what was not verified, H5P.com above
+all. The comparison is with the software only: H5P Core, the server library and ltijs as installed here,
+read in their own files. A project rule asks later steps to keep it true.</li>
+<li>The owner asked for a short paper for the data protection officer&#39;s first meeting (2026-11-28).
+<code>docs/privacy/dpo-first-meeting.md</code> says what the service does with personal data, lists the nine questions,
+sorts the 43 residuals of the DPIA input into seven themes, suggests which to look at first and what the
+meeting should decide. It adds nothing to the DPIA input, which stays the authority.
+<code>npm run privacy:dpia-check</code> now also fails when the brief&#39;s table does not name every residual of §12
+exactly once, when a theme&#39;s count is wrong, or when the brief cites a residual §12 does not list
+(<code>tools/privacy/dpoBriefProblems.mjs</code>, with tests).</li>
+<li>The gate found one thing: a document test in the server suite still expected the DPO to be asked about
+«R1–R41» (<code>dpiaRecordedLearners.test.ts</code>). It had not been run again after the DPIA input gained R42 and R43.
+The test now reads the table&#39;s last residual instead of a number typed by hand.</li>
 <li>One existing figure changes for a scenario: «median tid» is measured from a page load&#39;s first to its last
 stored statement, so a learner who chose at least once without finishing now has a measured time.</li>
 <li>A second reader, not the writer, read the whole change and ran nothing. No fault in what is sent, stored,

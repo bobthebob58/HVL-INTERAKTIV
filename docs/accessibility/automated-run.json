@@ -2,13 +2,13 @@
   "format": 2,
   "command": "npm run test:a11y",
   "date": "2026-11-28",
-  "commit": "106e98dbe2a4bc70cac6bdf5ec13428459a1f786",
+  "commit": "da19b855c649bb65d61591f82520c761131fd431",
   "worktree": "clean",
   "axeCore": "4.14.1",
   "totals": {
-    "files": 18,
+    "files": 19,
     "failedFiles": 0,
-    "passed": 575,
+    "passed": 578,
     "failed": 0,
     "skipped": 0
   },
@@ -91,6 +91,11 @@
       {"group":"[UD-030] axe on the Innsikt tab › light","title":"[UD-030][INS-008] the Canvas page’s Innsikt tab has no serious or critical violation","status":"passed"},
       {"group":"[UD-030] axe on the Innsikt tab › light","title":"[UD-030][INS-008] the portal’s Innsikt tab, with a question on the list, has no serious or critical violation","status":"passed"},
       {"group":"[UD-030] axe on the Innsikt tab › light","title":"[UD-030][PROD-010] the portal’s Innsikt tab for a period shortened to 1 August has no serious or critical violation","status":"passed"}
+    ],
+    "axeInsightBranching.a11y.test.ts": [
+      {"group":"[UD-030] axe on the Innsikt tab of a Branching Scenario","title":"[UD-008][INS-004] at phone width the decisions’ part scrolls neither the page nor its tables sideways","status":"passed"},
+      {"group":"[UD-030] axe on the Innsikt tab of a Branching Scenario › forced colours","title":"[UD-030][INS-004] the decisions’ part has no serious or critical violation","status":"passed"},
+      {"group":"[UD-030] axe on the Innsikt tab of a Branching Scenario › light","title":"[UD-030][INS-004] the decisions’ part has no serious or critical violation","status":"passed"}
     ],
     "axeSaveChoice.a11y.test.ts": [
       {"group":"[UD-030] axe on the editor’s save choice dialog › forced colours","title":"[UD-030] the open dialog on the activity page has only recorded upstream problems","status":"passed"},
@@ -627,7 +632,7 @@
     ]
   },
   "axe": {
-    "scans": 181,
+    "scans": 183,
     "labels": [
       {"label":"forced colours, /h5p/edit/<id> in a frame","scans":1},
       {"label":"forced colours, /h5p/play/<id> in a frame","scans":1},
@@ -714,6 +719,7 @@
       {"label":"forced colours, the sign-in page","scans":1},
       {"label":"forced colours, the signed-out page","scans":1},
       {"label":"forced colours: /aktivitet/[id] Innsikt","scans":1},
+      {"label":"forced colours: /aktivitet/[id] Innsikt, Branching Scenario","scans":1},
       {"label":"forced colours: /aktivitet/[id] Innsikt, shortened period","scans":1},
       {"label":"forced colours: /aktivitet/[id] Poeng til Canvas","scans":1},
       {"label":"forced colours: /app/play Innsikt","scans":1},
@@ -803,6 +809,7 @@
       {"label":"light, the sign-in page","scans":1},
       {"label":"light, the signed-out page","scans":1},
       {"label":"light: /aktivitet/[id] Innsikt","scans":1},
+      {"label":"light: /aktivitet/[id] Innsikt, Branching Scenario","scans":1},
       {"label":"light: /aktivitet/[id] Innsikt, a period over the limit","scans":1},
       {"label":"light: /aktivitet/[id] Innsikt, shortened period","scans":1},
       {"label":"light: /aktivitet/[id] Poeng til Canvas","scans":1},
@@ -820,7 +827,7 @@
       {"rule":"aria-allowed-attr","impact":"critical","elements":36,"scans":4},
       {"rule":"aria-prohibited-attr","impact":"serious","elements":12,"scans":4},
       {"rule":"aria-valid-attr-value","impact":"critical","elements":6,"scans":6},
-      {"rule":"color-contrast","impact":"serious","elements":1458,"scans":127},
+      {"rule":"color-contrast","impact":"serious","elements":1469,"scans":129},
       {"rule":"form-field-multiple-labels","impact":"moderate","elements":2,"scans":2},
       {"rule":"video-caption","impact":"critical","elements":4,"scans":4}
     ]

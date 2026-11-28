@@ -974,7 +974,7 @@ under the step that does it):
 | Q4 | Paste `docs/reference/canvas-lti13-developer-key.json` into HVL's test Canvas; report client ID, deployment ID, which instance TeCopp uses (test/beta/production), and whether `feide_login` arrives under `privacy_level` anonymous and equals the Feide ID; only then set `"feideLinking": true` for that platform in `LTI_PLATFORMS` (AUTH-005, D-063) | TeCopp | S3 |
 | Q16 | ~~The repository has no `main` branch, and CI (`.github/workflows/ci.yml`) runs only on pushes to `main` and on pull requests, so GitHub has never run the gate: every session's gate ran locally only. Create `main` from `ccr-07f63266-6cere5` or open a pull request, and decide what to do with the open Dependabot update branches (pins stay exact). **Required before the pilot (owner, 2026-10-24).**~~ Resolved 2026-10-30 (D-101): GitHub CI runs on `main` and on pull requests. `main` is protected by a ruleset that requires a pull request and CI's «Session gate» check; that check passed on pull request #8 (run 41066236672, on `72e5516`), which was then merged (`47e235e`); Dependabot opens one grouped monthly pull request per ecosystem (S5 start). The push run on the merge (run 41075981429) was red: its end-to-end step failed in `appPlayEditor.e2e`, which pressed «Lagre» before the editor could save, a real slow-device fault. It is fixed in S6 step 0; GitHub's confirmation comes with that step's push | — | — |
 | Q5 | Hosting: HVL on-premises or Sikt, both in the EEA (`DATA-004`). The container runtime must allow Playwright's seccomp profile and `CAP_SYS_CHROOT` for the PDF export's sandbox (OpenShift's `restricted-v2` allows neither), a DNS name and certificate for the files host (`files.<host>`, or a separate registrable domain), and a clamd with daily signatures (D-110's step-6 amendments) | HVL IT | S6 |
-| Q6 | Data protection officer confirms the legal basis and reviews DPIA input (`DATA-005`). **Input complete 2026-11-05:** `docs/privacy/DPIA-INPUT.md` (purposes, operations, data flows with a diagram, the Canvas key's `privacy_level` and custom fields, recipients, retention, rights, security measures, residuals R1–R40, and the DPO's questions in its §13) | HVL DPO | S6, pilot |
+| Q6 | Data protection officer confirms the legal basis and reviews DPIA input (`DATA-005`). **Input complete 2026-11-05:** `docs/privacy/DPIA-INPUT.md` (purposes, operations, data flows with a diagram, the Canvas key's `privacy_level` and custom fields, recipients, retention, rights, security measures, residuals R1–R43, and the DPO's questions in its §13). A short way in for a first meeting: `docs/privacy/dpo-first-meeting.md` | HVL DPO | S6, pilot |
 | Q17 | Review the studio's drafts: phase labels and texts, the guide and its references, the nine patterns, the mappe template, criteria and limits, and the content bank's consent text (with HVL's lawyers); pilot teachers try the patterns; from S6 also the H5P texts and the video guidance in `content/h5p-tekstar/` (§9a, D-111). Packet: `docs/reference/alu-review-s5.md` (D-100). **Required before the pilot.** | ALU, Pedagogisk akademi, HVL legal | The pilot |
 | Q18 | Should InteractiveBook and InteractiveVideo send a score to Canvas? H5P sends none unless asked. Default until answered (D-115): InteractiveBook does, through H5P's own «Send inn rapport» on the summary page (`reportingIsEnabled`, set for learners only, so an author's preview never offers it; the library then says «Svara dine er sende inn til vurdering», which the language overlay can reword, D-111); an InteractiveVideo only when its author adds a submit screen, so the `fa-video` pattern sends none | ALU / owner | The pilot |
 | Q19 | Every ending of the `uv-case` pattern scores 10 of 10, as the pattern intends, so Canvas gets 100 for any completed case. Keep that as a completion mark (the default, D-115), score the choices (a pattern change ALU reviews), or give `uv-case` no Canvas score? | ALU | The pilot |
@@ -3858,6 +3858,24 @@ Append one entry per session: date, session, what was done, gate output, and any
     what this container and GitHub's runner each check and why the slower one matters, and the project rules
     (`CLAUDE.md`) now ask every later session to run a new or changed browser test delayed and under load
     before its first push.
+  - The owner asked for a record of where the service is safer than the H5P software it builds on, and where
+    it is not (2026-11-28; "honesty is key"). `docs/assurance/compared-with-h5p.md` is its first version:
+    fourteen rows, each with what the H5P software does as it comes, what this service does, the file or test
+    that shows it, and what limits the claim; a section on where the service is not better or is more limited
+    (it stores learning events the bare library does not, it carries the library's unpatched flaw, it accepts
+    SVG and larger files than the library's defaults); and a section on what was not verified, H5P.com above
+    all. The comparison is with the software only: H5P Core, the server library and ltijs as installed here,
+    read in their own files. A project rule asks later steps to keep it true.
+  - The owner asked for a short paper for the data protection officer's first meeting (2026-11-28).
+    `docs/privacy/dpo-first-meeting.md` says what the service does with personal data, lists the nine questions,
+    sorts the 43 residuals of the DPIA input into seven themes, suggests which to look at first and what the
+    meeting should decide. It adds nothing to the DPIA input, which stays the authority.
+    `npm run privacy:dpia-check` now also fails when the brief's table does not name every residual of §12
+    exactly once, when a theme's count is wrong, or when the brief cites a residual §12 does not list
+    (`tools/privacy/dpoBriefProblems.mjs`, with tests).
+  - The gate found one thing: a document test in the server suite still expected the DPO to be asked about
+    «R1–R41» (`dpiaRecordedLearners.test.ts`). It had not been run again after the DPIA input gained R42 and R43.
+    The test now reads the table's last residual instead of a number typed by hand.
   - One existing figure changes for a scenario: «median tid» is measured from a page load's first to its last
     stored statement, so a learner who chose at least once without finishing now has a measured time.
   - A second reader, not the writer, read the whole change and ran nothing. No fault in what is sent, stored,

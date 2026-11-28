@@ -318,7 +318,7 @@ counts (D-106's amendments). A reviewer who knows statistical disclosure control
 - [ ] Periods end at the latest midnight in Oslo and never cross 1 August; Canvas's test students are never counted.
 - [ ] Only an activity's owner, its co-authors and the course's Canvas authors see insight; admins see none (`INS-007`).
 - [ ] Every view and export is audited before the answer is sent (`DATA-007`).
-- [ ] With the DPO, judge residuals R1–R4, R6–R14 and R36 (`docs/privacy/DPIA-INPUT.md` §12).
+- [ ] With the DPO, judge residuals R1–R4, R6–R14, R36, R41 and R42 (`docs/privacy/DPIA-INPUT.md` §12).
 - [ ] For a Branching Scenario, try to work out a hidden option count from the figures of a later decision or from
       «Valde på nytt», and judge R42 and R43 with the DPO (`INS-004`, D-154).
 - [ ] Try your own differencing attacks ([hand-off](../handoff/README.md) §4 lists some).
