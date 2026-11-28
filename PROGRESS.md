@@ -3801,3 +3801,8 @@ Append one entry per session: date, session, what was done, gate output, and any
       privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
       MAPPE-004)
   ```
+  - GitHub's code scanning marked two lines of this step's new tests as incomplete escaping: a pattern built
+    from the files origin with only its dots escaped, and a replacement of the first slash in a file name.
+    Neither line handles outside input. Both are written plainly now: a signed address is split into origin,
+    kind of path, grant and subject and compared part by part, and every slash of the name is replaced
+    (`editorFiles.int.test.ts`, `signedUploads.int.test.ts`); both test files pass as before.

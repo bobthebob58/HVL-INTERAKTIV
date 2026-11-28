@@ -18368,6 +18368,13 @@ $ npm run test:e2e                                   42 passed, 1 skipped; 1 fil
 $ npx vitest run --project server                    27184 passed, 31 skipped; 1 failed in 4 files: a
     privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
     MAPPE-004)</code></pre>
+<ul>
+<li>GitHub&#39;s code scanning marked two lines of this step&#39;s new tests as incomplete escaping: a pattern built
+from the files origin with only its dots escaped, and a replacement of the first slash in a file name.
+Neither line handles outside input. Both are written plainly now: a signed address is split into origin,
+kind of path, grant and subject and compared part by part, and every slash of the name is replaced
+(<code>editorFiles.int.test.ts</code>, <code>signedUploads.int.test.ts</code>); both test files pass as before.</li>
+</ul>
 </li>
 </ul>
 
