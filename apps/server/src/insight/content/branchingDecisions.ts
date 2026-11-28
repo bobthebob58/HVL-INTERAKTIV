@@ -26,8 +26,8 @@ import {
 } from '../../learningDesign/safeEditing/subContentNodes.js';
 import { insightText } from './questionShapes.js';
 
-/** Reads one text of the parameters as plain text. */
-type TextReader = (value: unknown) => string;
+/** Reads one text of a decision as plain text: cut to insight's length, or whole for the answer key. */
+export type DecisionTextReader = (value: unknown) => string;
 
 /** The main library whose activities have decisions. */
 export const BRANCHING_SCENARIO = 'H5P.BranchingScenario';
@@ -56,7 +56,7 @@ export interface BranchingDecision {
 export function branchingDecisions(
   mainLibrary: string,
   params: unknown,
-  text: TextReader = insightText,
+  text: DecisionTextReader = insightText,
 ): BranchingDecision[] {
   if (mainLibrary !== BRANCHING_SCENARIO) return [];
   const found = new Map<string, BranchingDecision>();
