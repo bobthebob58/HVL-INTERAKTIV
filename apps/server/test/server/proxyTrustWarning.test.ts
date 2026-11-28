@@ -26,6 +26,8 @@ describe('[NFR-006] a production start that trusts no reverse proxy', () => {
     expect(setting).toMatchObject({ level: 'info', trustProxy: 0, msg: 'reverse proxies trusted' });
     expect(warning).toMatchObject({ level: 'warn', trustProxy: 0 });
     expect(String(warning?.msg)).toMatch(/^TRUST_PROXY is 0: behind a reverse proxy every visitor /);
+    // SECURITY: with a proxy trusted its `X-Forwarded-Host` chooses the files origin's routes; it must set it itself.
+    expect(String(warning?.msg)).toContain('have the proxy set X-Forwarded-Host itself');
     // PRIVACY: beside the logger's own fields each line holds the setting and nothing else (DATA-009).
     for (const line of [setting, warning]) {
       expect(Object.keys(line ?? {}).sort()).toEqual(['level', 'msg', 'service', 'time', 'trustProxy']);

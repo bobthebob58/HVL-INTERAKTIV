@@ -15,7 +15,7 @@
  *     `/app/play` and H5P pages opened on their own go to their chrome page (D-067).
  *   - Right after the base headers, the files host (`FILES_BASE_URL`) gets its own router and nothing else (SEC-004).
  *   - `/api` and `/h5p` authenticate with `requestPrincipal` (ltik as Bearer or an allowed query, else the portal
- *     session with CSRF); the editor's file grants are checked before it, inside the H5P router (D-058).
+ *     session with CSRF); file grants are checked on the files host alone, never inside the H5P router (D-153).
  *   - `X-Powered-By` is off; every response gets `X-Request-Id`, `nosniff`, `no-referrer`, the default policy
  *     that pages replace (../http/securityHeaders.ts, D-133), and HSTS over https.
  *   - The findings API, the publish API and the save gate of `/h5p` share one validator and one Redis write lock

@@ -10,7 +10,8 @@
  * Invariants:
  *   - A request counts when its path starts with a path that serves, or once served, an uploaded file:
  *     `/h5p/files/`, `/h5p/editor-files/`, `/h5p/uploads/`, `/h5p/content/` and `/h5p/temp-files/`.
- *   - Only `GET` and `HEAD` count: a save (`PUT /h5p/content/<id>`) is not a request for a file.
+ *   - Only `GET` and `HEAD` count: a save (`PUT /h5p/content/<id>`) is not a request for a file. A request the
+ *     page gave up itself (a video still loading when the test opens the next page) is not an answer and is left out.
  *   - An entry holds the origin, the kind and the status only: never the grant, the activity or the file name.
  * Collaborators: playwright-core 1.65.1.
  * Tests: used by apps/server/e2e/editorImageTool.e2e.test.ts and apps/server/e2e/editorFilesOrigin.e2e.test.ts
@@ -44,7 +45,10 @@ export function recordUserFileRequests(page: Page): UserFileRequest[] {
     if (kind) seen.push({ origin, kind, status });
   };
   page.on('response', (response) => note(response.request().method(), response.url(), response.status()));
-  page.on('requestfailed', (request) => note(request.method(), request.url(), 'failed'));
+  page.on('requestfailed', (request) => {
+    // WHY: `net::ERR_ABORTED` is the page leaving, not a refusal by a server, a policy or the browser.
+    if (request.failure()?.errorText !== 'net::ERR_ABORTED') note(request.method(), request.url(), 'failed');
+  });
   return seen;
 }
 

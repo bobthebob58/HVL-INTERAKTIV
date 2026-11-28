@@ -10,8 +10,9 @@
  *   - Headers come from ../security/ContentFileHeaders.ts, never from the stored object or the browser.
  *   - A single satisfiable range gives 206 with Content-Range; anything else sends the whole file with 200.
  *   - A stream error after the headers ends the connection (./h5pErrorHandler.ts); the source is always closed.
- *   - Only the files origin's routes call it (./filesOriginRouter.ts): the app's own origin sends no user file
- *     (D-110 amendment of 2026-11-05, D-153).
+ *   - Only the files origin's routes call it (./filesOriginRouter.ts): the app's own origin sends no user file as
+ *     a file (D-110 amendment of 2026-11-05, D-153); an activity's `.h5p` export is a zip download
+ *     (./routes/contentRoutes.ts).
  * Collaborators: ./routes/signedFileRoutes.ts, ./routes/signedUploadRoutes.ts, Lumi's content and temporary storage.
  * Tests: apps/server/test/http/contentFiles.int.test.ts, apps/server/test/http/signedFiles.int.test.ts
  */

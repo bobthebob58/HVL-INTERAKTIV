@@ -1,11 +1,11 @@
 /**
  * End-to-end test of the editor's picture tool in Chromium (H5P-001, SEC-004, D-153): the signed-in Feide author
  * opens a saved Image Hotspots activity on **Rediger**, presses «Rediger bilete», turns the picture, crops it and
- * saves. The tool opens (its script is one the H5P server library leaves out of its list), draws the saved picture
- * into its canvas and exports it, and the edited picture is uploaded and shown. Both the saved picture and the fresh
- * upload come from the files origin, and no request for an uploaded file goes to the app's own. The whole server
- * with the built web app and the real content types (../test/support/realWebApp.ts); a failed step names itself
- * (../test/support/flowRecorder.ts).
+ * saves. The tool opens (its script is loaded as a file, since the page policy refuses H5P's own way of loading it),
+ * draws the saved picture into its canvas and exports it, and the edited picture is uploaded and shown. Both the
+ * saved picture and the fresh upload come from the files origin, and no request for an uploaded file goes to the
+ * app's own. The whole server with the built web app and the real content types (../test/support/realWebApp.ts); a
+ * failed step names itself (../test/support/flowRecorder.ts).
  *
  * Spec: H5P-001, SEC-004
  */
@@ -58,8 +58,8 @@ describeWithRealWebApp('[H5P-001] the picture tool of the editor', () => {
     const context = await browser.newContext({ storageState: app.authorStorage, viewport: VIEWPORT });
     const page = await context.newPage();
     const flow = await recordFlow(page, app.base, {
-      // WHY: H5P's jQuery tries one inline script in the Image Hotspots editor, which the page policy refuses
-      // (D-070); the picture tool does not depend on it.
+      // WHY: at its first opening the tool still asks jQuery to run its script as inline script, which the page
+      // policy refuses (D-070); the script is already loaded as a file of the editor frame (src/h5p/h5pAssets.ts).
       ignoreConsole: (m) =>
         m.text().includes('inline script') && m.location().url.includes('/core/js/jquery.js'),
     });
@@ -90,9 +90,11 @@ describeWithRealWebApp('[H5P-001] the picture tool of the editor', () => {
       const answer = await upload;
       const file = ((await answer.json()) as { path?: string }).path ?? '';
       flow.step = 'the edited picture';
+      // WHY: the field showed the saved picture before; wait until it shows the one just uploaded.
       const shown = editor.locator('.h5p-editor-image img, .file img, img.thumbnail').first();
-      await shown.waitFor({ timeout: 15_000 });
-      return { status: answer.status(), file, shown: (await shown.getAttribute('src')) ?? '' };
+      const src = async () => (await shown.getAttribute('src')) ?? '';
+      await expect.poll(src, { timeout: 15_000 }).toContain(file.replace('#tmp', ''));
+      return { status: answer.status(), file, shown: await src() };
     });
     // Assert: the canvas was exported and the new picture is the one shown
     expect(errors).toEqual([]);

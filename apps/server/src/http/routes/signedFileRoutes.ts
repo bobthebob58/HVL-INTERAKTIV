@@ -18,7 +18,7 @@
  *   - Files come from the content storage only, by the activity's registered file name (no traversal, no
  *     fallback to the editor's temporary files); a missing file is 404, and so is a name no stored file can have
  *     (`assertSafeObjectName`: a control character, a backslash, a dot segment), which never reaches the database.
- *   - Headers and byte ranges are those of the authenticated file route (../sendUserFile.ts: nosniff, sandbox
+ *   - Headers and byte ranges are those of every user file (../sendUserFile.ts: nosniff, sandbox
  *     CSP, attachment for non-media), plus `Cache-Control: private, max-age=<seconds the grant has left>`.
  *   - No identity is read or set here: no actor, session, ltik or cookie. Storage receives an anonymous user
  *     that no permission check accepts, so a check added there later fails closed.

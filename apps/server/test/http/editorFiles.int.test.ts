@@ -48,7 +48,8 @@ describeWithServices('[SEC-004] the editor’s files on the files origin', () =>
     const answers = [
       await onFilesOrigin(tb, saved()),
       await onFilesOrigin(tb, upload()).set('Cookie', '__Host-hvli_sid=not-read-here'),
-      await onFilesOrigin(tb, saved(STORED.svg)),
+      // SECURITY: another site's `Origin` is never echoed: the one origin allowed stays the app's.
+      await onFilesOrigin(tb, saved(STORED.svg)).set('Origin', 'https://annan-stad.example'),
     ];
     // Assert
     for (const res of answers) {
@@ -71,11 +72,13 @@ describeWithServices('[SEC-004] the editor’s files on the files origin', () =>
     const player = signedPath(tb.runtime.fileGrants, PLAYER, contentId, STORED.image);
     // Act
     const answers = await Promise.all([saved(), upload(), player].map((path) => onAppOrigin(tb, path)));
+    const others = await Promise.all([request(tb.app).head(saved()), request(tb.app).post(upload())]);
     // Assert
     for (const res of answers) {
       expect(res.status).toBe(404);
       expect(res.headers['content-type']).toMatch(/^application\/json/);
     }
+    expect(others.map((res) => res.status)).toEqual([404, 404]);
   });
 
   it('[SEC-004] a grant opens no other activity’s or account’s file, expires, and opens nothing on another kind’s path', async () => {
@@ -100,6 +103,33 @@ describeWithServices('[SEC-004] the editor’s files on the files origin', () =>
     }
     expect((await onFilesOrigin(tb, saved('images/missing.png'))).status).toBe(404);
     expect((await onFilesOrigin(tb, upload().replace(UPLOADED, 'images/missing.png'))).status).toBe(404);
+  });
+
+  it('[SEC-004][NFR-006] both paths answer the app’s CORS preflight, and the request log holds neither grant nor account', async () => {
+    // Act
+    const preflights = await Promise.all(
+      [saved(), upload()].map((path) =>
+        request(tb.app)
+          .options(path)
+          .set('Host', files.filesHost(tb))
+          .set('Origin', tb.toolUrl)
+          .set('Access-Control-Request-Method', 'GET')
+          .set('Access-Control-Request-Headers', 'range'),
+      ),
+    );
+    const [asked, before] = [[saved(), upload()], tb.logs.length];
+    for (const path of asked) await onFilesOrigin(tb, path);
+    // Assert
+    for (const res of preflights) {
+      const { 'access-control-allow-methods': methods, 'access-control-allow-origin': origin } = res.headers;
+      expect([res.status, methods, origin]).toEqual([204, 'GET, HEAD', tb.toolUrl]);
+    }
+    // WHY: the logger's redaction masks the `:grant` segment of the pattern too (../../src/logging/redactText.ts).
+    const logged = (text: string, from = 0) => tb.logs.slice(from).some((line) => line.includes(text));
+    const routes = ['editor-files/[Redacted]/:contentId', 'uploads/[Redacted]/:owner'];
+    expect(routes.map((route) => logged(`"route":"/h5p/${route}/*file"`, before))).toEqual([true, true]);
+    const secrets = [...asked.map((path) => path.split('/')[3] ?? ''), `/${owner}/`, `/${contentId}/`];
+    expect(secrets.filter((secret) => logged(secret))).toEqual([]);
   });
 
   it('[SEC-004] a launched learner’s ltik opens no file path on the app origin either', async () => {

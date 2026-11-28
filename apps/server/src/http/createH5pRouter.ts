@@ -53,8 +53,9 @@ import { userDataRoutes } from './routes/userDataRoutes.js';
 export function createH5pRouter(deps: H5pRouteDeps, authenticate: Authenticate): Router {
   const router = Router();
   router.use(staticRoutes(deps));
-  // SECURITY: a grant opens a file on the files origin only (./filesOriginRouter.ts, SEC-004, D-153): the paths of
-  // the player's files, the editor's files and fresh uploads are 404 here, whatever the grant and whoever asks.
+  // SECURITY: a grant opens a file on the files origin only (./filesOriginRouter.ts, SEC-004, D-153): on the paths
+  // of the player's files, the editor's files and fresh uploads nothing here reads a file, whatever the grant.
+  // They answer 404; a request that carries an ltik was refused before it came here (D-130).
   for (const path of GRANTED_FILE_PATHS) {
     router.use(path, () => {
       throw new HttpError(404, 'error.notFound');

@@ -26,6 +26,16 @@ const CONFIRM = '.h5p-confirmation-dialog-popup button.h5p-core-button';
 /** The picture field's «Rediger bilete», which the form shows once a pasted Image Hotspots is built. */
 const PICTURE_FIELD = '.h5p-editing-image-button';
 
+/** The content types whose example shows an uploaded file in the editor as soon as it opens. */
+const WITH_FILES = [
+  'BranchingScenario',
+  'Column',
+  'CoursePresentation',
+  'ImageHotspots',
+  'InteractiveBook',
+  'InteractiveVideo',
+];
+
 const visible = (frame: Frame, selector: string) => frame.locator(selector).filter({ visible: true }).first();
 
 describeWithRealWebApp('[SEC-004] where the editor asks for uploaded files', () => {
@@ -69,6 +79,9 @@ describeWithRealWebApp('[SEC-004] where the editor asks for uploaded files', () 
     const fromFilesOrigin = [200, 206].map((status) => `${app.filesBase} editor-files ${status}`);
     expect(asked.size).toBe(10);
     expect(asked.get('H5P.ImageHotspots')).toEqual([fromFilesOrigin[0]]);
+    // WHY: the six examples whose form shows a picture or a video when it opens; the other four hold text alone.
+    const withFiles = [...asked].filter(([, lines]) => lines.length > 0).map(([type]) => type.slice(4));
+    expect(withFiles.sort()).toEqual(WITH_FILES);
     for (const [type, lines] of asked) {
       for (const line of lines) expect(fromFilesOrigin, `${type}: ${line}`).toContain(line);
     }
@@ -79,12 +92,7 @@ describeWithRealWebApp('[SEC-004] where the editor asks for uploaded files', () 
     const source = app.ids.get('H5P.ImageHotspots') ?? '';
     const page = await context.newPage();
     const files = recordUserFileRequests(page);
-    const flow = await recordFlow(page, app.base, {
-      // WHY: H5P's jQuery tries one inline script in the Image Hotspots editor, which the page policy refuses
-      // (D-070); neither the copy nor the paste depends on it.
-      ignoreConsole: (m) =>
-        m.text().includes('inline script') && m.location().url.includes('/core/js/jquery.js'),
-    });
+    const flow = await recordFlow(page, app.base);
     const since = (mark: number) => distinctUserFileRequests(files.slice(mark));
     const seen = await flow.run(async () => {
       // Act: copy the example, and paste it over the author's draft

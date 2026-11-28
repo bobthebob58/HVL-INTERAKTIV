@@ -7,7 +7,10 @@
  *      per address on the Feide login and the LTI login and launch (../http/addressRequestCeiling.ts) count
  *      everyone as one, so ordinary use, or one stranger, can use up the ceiling for all, and the audit's address
  *      hash is the same for everyone. The value is right only when no proxy is in front, which the app cannot
- *      see, so it warns and starts (D-153).
+ *      see, so it warns and starts (D-153). With a proxy trusted, the app also believes that proxy's
+ *      `X-Forwarded-Host`, which decides between the app's routes and the files origin's
+ *      (../http/filesOriginRouter.ts); the proxy must set that header itself (docs/ops/runbook.md), and the
+ *      warning says so.
  * Spec: NFR-006, LTI-001, AUTH-001
  * Invariants:
  *   - One `info` line with the setting at every start, for the deployment checklist; one `warn` line more, only
@@ -34,6 +37,7 @@ export function logProxyTrust(
   logger.warn(
     { trustProxy: env.TRUST_PROXY },
     'TRUST_PROXY is 0: behind a reverse proxy every visitor then has the proxy’s address and shares one ' +
-      'request ceiling; set it to the number of proxies in front (usually 1)',
+      'request ceiling; set it to the number of proxies in front (usually 1), and have the proxy set ' +
+      'X-Forwarded-Host itself',
   );
 }

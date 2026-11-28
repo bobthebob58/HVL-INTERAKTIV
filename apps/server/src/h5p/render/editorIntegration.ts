@@ -19,12 +19,12 @@
  *     exports it, which a browser allows for another origin's picture only when it was loaded in CORS mode (D-153).
  * Collaborators: ./editorPage.ts, ../contentFileGrants.ts, ../../http/editorView.ts, ../../http/routes/editorRoutes.ts,
  *   ../../lti/play/ltiEditRoutes.ts, ../../http/filesOriginRouter.ts (serves both), ../../config/filesOrigin.ts,
- *   ./playerPage.ts (`PLAYER_CROSSORIGIN`).
+ *   ./playerPage.ts (`USER_FILE_CROSSORIGIN`).
  * Tests: apps/server/test/h5p/render/editorIntegration.test.ts
  */
 import type { IIntegration } from '@lumieducation/h5p-server';
 import type { ContentFileGrants } from '../contentFileGrants.js';
-import { ANONYMOUS_H5P_USER, PLAYER_CROSSORIGIN } from './playerPage.js';
+import { ANONYMOUS_H5P_USER, USER_FILE_CROSSORIGIN } from './playerPage.js';
 
 /** The path under the H5P base URL where upload grants are served (../../http/routes/signedUploadRoutes.ts). */
 export const SIGNED_UPLOADS_PATH = '/uploads';
@@ -70,7 +70,7 @@ export function editorIntegration(integration: IIntegration, inputs: EditorGrant
     ...integration,
     user: { ...ANONYMOUS_H5P_USER },
     // WHY: without it the picture tool's canvas is tainted by a picture of the files origin and cannot be saved.
-    crossorigin: PLAYER_CROSSORIGIN,
+    crossorigin: USER_FILE_CROSSORIGIN,
     editor: { ...integration.editor, filesPath },
     contents: contents as unknown as IIntegration['contents'],
   } as IIntegration;

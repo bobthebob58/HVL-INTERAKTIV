@@ -52,11 +52,8 @@ describe('H5P engine factories', () => {
     for (const file of coreList('scripts')) expect(model.scripts).toContain(urls.coreFile(file));
   });
 
-  it('[H5P-001] the editor frame loads the picture tool’s script, which Lumi 10.0.4 lists the style of and not the script', async () => {
+  it('[H5P-001][H5P-009] the editor frame loads the picture tool’s script as a file, because the tool would run it as inline script', async () => {
     // Arrange
-    const lumi = createRequire(import.meta.url)(
-      '@lumieducation/h5p-server/build/src/editorAssetList.json',
-    ) as { scripts: { editor: string[] }; styles: { editor: string[] } };
     const popup = readFileSync(join(SERVER_ROOT, 'h5p/editor/scripts/h5peditor-image-popup.js'), 'utf8');
     const { editor, config } = await engineTestbed();
     const urls = new UrlGenerator(config);
@@ -64,10 +61,11 @@ describe('H5P engine factories', () => {
     const model = (await editor.render(undefined as never, 'nn', author)) as {
       integration: { editor: { assets: { js: string[] } } };
     };
-    // Assert: the pinned editor’s «Rediger bilete» calls `new Cropper(…)`, which only libs/cropper.js defines
+    // Assert: the pinned «Rediger bilete» still fetches the file with jQuery's script type, which runs the text as
+    // an inline script that the page policy refuses (D-070); so the frame's own scripts must hold the file
+    expect(popup).toMatch(/\$\.ajax\(\{\s*url: path,\s*dataType: 'script'/);
+    expect(popup).toContain("loadScript(H5PEditor.basePath + 'libs/cropper.js'");
     expect(popup).toContain('new Cropper(');
-    expect(lumi.styles.editor).toContain('libs/cropper.css');
-    expect(lumi.scripts.editor).not.toContain('libs/cropper.js');
     expect(model.integration.editor.assets.js).toContain(urls.editorLibraryFile('libs/cropper.js'));
   });
 

@@ -13,7 +13,7 @@
  *   - Text types carry `charset=utf-8`; an unknown extension is `application/octet-stream`.
  *   - Header values never contain CR, LF or quotes from the file name.
  *   - These headers are the second defence: every user file is served from the separate files origin
- *     (../http/filesOriginRouter.ts, D-110 amendment of 2026-11-05, D-153), and never from the app's own.
+ *     (../http/filesOriginRouter.ts, D-110 amendment of 2026-11-05, D-153), and never as a file from the app's own.
  * Collaborators: ./fileExtension.ts; ../http/sendUserFile.ts and ../http/multipartUpload.ts call it.
  * Tests: apps/server/test/security/ContentFileHeaders.test.ts
  */

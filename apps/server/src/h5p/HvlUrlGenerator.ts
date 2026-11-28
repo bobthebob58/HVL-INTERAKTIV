@@ -16,7 +16,7 @@
  *   - `contentFilesUrl` is `<files origin><baseUrl>/files/<grant>/<contentId>`: no token and no user. Lumi calls it
  *     only while rendering the player, after the View check on the activity's parameters; the player factory refuses
  *     the render options that skip that check (./H5pPlayerFactory.ts, `UNCHECKED_RENDER_OPTIONS`). The editor never
- *     uses it: its files have their own grants on the app origin (./render/editorIntegration.ts).
+ *     uses it: its files have their own grants, on the files origin too (./render/editorIntegration.ts, D-153).
  *   - Every other URL is Lumi's own, unchanged (tested against Lumi's UrlGenerator).
  * SPEC-DEVIATION: D-058 — H5P-007 names Lumi's `queryParamGenerator`; it cannot encode the token correctly for all
  *   three URLs (see Why), so the token is added here and the generator is not used.

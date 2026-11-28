@@ -1,10 +1,11 @@
 /**
- * uploadFixtures — small valid files and an editor-upload helper for the HTTP upload tests.
+ * uploadFixtures — small valid files, an editor-upload helper and a read-back of an upload, for the HTTP upload tests.
  *
  * Why: the upload checks sniff real bytes (SEC-002), so tests need genuine PNG and PDF bytes, and they send
  *      files the way the H5P editor does: `POST ajax?action=files` with `file`, `field` (JSON) and `contentId`.
  * Spec: SEC-001, SEC-002, SEC-004
- * Tests: shared by apps/server/test/http/editorUpload.int.test.ts and apps/server/test/http/contentFiles.int.test.ts.
+ * Tests: shared by apps/server/test/http/editorUpload.int.test.ts, contentFiles.int.test.ts, malwareScan.int.test.ts,
+ *   packageImport.int.test.ts and signedUploads.int.test.ts in the same folder.
  */
 import request from 'supertest';
 import type { Express } from 'express';

@@ -10,8 +10,8 @@
  *      2026-11-05). Since D-153 the editor's files and an author's fresh uploads are served here too, and nowhere else.
  * Spec: SEC-004, H5P-007, H5P-004
  * Invariants:
- *   - A request for the files host (`req.hostname`, case-insensitive) is answered here and never falls through to
- *     another route of the app; a request for any other host never reaches this router.
+ *   - A request for the files host (`req.hostname`, case-insensitive, with or without a final dot) is answered here
+ *     and never falls through to another route of the app; a request for any other host never reaches this router.
  *   - Only `GET`/`HEAD` on three paths serve a file, each to its own kind of grant: `/h5p/files/<grant>/<contentId>/…`
  *     (the player's, purpose `content-file-url`), `/h5p/editor-files/<grant>/<contentId>/…` (the editor's,
  *     `editor-file-url`; both ./routes/signedFileRoutes.ts) and `/h5p/uploads/<grant>/<owner>/…` (fresh uploads,
@@ -117,9 +117,11 @@ export function filesOriginRouter(deps: FilesOriginDeps): Router {
  * @returns Express middleware; mount it before every route that reads a credential.
  */
 export function routeFilesHost(filesOrigin: string, router: RequestHandler): RequestHandler {
-  const filesHost = new URL(filesOrigin).hostname.toLowerCase();
+  // SECURITY: a host name written with a final dot (`files.example.no.`) is the same host, so it gets this router too.
+  const hostOf = (name: string): string => name.toLowerCase().replace(/\.$/, '');
+  const filesHost = hostOf(new URL(filesOrigin).hostname);
   return (req, res, next) => {
-    if ((req.hostname ?? '').toLowerCase() !== filesHost) {
+    if (hostOf(req.hostname ?? '') !== filesHost) {
       next();
       return;
     }

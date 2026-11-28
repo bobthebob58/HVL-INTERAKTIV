@@ -102,8 +102,9 @@ check_startup_probe() {
 # no cookie) and never by the app's own origin (404). SECURITY: the URL carries a grant, so it is used, never printed.
 files_origin_only() {
   local what=$1 url=$2 files_host path status
-  files_host=$(node -e 'process.stdout.write(new URL(process.argv[1]).host)' "$url")
-  path=$(node -e 'process.stdout.write(new URL(process.argv[1]).pathname)' "$url")
+  # SECURITY: Node would print a value it cannot read as a URL, grant and all; its error output is dropped.
+  files_host=$(node -e 'process.stdout.write(new URL(process.argv[1]).host)' "$url" 2>/dev/null) || files_host='no URL'
+  path=$(node -e 'process.stdout.write(new URL(process.argv[1]).pathname)' "$url" 2>/dev/null) || path=''
   [[ "$files_host" == "files.localhost:$APP_PORT" ]] ||
     { echo "✗ $what is on $files_host, not the files origin" >&2; return 1; }
   status=$(curl -s -D "$WORK/files.headers" -o "$WORK/files.body" -w '%{http_code}' --max-time 20 \

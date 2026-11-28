@@ -118,6 +118,9 @@ describeWithServices('[SEC-004] the files origin', () => {
     const answers = await Promise.all(
       [...paths, '/h5p/core/js/h5p.js'].map((path) => onFilesOrigin(tb, path)),
     );
+    // SECURITY: the files host written with a final dot is the files host too, never the app.
+    const dotted = filesHost(tb).replace(/(:\d+)?$/, '.$1');
+    answers.push(await request(tb.app).get('/healthz').set('Host', dotted));
     // Assert
     for (const res of answers) {
       expect(res.status).toBe(404);
