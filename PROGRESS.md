@@ -3806,3 +3806,11 @@ Append one entry per session: date, session, what was done, gate output, and any
     Neither line handles outside input. Both are written plainly now: a signed address is split into origin,
     kind of path, grant and subject and compared part by part, and every slash of the name is replaced
     (`editorFiles.int.test.ts`, `signedUploads.int.test.ts`); both test files pass as before.
+  - GitHub's next run failed in this step's own browser test of the picture tool. The test read its list of file
+    requests as soon as the form showed the new picture's address, before the files origin had answered for it,
+    so on a slower machine the list was one entry short; nothing went to the wrong origin. Answering every
+    uploaded file 1.5 s late reproduced it here. The test now waits until the saved picture is drawn before it
+    opens the tool, and for the upload's answer before it reads the list; the test of the ten editors opens each
+    editor in a page of its own and waits for a file's answer where one is due. Both pass with the late answers,
+    twice as they are, and once with every processor busy. One thing the slowed run showed about H5P's tool:
+    pressed before the form's picture is drawn, its controls lay outside the part of the editor frame that shows.

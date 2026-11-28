@@ -18374,6 +18374,14 @@ from the files origin with only its dots escaped, and a replacement of the first
 Neither line handles outside input. Both are written plainly now: a signed address is split into origin,
 kind of path, grant and subject and compared part by part, and every slash of the name is replaced
 (<code>editorFiles.int.test.ts</code>, <code>signedUploads.int.test.ts</code>); both test files pass as before.</li>
+<li>GitHub&#39;s next run failed in this step&#39;s own browser test of the picture tool. The test read its list of file
+requests as soon as the form showed the new picture&#39;s address, before the files origin had answered for it,
+so on a slower machine the list was one entry short; nothing went to the wrong origin. Answering every
+uploaded file 1.5 s late reproduced it here. The test now waits until the saved picture is drawn before it
+opens the tool, and for the upload&#39;s answer before it reads the list; the test of the ten editors opens each
+editor in a page of its own and waits for a file&#39;s answer where one is due. Both pass with the late answers,
+twice as they are, and once with every processor busy. One thing the slowed run showed about H5P&#39;s tool:
+pressed before the form&#39;s picture is drawn, its controls lay outside the part of the editor frame that shows.</li>
 </ul>
 </li>
 </ul>

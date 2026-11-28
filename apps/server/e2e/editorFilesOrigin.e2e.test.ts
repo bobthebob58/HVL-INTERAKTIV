@@ -65,16 +65,18 @@ describeWithRealWebApp('[SEC-004] where the editor asks for uploaded files', () 
 
   it('[SEC-004] each of the ten editors asks for its example’s files on the files origin only', async () => {
     // Arrange
-    const page = await context.newPage();
-    const files = recordUserFileRequests(page);
     const asked = new Map<string, string[]>();
-    // Act
+    // Act: each editor in a page of its own, so no late answer is counted for the next type
     for (const [type, id] of app.ids) {
-      const before = files.length;
+      const page = await context.newPage();
+      const files = recordUserFileRequests(page);
       await openEditor(page, `/aktivitet/${id}?fane=edit`);
-      asked.set(type, distinctUserFileRequests(files.slice(before)));
+      // WHY: a form shows a picture's place before the picture's bytes are answered; wait where an answer is due.
+      const due = WITH_FILES.includes(type.slice(4)) ? 1 : 0;
+      await expect.poll(() => files.length, { timeout: 20_000 }).toBeGreaterThanOrEqual(due);
+      asked.set(type, distinctUserFileRequests(files));
+      await page.close();
     }
-    await page.close();
     // Assert: saved files only, each answered by the files origin (206 is a part of a video)
     const fromFilesOrigin = [200, 206].map((status) => `${app.filesBase} editor-files ${status}`);
     expect(asked.size).toBe(10);
@@ -113,6 +115,10 @@ describeWithRealWebApp('[SEC-004] where the editor asks for uploaded files', () 
       flow.step = 'open the saved draft';
       mark = files.length;
       await openEditor(page, `/aktivitet/${app.draftId}?fane=edit`);
+      // WHY: the form is drawn before the picture's bytes are answered; wait for the files origin's answer.
+      await expect
+        .poll(() => since(mark), { timeout: 20_000 })
+        .toContain(`${app.filesBase} editor-files 200`);
       const reopened = since(mark);
       // Act: paste the same piece into a new activity
       flow.step = 'paste into a new activity';

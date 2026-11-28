@@ -23,6 +23,9 @@ const [TURN_RIGHT, CROP] = [1, 2];
 /** The two controls the tool shows while a crop is being drawn: confirm first, then cancel. */
 const CROP_DECISION = '.cropper-button:not(.cropper-image-button)';
 
+/** The picture an image field shows: the saved one, and after an upload the new one. */
+const SHOWN_PICTURE = '.h5p-editor-image img, .file img, img.thumbnail';
+
 /** A window tall enough that the editor frame (85vh) shows the tool's controls where the tool opens. */
 const VIEWPORT = { width: 1280, height: 900 };
 
@@ -75,6 +78,15 @@ describeWithRealWebApp('[H5P-001] the picture tool of the editor', () => {
       flow.step = 'open the editor';
       await page.goto(`${app.base}/aktivitet/${id}?fane=edit`);
       const editor = await editorFrame(page);
+      // WHY: an author presses the button under a picture they can see. In a run where the picture's answer came
+      // late and the button was pressed first, the tool's controls lay outside the part of the frame that shows.
+      flow.step = 'the saved picture';
+      const drawn = () =>
+        editor
+          .locator(SHOWN_PICTURE)
+          .first()
+          .evaluate((img: HTMLImageElement) => img.naturalWidth);
+      await expect.poll(drawn, { timeout: 20_000 }).toBeGreaterThan(0);
       flow.step = 'open the picture tool';
       await editor.locator('.h5p-editing-image-button').first().click();
       const tool = await pictureTool(page);
@@ -91,9 +103,12 @@ describeWithRealWebApp('[H5P-001] the picture tool of the editor', () => {
       const file = ((await answer.json()) as { path?: string }).path ?? '';
       flow.step = 'the edited picture';
       // WHY: the field showed the saved picture before; wait until it shows the one just uploaded.
-      const shown = editor.locator('.h5p-editor-image img, .file img, img.thumbnail').first();
+      const shown = editor.locator(SHOWN_PICTURE).first();
       const src = async () => (await shown.getAttribute('src')) ?? '';
       await expect.poll(src, { timeout: 15_000 }).toContain(file.replace('#tmp', ''));
+      // WHY: the picture's address changes before its bytes are answered; wait for the files origin's answer too.
+      const uploads = () => distinctUserFileRequests(files).filter((line) => line.includes(' uploads '));
+      await expect.poll(uploads, { timeout: 15_000 }).toEqual([`${app.filesBase} uploads 200`]);
       return { status: answer.status(), file, shown: await src() };
     });
     // Assert: the canvas was exported and the new picture is the one shown
