@@ -45,7 +45,13 @@ describe('[DATA-005] the DPIA input says who is recorded as a learner', () => {
   });
 
   it('[DATA-005] R4 records that the owner kept the share rule, and the DPO is asked about every residual', () => {
-    expect(rowOf('R4')).toContain('kept by the owner on 2026-11-22 (D-138)');
-    expect(DPIA).toContain('For each residual R1–R41');
+    // Arrange: the table's last residual, so a residual added later needs no change here
+    const last = Math.max(...[...DPIA.matchAll(/^\| R(\d+) \|/gm)].map((row) => Number(row[1])));
+    // Act
+    const r4 = rowOf('R4');
+    // Assert
+    expect(r4).toContain('kept by the owner on 2026-11-22 (D-138)');
+    expect(last).toBeGreaterThanOrEqual(43);
+    expect(DPIA).toContain(`For each residual R1–R${last}`);
   });
 });
