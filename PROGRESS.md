@@ -3710,3 +3710,94 @@ Append one entry per session: date, session, what was done, gate output, and any
     on a slow machine the count came one request short. Every test of this step passed in that run (854 of 855
     files). The test now waits for the section's sign-in link, which shows once the question is answered, and
     counts then; it passed five times after the change, twice of them with every processor kept busy.
+
+- **2026-11-28 · Security repairs, step 37 (D-153)** — every file an author uploads now comes from the separate
+  files origin, for the editor as for the player (`SEC-004`); H5P's picture tool works; two start-up items.
+  - A browser test came first. It pressed «Rediger bilete», turned a picture and saved it in the real editor in
+    four set-ups: as the code was, the tool did not open at all; with its script added, it worked; with the
+    pictures from the files origin and H5P's `crossorigin` setting, it worked; without that setting the browser
+    refused to export the picture, which is what the old exception had expected. So the whole move was possible,
+    and the tool had a fault of its own.
+  - The picture tool (`H5P-001`, `H5P-009`): H5P's editor fetches the tool's script when the tool is first
+    opened and runs it as inline script, which no H5P page of ours allows (D-070). So «Rediger bilete» did
+    nothing, wherever the picture came from. The policy stays; the script is now one of the editor frame's own
+    files, and a browser test turns, crops and saves a picture with real presses. No test had pressed that
+    button before. A report for H5P's editor is drafted (`docs/upstream/h5p-editor-cropper-loader.md`).
+  - The editor's files (`SEC-004`, `H5P-007`): saved files and fresh uploads come from
+    `<files origin>/h5p/editor-files/…` and `<files origin>/h5p/uploads/…`, each behind its own kind of signed
+    grant, in the portal and in Canvas. The app origin answers 404 on those paths and on the player's, whatever
+    the grant. The editor loads the files without credentials, as the player does, and its page policy names the
+    files origin for pictures and media only.
+  - The two routes that served files to a session cookie on the app origin are removed. A browser test opens
+    the editor of each of the ten content types, copies a piece with a picture and pastes it over a draft and
+    into a new activity: every request for an uploaded file went to the files origin, none to the app's own.
+  - A limit that was there before and is now written down: a picture in a piece pasted from another activity
+    shows after «Lagre», not before. The pasting activity's grant does not open the other activity's file;
+    saving copies it. The same test ran on the earlier code with the same result.
+  - Start-up (`NFR-006`): every start says how many reverse proxies the server trusts, and a production start
+    that trusts none writes one warning, because behind a proxy every visitor then shares one request ceiling.
+  - The standstill watch (`NFR-002`): it reads the clock itself, so the first check after a standstill reports
+    it whichever timer runs first. One run of the image's smoke test on GitHub had failed on the old order.
+  - The Docker smoke test now asks for the player's file, the editor's file and a fresh upload on the files
+    origin, and expects 404 for each on the app origin.
+  - Two other readers read the change, neither of them the writer. The second read found that the cause first
+    recorded for the picture tool was wrong: the file was put down as missing from the server library's list,
+    and it is H5P's own on-demand load that the page policy refuses. The repair was right and its explanation
+    was not; the constant, its test, the decision and the report draft now say what happens. It also found
+    eleven headers that still described the editor's files on the app origin, a race in the picture tool's
+    browser test, a way the ten-editors test could fail on a video still loading when the next page opened,
+    and an error path of the smoke script that could print a signed address. All are corrected.
+  - The other read looked at the security rules alone. It found no way left for the app origin to send an
+    uploaded file as a file, no way to cross the three kinds of grant or their subjects, and nothing wider in
+    the page policy or in CORS than the change intends. Its three low points are acted on: two sentences said
+    the 404 on the file paths comes before any credential is read, and a request that carries an ltik is in
+    fact refused earlier (the sentences are corrected); the proxy warning now says that the proxy must set
+    `X-Forwarded-Host` itself, because behind a trusted proxy that header chooses the files origin's routes;
+    and the runbook asks the proxy's access log to mask the grant in a file address. From its notes: a files
+    host written with a final dot now gets the files router too (it reached the app's pages, without cookies),
+    and a grant is masked in a log line in any letter case. New tests hold these, and four more that the read
+    asked for: a scan of the source that only the two grant-checked route modules can send a user file,
+    another site's `Origin` never echoed, other methods and unsafe upload names refused.
+  - Still as it was: the app origin sends an activity's `.h5p` export, a zip download to a signed-in person who
+    may see the activity; and at phone width H5P's picture tool lays its own buttons out untidily.
+  - The gate ran on the change as it stands; nothing in it failed that does not fail in this container for every
+    step. The accessibility run is recorded in the conformance report (575 tests, 181 scans) on commit
+    `106e98dbe2a4`, which holds the files the run was made on: the branch was restarted from `main` after pull
+    request #37 (step 36) was merged, and that gave the commits new names. #37 passed on GitHub in its second
+    run, with the corrected web test. Gate output:
+
+  ```
+  $ npm run build                                      exit 0
+  $ HVLI_DOCKER_SANDBOX=1 bash deploy/smoke/dockerSmoke.sh   passed in 226 s (the player's file, the editor's
+      file and a fresh upload served by the files origin, 404 on the app origin; the PDF printed as uid 10001
+      with the sandbox seen in /proc)
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run lint:css                                   exit 0
+  $ npm run doc:lint && npm run check:filesize         11 checks passed; file-size passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run privacy:dpia-check                         13 sections, the developer key and the residuals agree
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins && npm run check:licences       every version pinned; 489 production packages compatible
+  $ npm run check:lockfile                             949 packages from the registry with sha512; 4 install scripts reviewed
+  $ npm run check:workflows                            3 workflows: actions by commit, images by digest
+  $ npm run check:audit                                2 high/critical advisories, both covered by reviewed exceptions
+  $ npm run sbom -- --check                            current: 478 npm packages, 12 H5P components, 3 images
+  $ npm run content:check && npm run tokens:check      exit 0
+  $ node tools/spec-site/buildSpecSite.mjs --check     up to date
+  $ node tools/deploy-check/checkDeployFiles.mjs       exit 0
+  $ npm run docs:api                                   exit 0
+  $ npm run a11y:report -- --check                     exit 0
+  $ npx vitest run --project web                       688 passed (106 files)
+  $ npx vitest run --project api-contract              123 passed (15 files)
+  $ npx vitest run --project tools                     604 passed (81 files)
+  $ npx vitest run --project design-tokens             162 passed
+  $ npx vitest run --project hvl-h5p-theme             217 passed
+  $ LIVE_TARGET=mock npm run test:live                 36 passed
+  $ npm run test:a11y                                  575 passed (18 files)
+  $ npm run test:e2e                                   42 passed, 1 skipped; 1 file failed: learnerDataRights
+      (needs the privileged database, like DATA-010's tests)
+  $ npx vitest run --project server                    27184 passed, 31 skipped; 1 failed in 4 files: a
+      privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
+      MAPPE-004)
+  ```

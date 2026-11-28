@@ -12,7 +12,7 @@
 |---|---|
 | Product | HVL Interaktiv: the web app, the server-rendered pages, the Canvas views and the ten H5P content types with the HVL theme |
 | Standard | WCAG 2.2, Level A and AA: 56 success criteria (4.1.1 *Parsing* included for WCAG 2.1 and EN 301 549) |
-| Last automated run | 2026-11-27, commit `17d19832c720` (clean): 575 passed, 0 failed, 0 skipped (appendix A) |
+| Last automated run | 2026-11-28, commit `106e98dbe2a4` (clean): 575 passed, 0 failed, 0 skipped (appendix A) |
 | Manual results | none recorded yet (*not yet tested by HVL*) |
 | Automated tools | axe-core 4.14.1 with the tags `wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`, `wcag22aa`; Playwright in Chromium (D-079) |
 
@@ -410,7 +410,7 @@ Level AA · since WCAG 2.0 · [Understanding 1.4.3](https://www.w3.org/WAI/WCAG2
 
 **Automated evidence (generated):**
 
-- axe [`color-contrast`](https://dequeuniversity.com/rules/axe/4.14/color-contrast). Views: every page and frame the axe suites scan (181 scans). Last run: serious or critical: `color-contrast` (serious): 2 elements in 2 scans; lower impact: none; left to review by hand: `color-contrast` (serious): 1460 elements in 127 scans.
+- axe [`color-contrast`](https://dequeuniversity.com/rules/axe/4.14/color-contrast). Views: every page and frame the axe suites scan (181 scans). Last run: serious or critical: `color-contrast` (serious): 2 elements in 2 scans; lower impact: none; left to review by hand: `color-contrast` (serious): 1458 elements in 127 scans.
 - `UD-001`: Every foreground and background pairing of the design tokens is computed (≥ 4.5 : 1 for text, 3 : 1 for large text). Runs in `npm test`: [`packages/design-tokens/test/contrast.test.ts`](../../packages/design-tokens/test/contrast.test.ts) (7 test titles).
 - `UD-011`: H5P Core 1.28’s Daylight colours point at the HVL tokens and pass with them. Runs in `npm test`: [`packages/design-tokens/test/buildTokens.test.ts`](../../packages/design-tokens/test/buildTokens.test.ts) (1 test title), [`packages/design-tokens/test/contrast.test.ts`](../../packages/design-tokens/test/contrast.test.ts) (1 test title).
 
@@ -1273,7 +1273,7 @@ their issue links once they are filed (D-112).
 
 ## Appendix A. The last automated run
 
-`npm run test:a11y` on 2026-11-27, commit `17d19832c720` (clean), axe-core 4.14.1: 18 files, 0 of them failed; 575 tests passed, 0 failed, 0 skipped.
+`npm run test:a11y` on 2026-11-28, commit `106e98dbe2a4` (clean), axe-core 4.14.1: 18 files, 0 of them failed; 575 tests passed, 0 failed, 0 skipped.
 
 | Suite file | File | Passed | Failed | Skipped |
 |---|---|---|---|---|
@@ -1318,7 +1318,7 @@ Left to review by hand (axe’s *incomplete* results, e.g. contrast over a gradi
 | `aria-allowed-attr` | critical | 36 | 4 |
 | `aria-prohibited-attr` | serious | 12 | 4 |
 | `aria-valid-attr-value` | critical | 6 | 6 |
-| `color-contrast` | serious | 1460 | 127 |
+| `color-contrast` | serious | 1458 | 127 |
 | `form-field-multiple-labels` | moderate | 2 | 2 |
 | `video-caption` | critical | 4 | 4 |
 
