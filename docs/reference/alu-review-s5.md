@@ -62,8 +62,8 @@ phase matrix in spec 04 §3.
   intended practice, or soften it until S6?
 - Etterarbeid's Canvas placement no longer promises what Session 6 brings (scores sent to Canvas by best attempt or
   mastery, `LTI-012`; suggested repetition dates, `PROD-014`, which spec 00 shows to the author, not to students).
-  It now tells the teacher to place the same activity again in a later Canvas module, a few days and weeks on (S5
-  review, 2026-10-29). Is that the advice ALU wants, and how should the text read once S6 has added both?
+  Since `PROD-014` was built (D-152, 2026-11-27) it says that the teacher gets two suggested dates after publishing
+  and can make a copy for a later Canvas module. Is that the advice ALU wants, and are 7 and 21 days the distances?
 - When everything in this packet is approved, change `status: proposed` to `status: confirmed-by-alu`. That removes
   the draft banner from every studio page (one switch for all studio texts).
 

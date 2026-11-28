@@ -1,15 +1,16 @@
 /**
  * studioViews — opens the læringsdesign studio's views (S5) in the states the seed (./studioSeed.ts) gives them: a
  * pattern page, the planner of a course with gaps, `/mappe` after a word count, an activity's **Læringsdesign** and
- * **Deling** tabs, and a copy's page with its attribution sign; each waits until its content is there (the planner
- * until its table, both kinds of gap and the activity without tags show; the copy until its sign shows; a pattern
- * page until its create form or, signed out, its sign-in prompt shows).
+ * **Deling** tabs, a copy's page with its attribution sign, and the **Sjekk og publiser** tab of a published
+ * Etterarbeid activity with its repetition suggestion; each waits until its content is there (the planner until its
+ * table, both kinds of gap and the activity without tags show; the copy until its sign shows; a pattern page until
+ * its create form or, signed out, its sign-in prompt shows; the suggestion until its heading shows).
  *
  * Why: the studio's pages fetch their data in the browser after hydration, and some of their states exist only after
  *      a step (the planner needs `?emne=`, the word count needs a choice). Every suite that walks ./catalogue.ts's
  *      views opens them through this one function, so the axe, keyboard, reflow, spacing and language checks see the
  *      same states (UD-030).
- * Spec: UD-030, PED-010, PED-030, PED-031, PROD-007, MAPPE-001
+ * Spec: UD-030, PED-010, PED-030, PED-031, PROD-007, MAPPE-001, PROD-014
  * Invariants:
  *   - Controls and messages are found by structure or by the web app's own Nynorsk texts
  *     (../../test/support/webAppTexts.ts), never by ALU's content texts.
@@ -86,6 +87,13 @@ export async function openStudioView(
     const page = await openActivityTab(context, app.base, seed.copyId, 'play');
     // WHY: the view is the copy's page with its attribution sign; a page without it would be scanned for nothing.
     await shows(page, 'sharing.attribution');
+    return page;
+  }
+  if (view === 'repetition') {
+    const page = await open(`/aktivitet/${encodeURIComponent(seed.etterarbeidId)}?fane=check`);
+    // WHY: the suggestion shows once the tab has read the learning design; a scan before that would miss it.
+    await shows(page, 'repetition.heading');
+    await page.waitForLoadState('networkidle');
     return page;
   }
   if (view === 'pattern') {

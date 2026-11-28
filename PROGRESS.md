@@ -16,7 +16,7 @@ what is done, what is verified, and what is blocked.
 | S4+ | Whole-code-base simplification pass (owner decision, 2026-10-24) | — | ✅ Done (2026-10-25): 59 changes, 569 lines shorter, every test kept, S4 gate green again; a second round is the owner's call |
 | S5 | Læringsdesign studio, patterns, planner, pedagogisk mappe export | 04; 00 S5 rows | ✅ Gate passed (2026-10-30); the ALU and pilot review (Q17), the bank consent text and the manual PDF check open; the Canvas side in S6 |
 | S6 | xAPI → AGS grade bridge, insight, privacy jobs, Docker, conformance report | 02 §4–§8; 05; 00 §3 (journeys J1–J5), §6; 01 `H5P-009`, `H5P-010`, `SEC-004`, `SEC-006`; 03 `UD-003`, §6 (`UD-040`); 04 `MAPPE-003`, `MAPPE-004` (D-101) | ✅ Done (gate passed 2026-11-06; started 2026-10-30; D-101…D-116) |
-| SR | Security repairs after the S6 gate: 35 steps, each with tests, a gate run and a decision entry | The spec a step names | ✅ Done (2026-11-20 to 2026-11-27; D-117…D-151; session log, steps 1–35); open: HVL IT's and the owner's questions Q32, Q33 and Q34, with the earlier ones |
+| SR | Security repairs after the S6 gate: 36 steps, each with tests, a gate run and a decision entry | The spec a step names | ✅ Done (2026-11-20 to 2026-11-27; D-117…D-152; session log, steps 1–36); open: HVL IT's and the owner's questions Q32, Q33 and Q34, with the earlier ones |
 
 Legend: ⬜ not started · 🟨 in progress · ✅ done (gate passed, output pasted below) · ⛔ blocked
 
@@ -3637,3 +3637,76 @@ Append one entry per session: date, session, what was done, gate output, and any
     removal again, a little later each time, and reports a removal that still fails instead of throwing
     (`test/support/thirdPartyCookies.ts` `removeBrowserProfile`, with a test). Its test file passed four times
     after the change and left no folder behind; the Canvas iframe flow that uses the helper passed.
+
+- **2026-11-27 · Security repairs, step 36 (D-152)** — the repetition suggestion after publishing an
+  *Etterarbeid* activity (`PROD-014`), the one product requirement that was not built.
+  - What the author sees (PROD-014, UD-006): on **Sjekk og publiser**, for as long as the activity is published
+    and its phase is *Etterarbeid*, a block «Forslag til repetisjon» with the calendar days 7 and 21 days after
+    the day of publishing (Oslo time, written with their weekday), a sentence that says to count from the day the
+    students first do the activity when that is later, and the studio's «Lag ein kopi», which makes the author's
+    draft copy in one press and opens it. After a first publish one status message says that the activity is
+    published and where the suggestion is. Texts in nn, nb and en.
+  - A copy, not the same activity placed again: a learner's saved answers belong to the activity and the course,
+    so the same activity in a later module would open with the answers of the first round; a copy starts empty
+    and has an insight view of its own. One copy for each repetition, the block says. The phase text for
+    Etterarbeid in `content/` follows; the sentence and the two distances are questions in ALU's review packet.
+  - In the web app only: no change of server, database or contract; nothing is stored, no reminder is set,
+    nothing is shown to learners, and the Canvas views are as they were.
+  - A weekday's name is the web app's own text: Chromium has no Nynorsk names and would write Bokmål's «lørdag»
+    and «søndag» on a Nynorsk page. The end-to-end test reads «laurdag» in the real browser.
+  - The accessibility suites walk the tab in its published state as one more seeded view (12 tests). The seeded
+    examples are marked published without a time of publishing, and such a row shows no suggestion (there is no
+    day to count from); the seed now gives its Etterarbeid example one, and a test holds the rule.
+  - A second read of the change (read-only) found no fault in the dates. It found that the tab could show one
+    activity the phase read for another for a moment after a change of activity, that three tests of «shows
+    nothing» could pass before the phase had been read, that one case of summer time and the browser's time zone
+    in the end-to-end test proved less than they said, and four sentences in documents that were not true as
+    written. All are corrected; the first has tests that fail on the earlier code
+    (`useActivityPhase.test.tsx`).
+  - With it: the third report draft for H5P (a question button's name) is ready as an issue, the owner's choice.
+  - The gate ran on the change as it stands, on top of step 35's two test corrections; nothing in it failed that
+    does not fail in this container for every step. The accessibility run is recorded in the conformance
+    report (575 tests, 181 scans) on commit `17d19832c720`, which holds the files the run was made on: the
+    branch was restarted from `main` after pull request #36 was merged, and that gave the commits new names.
+    Gate output:
+
+  ```
+  $ npm run build                                      exit 0
+  $ HVLI_DOCKER_SANDBOX=1 bash deploy/smoke/dockerSmoke.sh   passed in 231 s (the PDF printed as uid 10001 with
+      the sandbox seen in /proc)
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run lint:css                                   exit 0
+  $ npm run doc:lint && npm run check:filesize         11 checks passed; file-size passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run privacy:dpia-check                         13 sections, the developer key and the residuals agree
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins && npm run check:licences       every version pinned; 489 production packages compatible
+  $ npm run check:lockfile                             949 packages from the registry with sha512; 4 install scripts reviewed
+  $ npm run check:workflows                            3 workflows: actions by commit, images by digest
+  $ npm run check:audit                                2 high/critical advisories, both covered by reviewed exceptions
+  $ npm run sbom -- --check                            current: 478 npm packages, 12 H5P components, 3 images
+  $ npm run content:check && npm run tokens:check      exit 0
+  $ node tools/spec-site/buildSpecSite.mjs --check     up to date
+  $ node tools/deploy-check/checkDeployFiles.mjs       exit 0
+  $ npm run docs:api                                   exit 0
+  $ npm run a11y:report -- --check                     exit 0
+  $ npx vitest run --project web                       688 passed (106 files)
+  $ npx vitest run --project api-contract              123 passed (15 files)
+  $ npx vitest run --project tools                     604 passed (81 files)
+  $ npx vitest run --project design-tokens             162 passed
+  $ npx vitest run --project hvl-h5p-theme             217 passed
+  $ LIVE_TARGET=mock npm run test:live                 36 passed
+  $ npm run test:a11y                                  575 passed (18 files)
+  $ npm run test:e2e                                   39 passed, 1 skipped; 1 file failed: learnerDataRights
+      (needs the privileged database, like DATA-010's tests)
+  $ npx vitest run --project server                    27173 passed, 31 skipped; 1 failed in 4 files: a
+      privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
+      MAPPE-004)
+  ```
+  - GitHub's run on the pull request failed in one older web test that this step does not touch
+    (`studioPages.test.tsx`, a pattern's page signed out): it counted the page's requests as soon as the «Lag frå
+    dette mønsteret» section was drawn, and the section asks who is signed in only after it has drawn itself, so
+    on a slow machine the count came one request short. Every test of this step passed in that run (854 of 855
+    files). The test now waits for the section's sign-in link, which shows once the question is answered, and
+    counts then; it passed five times after the change, twice of them with every processor kept busy.

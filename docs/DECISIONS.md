@@ -6838,3 +6838,77 @@ loading of one spec per session are kept.
   now has a rule that runs. The evaluator guide's `NFR-001` row names the timed open. No line reference moved:
   this entry and step 35 stand at the end of their files, and the one in-line edit keeps its file's line count.
   The status overview counts 35 steps.
+
+### D-152 · Step 36: suggested repetition dates after publishing an Etterarbeid activity (PROD-014)
+- **Context:** `PROD-014` (COULD, S6) was the one product requirement never built: after publishing an
+  *Etterarbeid* activity, the author is shown suggested repetition dates and gets a one-click copy to place in a
+  later Canvas module. Until now the phase text told the teacher to place the same activity again «nokre dagar og
+  veker etter». What the requirement needs was there: the time of publishing in the activity's detail, the phase
+  in the learning design, the studio's copy (`PROD-007`, D-091) and dates in the three languages.
+- **Decision — where and when it shows.** On **Sjekk og publiser**, under the panel, for as long as the activity
+  is published and its stored phase is `etterarbeid`; not only in the moment after publishing, so an author who
+  comes back a week later still sees the dates. The tab reads the phase from the learning design
+  (`useActivityPhase.ts`), which only people who may edit the activity can read, and reads it again whenever the
+  page has loaded the activity again. Nobody else gets the block, and neither does a draft, another phase, no
+  phase, or a learning design that cannot be read. After a first publish one status message says both that the
+  activity is published and that the suggestion is under the button (WCAG 4.1.3): `CheckPanel` takes the key of
+  that message from the tab.
+- **Decision — the dates (PEDAGOGY).** Two dates: the calendar days 7 and 21 days after the day of the last
+  publishing, counted in Europe/Oslo and written with their weekday (`repetitionDates.ts`, `formatLongDate`).
+  The weekday's name is the web app's own text (`weekday.*`), because Chromium has no Nynorsk names and Bokmål
+  names Saturday and Sunday otherwise.
+  The two distances are the requirement's own example and fit a course week: one repetition the week after and
+  one three weeks after. The guide and the *Etterarbeid* patterns already cite the research on practice spread
+  over time (reference `cepeda2006`, among the references ALU has still to verify). The distances are a constant
+  of the web app, not content: ALU cannot change them without a change of code. If ALU wants other distances,
+  they move to `content/laeringsdesign/phases.yaml` (D-083); the question is in ALU's review packet. Publishing
+  is the one date the tool knows, so the dates count from it, and the block says to count from the day the
+  students first do the activity when that is later.
+- **Decision — a copy, not the same activity placed again.** The requirement asks for a copy, and the stored
+  data says why: a learner's resume state is one row per activity, learner and course (`H5PUserData`,
+  `H5P-005`), so the same activity placed in a later module opens with the answers of the first round, and its
+  insight view holds both rounds as attempts of one activity. A copy starts empty and has an insight view of its
+  own, so the first round and the repetition can be compared. The copy is the studio's own
+  (`POST /api/content/:id/duplicate`): a private draft of the author's with the source's phase, outcomes,
+  minutes and purpose, opened on **Rediger**; the server decides who may copy and how often (20 copies in ten
+  minutes per person). The block tells the author to give the copy a name that shows it is a repetition and to
+  publish it before placing it, because the Deep Linking picker lists a draft and does not let it be chosen. It
+  asks for one copy for each repetition: two placements of one copy would share their answers again.
+- **Decision — the phase text follows.** Etterarbeid's `canvasPlacement` in `content/laeringsdesign/phases.yaml`
+  no longer says to place the same activity again; it says that the author gets two suggested dates after
+  publishing and can make a copy for a later module (nn, nb, en). The content's status stays `proposed`: the
+  sentence and the two distances are questions to ALU (`docs/reference/alu-review-s5.md`).
+- **Not built, on purpose:** no reminder, e-mail or calendar entry; nothing new is stored (the dates are worked
+  out in the browser from `publishedAt` each time); nothing is shown to learners; nothing in the Canvas views
+  (`/app/*`), where the copy does not exist because it needs a portal session.
+- **Residual:** the dates count from the last publishing, so publishing again with new reasons («Grunngje på
+  nytt») moves them, and an activity published well before its students meet it gets dates that are too early;
+  the block's own sentence covers both. A published row without a time of publishing shows no suggestion; only
+  rows published outside the publish flow are such rows, as some test seeds are. The copy keeps the source's
+  title until the author changes it, so two activities of one name can stand in the author's list and in the
+  picker. A copy keeps the phase, so a published copy shows a suggestion of its own, counted from its own
+  publishing. The tab reads the phase when it opens and again each time the page has loaded the activity again
+  (a save, a change of status or of sharing): one small request each time.
+- **Verified:** tests that failed first: `apps/web/test/features/repetitionDates.test.ts` (13: the two
+  distances, the Oslo calendar day, both changes of summer time, the turn of the year, a leap day, a machine in
+  another time zone, times that cannot be read or written), `useActivityPhase.test.tsx` (5: read again after a
+  reload, never another activity's phase, no request without the right to edit, none or unreadable),
+  `RepetitionSuggestion.test.tsx` (5: the region, the dates as `<time>`, nb and en, the copy, a refused copy),
+  `CheckTabRepetition.test.tsx` (9: after publishing with its status, on opening, the five cases that show
+  nothing, another phase's plain status, the way back to draft) and one more case in
+  `test/i18n/formatDate.test.ts` (the long date, with Nynorsk's «laurdag» and «sundag»).
+  `apps/server/e2e/repetitionSuggestion.e2e.test.ts` failed on the old build and passes on the new: for a stored
+  time of publishing that is Saturday in Oslo and still Friday in the browser's own time zone, the two Saturdays
+  named in Nynorsk; the copy pressed with the keyboard; the copy a private draft with the phase. The accessibility suites walk the tab in its published
+  state as one more seeded view (`repetition` in `a11y/support/catalogue.ts`): axe in both colour modes, reflow
+  in both orientations, reduced motion, zoom and text spacing, target size, the skip link and visible focus,
+  the page language and own-origin requests, 12 tests. The full gate and the Docker smoke test ran; step 36 in
+  `PROGRESS.md` has the output.
+- **Consequences:** `PROD-014` is built, and TRACEABILITY, the hand-off index, the meeting brief and the
+  Evaluator Guide (limitation 24 and the end-to-end row) say so; spec 00 notes how. No change of server,
+  database or contract, and no new stored data, so the data inventory and the DPIA input stand as they were.
+  The web app's README has a row for the suggestion. The conformance report is rewritten from a run with the
+  new view. No line reference moved: this entry and step 36 stand at the end of their files; the edits in the
+  Evaluator Guide, the hand-off index, the meeting brief, the phase file and ALU's packet keep their line counts;
+  spec 00 and the web app's README grew, and no reference points into either. The status overview counts 36
+  steps.
