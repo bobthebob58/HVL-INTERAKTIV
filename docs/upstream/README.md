@@ -43,6 +43,7 @@ owner's check** means a decision or a fact only the owner can settle comes first
 | [lumi-alter-language-file.md](lumi-alter-language-file.md) | `alterLibraryLanguageFile` drops `libraryStrings` and every other key (D-111) | Ready |
 | [lumi-core128-new-hub.md](lumi-core128-new-hub.md) | A 10.0.x backport of `master`'s three Core 1.28 and new-Hub fixes (spec 01 §1, F1–F3) | Needs the owner's check: only if the release request is declined or not answered in about four weeks |
 | [lumi-small-api-issues.md](lumi-small-api-issues.md) | Eight small API, typing and save-order gaps our `UPSTREAM:` tags work around | Needs the owner's check: whether to file, and as one issue or several |
+| [lumi-editor-cropper-script.md](lumi-editor-cropper-script.md) | The editor's asset list has `libs/cropper.css` and not `libs/cropper.js`, so «Edit image» throws `Cropper is not defined` (D-153) | Needs the owner's check: `master` not read; do not file if it already lists the file |
 
 ### H5P (one GitHub repository per library)
 

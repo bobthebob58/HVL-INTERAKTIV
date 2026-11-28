@@ -1,6 +1,7 @@
 /**
- * Tests for the editor and player factories: Core 1.28 assets (F3), the Hub local ID (F1), and the wiring of
- * language fallback, DragQuestion removal and renderers (the permission wiring: permissionSystemGuard.test.ts).
+ * Tests for the editor and player factories: Core 1.28 assets (F3), the picture tool's script, the Hub local ID
+ * (F1), and the wiring of language fallback, DragQuestion removal and renderers (the permission wiring:
+ * permissionSystemGuard.test.ts).
  *
  * Spec: H5P-001, H5P-002, H5P-008, SEC-008
  */
@@ -49,6 +50,25 @@ describe('H5P engine factories', () => {
     };
     for (const file of coreList('styles')) expect(model.styles).toContain(urls.coreFile(file));
     for (const file of coreList('scripts')) expect(model.scripts).toContain(urls.coreFile(file));
+  });
+
+  it('[H5P-001] the editor frame loads the picture tool’s script, which Lumi 10.0.4 lists the style of and not the script', async () => {
+    // Arrange
+    const lumi = createRequire(import.meta.url)(
+      '@lumieducation/h5p-server/build/src/editorAssetList.json',
+    ) as { scripts: { editor: string[] }; styles: { editor: string[] } };
+    const popup = readFileSync(join(SERVER_ROOT, 'h5p/editor/scripts/h5peditor-image-popup.js'), 'utf8');
+    const { editor, config } = await engineTestbed();
+    const urls = new UrlGenerator(config);
+    // Act
+    const model = (await editor.render(undefined as never, 'nn', author)) as {
+      integration: { editor: { assets: { js: string[] } } };
+    };
+    // Assert: the pinned editor’s «Rediger bilete» calls `new Cropper(…)`, which only libs/cropper.js defines
+    expect(popup).toContain('new Cropper(');
+    expect(lumi.styles.editor).toContain('libs/cropper.css');
+    expect(lumi.scripts.editor).not.toContain('libs/cropper.js');
+    expect(model.integration.editor.assets.js).toContain(urls.editorLibraryFile('libs/cropper.js'));
   });
 
   it('[H5P-001] the player loads every core style and script that Core 1.28 lists (F3)', async () => {

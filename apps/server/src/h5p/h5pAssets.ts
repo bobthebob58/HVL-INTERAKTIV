@@ -58,6 +58,14 @@ export const EDITOR_MISSING_CORE_STYLES: readonly string[] = [
 /** Core 1.28 scripts missing from Lumi 10.0.4's editor list (the player list has them). */
 export const EDITOR_MISSING_CORE_SCRIPTS: readonly string[] = ['js/request-queue.js', 'js/h5p-tooltip.js'];
 
+// UPSTREAM: https://github.com/Lumieducation/H5P-Nodejs-library/blob/v10.0.4/packages/h5p-server/src/editorAssetList.json (no issue filed yet; docs/upstream/lumi-editor-cropper-script.md)
+// Remove when a pinned h5p-server release lists the file; a test in H5pFactories.test.ts then fails.
+/**
+ * Scripts of the pinned H5P editor missing from Lumi 10.0.4's editor list: the picture tool («Rediger bilete»)
+ * calls `new Cropper(…)`, and Lumi lists the tool's style (`libs/cropper.css`) without its script.
+ */
+export const EDITOR_MISSING_EDITOR_SCRIPTS: readonly string[] = ['libs/cropper.js'];
+
 /** Where the H5P router serves the theme files, below the H5P base URL. */
 export const THEME_PATH = '/theme';
 
@@ -121,7 +129,7 @@ export interface GlobalAssets {
 }
 
 /** The part of Lumi's URL generator the asset lists need: Core's file URLs and the base URL. */
-export type AssetUrls = Pick<IUrlGenerator, 'coreFile' | 'baseUrl'>;
+export type AssetUrls = Pick<IUrlGenerator, 'coreFile' | 'editorLibraryFile' | 'baseUrl'>;
 
 /**
  * The URLs of the theme's styles or scripts.
@@ -167,7 +175,11 @@ export function playerGlobalAssets(urls: AssetUrls): GlobalAssets {
  */
 export function editorGlobalAssets(urls: AssetUrls): GlobalAssets {
   return {
-    scripts: [...EDITOR_MISSING_CORE_SCRIPTS.map((file) => urls.coreFile(file)), ...themeUrls(urls, '.js')],
+    scripts: [
+      ...EDITOR_MISSING_CORE_SCRIPTS.map((file) => urls.coreFile(file)),
+      ...EDITOR_MISSING_EDITOR_SCRIPTS.map((file) => urls.editorLibraryFile(file)),
+      ...themeUrls(urls, '.js'),
+    ],
     styles: [...EDITOR_MISSING_CORE_STYLES.map((file) => urls.coreFile(file)), ...themeUrls(urls, '.css')],
   };
 }
