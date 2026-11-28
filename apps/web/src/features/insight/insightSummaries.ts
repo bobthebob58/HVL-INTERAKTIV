@@ -25,6 +25,8 @@ import { t, type Locale } from '../../i18n/translate';
 import { cellText, formatValue, shownValue, videoTime } from './insightFormat';
 import { plainText, quotedSentence, type QuotedText } from './quotedText';
 import type {
+  BranchingDecisionInsight,
+  BranchingOptionInsight,
   ChoiceMisconception,
   GapInsight,
   ItemDifficultyInsight,
@@ -144,4 +146,45 @@ export function videoSummary(interactions: readonly VideoInteractionInsight[], l
   };
   const named = (lowest.label ?? lowest.questionText) !== null;
   return quotedSentence('insight.video.summary', locale, params, named ? 'task' : undefined);
+}
+
+/**
+ * The name of a decision: its question, or its place in the scenario when it has no text.
+ * @param text - The decision's question; '' when the parameters hold none.
+ * @param number - The decision's place among the scenario's decisions, from 1.
+ * @param locale - The page locale.
+ * @returns The name.
+ */
+export const decisionLabel = (text: string, number: number, locale: Locale): string =>
+  text === '' ? t('insight.branching.untitled', locale, { number }) : text;
+
+/**
+ * The name of a decision's option: its text, or its place when it has none.
+ * @param option - The option.
+ * @param locale - The page locale.
+ * @returns The name.
+ */
+export const optionLabel = (option: BranchingOptionInsight, locale: Locale): string =>
+  option.text === ''
+    ? t('insight.branching.untitledOption', locale, { number: option.index + 1 })
+    : option.text;
+
+/**
+ * INS-004: the option most learners chose first at a decision, among the shown counts.
+ * @param decision - The decision.
+ * @param locale - The page locale.
+ * @returns The summary; the option's own text is its quoted part, the name of one without text is not.
+ */
+export function decisionSummary(decision: BranchingDecisionInsight, locale: Locale): QuotedText {
+  let best: BranchingOptionInsight | undefined;
+  for (const option of decision.options) {
+    const count = shownValue(option.learners) ?? 0;
+    if (count > 0 && count > (shownValue(best?.learners ?? null) ?? 0)) best = option;
+  }
+  if (!best) return plainText(t('insight.branching.summaryNone', locale));
+  const params = {
+    option: optionLabel(best, locale),
+    count: formatValue(shownValue(best.learners) ?? 0, 'count', locale),
+  };
+  return quotedSentence('insight.branching.summary', locale, params, best.text ? 'option' : undefined);
 }

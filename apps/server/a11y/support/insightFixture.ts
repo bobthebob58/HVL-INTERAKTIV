@@ -137,5 +137,6 @@ export function insightView(
       },
     ],
     videoEngagement: null,
+    branching: null,
   };
 }

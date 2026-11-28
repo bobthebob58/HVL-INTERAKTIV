@@ -666,6 +666,21 @@
       "summary": "Luke {{number}}: vanlegaste feilsvar av dei som kan visast, er «{{answer}}» ({{count}} studentar).",
       "summaryNone": "Luke {{number}}: ingen feil svar er gitt av nok studentar til at dei kan visast."
     },
+    "branching": {
+      "heading": "Val ved kvar avgjerd",
+      "intro": "For kvar avgjerd i scenarioet: kor mange studentar som valde kvart alternativ første gongen dei kom til avgjerda. «Valde på nytt» er studentar som kom tilbake til avgjerda og valde ein gong til, i same gjennomspeling eller i ei ny.",
+      "none": "Scenarioet har ingen avgjerder.",
+      "olderVersion": "Vala blir berre viste for den gjeldande versjonen av aktiviteten, fordi alternativa kan ha endra seg sidan. Vel den gjeldande versjonen for å sjå dei.",
+      "untitled": "Avgjerd {{number}} (utan tekst)",
+      "untitledOption": "Alternativ {{number}} (utan tekst)",
+      "learners": "Studentar som valde:",
+      "choseAgain": "Valde på nytt:",
+      "caption": "Første val ved «{{question}}»",
+      "colOption": "Alternativ",
+      "colLearners": "Studentar (første val)",
+      "summary": "Mest valt først av dei som kan visast: «{{option}}», valt av {{count}} studentar.",
+      "summaryNone": "Ingen alternativ er valde av nok studentar til at dei kan visast."
+    },
     "video": {
       "heading": "Video: kor mange svarte på oppgåvene",
       "intro": "Kor stor del av dei som starta, som svarte på kvar oppgåve i videoen. Det seier omtrent kor langt dei såg.",
