@@ -21,8 +21,9 @@
  *   - The first log line names the mode (`NODE_ENV`) and where the data lives (database and Redis hosts, the S3
  *     region and endpoint host), for the deployment checklist; never a user, password, path or query (DATA-004,
  *     D-109 amendment). A warning follows when the mode is not `production` (D-133). The next line gives the
- *     memory limits, with a warning when they do not fit (./memoryBudget.ts, D-134). A standstill of the server of
- *     a second or more is written as a warning (./eventLoopWatch.ts, D-144), from the jobs' start to their stop.
+ *     memory limits, with a warning when they do not fit (./memoryBudget.ts, D-134), and the next how many reverse
+ *     proxies are trusted, with a warning when production trusts none (./proxyTrustWarning.ts, D-153). A standstill
+ *     of a second or more is written as a warning (./eventLoopWatch.ts, D-144), from the jobs' start to their stop.
  *   - A port that cannot be opened fails the start instead of leaving a process that serves nothing.
  *   - Upload folders an earlier run left in the temporary area are removed at start (../http/staleUploadFolders.ts),
  *     and the SVG cleaning worker is started (../security/SvgSanitizer.ts, D-119).
@@ -36,7 +37,7 @@
  *   ../lti/nrps/nrpsServices.ts, ../config/env.ts, ../config/storageResidency.ts, ../config/validationContext.ts,
  *   ../validation/validateContent.ts, ../learningDesign/content/loadStudioContent.ts, ../web/nextWebApp.ts,
  *   ../web/webRoutes.ts (`webUpgrades`), ../learningDesign/mappe/pdf/pdfAvailability.ts, ./serverProcess.ts,
- *   ./memoryBudget.ts, ./eventLoopWatch.ts.
+ *   ./memoryBudget.ts, ./proxyTrustWarning.ts, ./eventLoopWatch.ts.
  * Tests: apps/server/test/server/main.smoke.test.ts, apps/server/test/server/startupContent.test.ts,
  *   apps/server/test/server/startupLanguageOverlay.test.ts
  */
@@ -69,6 +70,7 @@ import { webUpgrades } from '../web/webRoutes.js';
 import { createApp } from './createApp.js';
 import { EventLoopWatch } from './eventLoopWatch.js';
 import { logMemoryBudget, memoryBudgetOf, readMemoryFacts } from './memoryBudget.js';
+import { logProxyTrust } from './proxyTrustWarning.js';
 import { runServerProcess } from './serverProcess.js';
 import { closeStudioServices } from './studioServices.js';
 
@@ -103,6 +105,9 @@ export async function startServer(env: Env, options: StartOptions = {}): Promise
     logger.warn({ mode: env.NODE_ENV }, 'not in production mode: the production start-up checks did not run');
   // WHY: the container's limit against what the server may use; a warning follows when they do not fit (D-134).
   logMemoryBudget(logger, memoryBudgetOf(readMemoryFacts(env)));
+  // SECURITY: behind a proxy, TRUST_PROXY=0 gives every visitor one address and one request ceiling; the setting
+  // is said at every start, with a warning for 0 in production (D-153).
+  logProxyTrust(logger, env);
   // WHY: a run that was stopped mid-upload could not remove its folders in the temporary area (SEC-005, D-118).
   logger.info({ removed: await removeStaleUploadFolders() }, 'stale upload folders removed');
   // WHY: the first SVG upload must not wait for the cleaning worker, and a worker that cannot start shows here.

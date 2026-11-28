@@ -98,10 +98,35 @@ check_startup_probe() {
   echo "✓ start-up probe: $(grep -o '"pdfAvailable".*"reason":"[a-z-]*"' <<<"$line")"
 }
 
+# SEC-004 in the image: one signed file URL is served by the files origin (200, the PNG, the sandbox policy, nosniff,
+# no cookie) and never by the app's own origin (404). SECURITY: the URL carries a grant, so it is used, never printed.
+files_origin_only() {
+  local what=$1 url=$2 files_host path status
+  files_host=$(node -e 'process.stdout.write(new URL(process.argv[1]).host)' "$url")
+  path=$(node -e 'process.stdout.write(new URL(process.argv[1]).pathname)' "$url")
+  [[ "$files_host" == "files.localhost:$APP_PORT" ]] ||
+    { echo "✗ $what is on $files_host, not the files origin" >&2; return 1; }
+  status=$(curl -s -D "$WORK/files.headers" -o "$WORK/files.body" -w '%{http_code}' --max-time 20 \
+    -H "Host: $files_host" "http://127.0.0.1:$APP_PORT$path")
+  [[ "$status" == 200 ]] || { echo "✗ $what: the files origin answered $status" >&2; return 1; }
+  [[ "$(head -c 8 "$WORK/files.body" | od -An -tx1 | tr -d ' \n')" == 89504e470d0a1a0a ]] ||
+    { echo "✗ $what: the files origin did not send the PNG" >&2; return 1; }
+  grep -qiE '^content-security-policy:.*sandbox' "$WORK/files.headers" ||
+    { echo "✗ $what: no CSP sandbox on the files origin" >&2; return 1; }
+  grep -qiE '^x-content-type-options: *nosniff' "$WORK/files.headers" ||
+    { echo "✗ $what: no nosniff" >&2; return 1; }
+  ! grep -qi '^set-cookie:' "$WORK/files.headers" ||
+    { echo "✗ $what: the files origin set a cookie" >&2; return 1; }
+  status=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 -H "Host: localhost:$APP_PORT" \
+    "http://127.0.0.1:$APP_PORT$path")
+  [[ "$status" == 404 ]] || { echo "✗ $what: the app origin answered $status" >&2; return 1; }
+}
+
 # SEC-006 and SEC-004 in the image (./uploadProof.mjs): the stack's clamd refuses EICAR and passes a clean PNG; the
-# running app serves the stored PNG on the files origin with the sandbox policy, never on its own origin.
+# running app serves the stored PNG to the player and to the editor, and a fresh upload, on the files origin with
+# the sandbox policy, never on its own origin (D-153).
 check_upload() {
-  local out line url files_host path status
+  local out line kind url
   out=$("${COMPOSE[@]}" exec -T app node --import tsx --input-type=module - <"$HERE/uploadProof.mjs" 2>&1) ||
     { echo "✗ the upload proof failed: $(tail -n 1 <<<"$out")" >&2; return 1; }
   line=$(tail -n 1 <<<"$out")
@@ -109,26 +134,13 @@ check_upload() {
     { echo "✗ EICAR was not refused as malware: ${line%%\"fileUrl\"*}" >&2; return 1; }
   grep -q '"reason":"malware-found","signatures":\["Eicar' <<<"$out" ||
     { echo "✗ no malware-found line from the scanner" >&2; return 1; }
-  url=$(node -e 'process.stdout.write(JSON.parse(process.argv[1]).fileUrl)' "$line")
-  files_host=$(node -e 'process.stdout.write(new URL(process.argv[1]).host)' "$url")
-  path=$(node -e 'process.stdout.write(new URL(process.argv[1]).pathname)' "$url")
-  # SECURITY: $path carries the grant, so it is used, never printed.
-  [[ "$files_host" == "files.localhost:$APP_PORT" ]] ||
-    { echo "✗ the player's file URL is on $files_host, not the files origin" >&2; return 1; }
-  status=$(curl -s -D "$WORK/files.headers" -o "$WORK/files.body" -w '%{http_code}' --max-time 20 \
-    -H "Host: $files_host" "http://127.0.0.1:$APP_PORT$path")
-  [[ "$status" == 200 ]] || { echo "✗ the files origin answered $status" >&2; return 1; }
-  [[ "$(head -c 8 "$WORK/files.body" | od -An -tx1 | tr -d ' \n')" == 89504e470d0a1a0a ]] ||
-    { echo "✗ the files origin did not send the PNG" >&2; return 1; }
-  grep -qiE '^content-security-policy:.*sandbox' "$WORK/files.headers" ||
-    { echo "✗ no CSP sandbox on the files origin" >&2; return 1; }
-  grep -qiE '^x-content-type-options: *nosniff' "$WORK/files.headers" || { echo "✗ no nosniff" >&2; return 1; }
-  ! grep -qi '^set-cookie:' "$WORK/files.headers" || { echo "✗ the files origin set a cookie" >&2; return 1; }
-  status=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 -H "Host: localhost:$APP_PORT" \
-    "http://127.0.0.1:$APP_PORT$path")
-  [[ "$status" == 404 ]] || { echo "✗ the app origin answered $status for a player file" >&2; return 1; }
+  for kind in fileUrl editorFileUrl uploadUrl; do
+    url=$(node -e 'process.stdout.write(JSON.parse(process.argv[1])[process.argv[2]] ?? "")' "$line" "$kind")
+    files_origin_only "the $kind" "$url" || return 1
+  done
   echo "✓ upload: the stack's clamd refused EICAR ($(grep -o '"signatures":\[[^]]*\]' <<<"$out" | head -n 1)) and passed a"
-  echo "  clean PNG; $files_host serves it (200, CSP sandbox, nosniff, no cookie); the app origin answers 404"
+  echo "  clean PNG; files.localhost:$APP_PORT serves it to the player and to the editor, and a fresh upload (200, CSP"
+  echo "  sandbox, nosniff, no cookie); the app origin answers 404 for each"
 }
 
 check_chromium() {

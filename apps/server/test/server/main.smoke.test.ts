@@ -140,6 +140,8 @@ describeWithServices('[NFR-002] the server entry point', () => {
     expect(run.output).toMatch(/"mode":"test","databaseHost":"[^"]+".*"msg":"deployment locations"/);
     expect(run.output).toMatch(/"level":"warn".*"mode":"test","msg":"not in production mode/);
     expect(run.output).toMatch(/"heapLimitMb":\d+,"besideHeapMb":\d+,"neededMb":\d+,"msg":"memory limits"/);
+    // Assert: it says how many reverse proxies it trusts; the warning for none is production's alone (D-153)
+    expect(run.output).toMatch(/"level":"info".*"trustProxy":0,"msg":"reverse proxies trusted"/);
     expect(run.output).not.toContain(new URL(String(process.env.DATABASE_URL)).password);
   }, 90_000);
 
@@ -181,20 +183,18 @@ describeWithServices('[NFR-002] the server entry point', () => {
 
   it('[DATA-004] in production, clear-text connections and the SDK’s own S3 endpoint stop the start, by name only', async () => {
     // Arrange: a production configuration whose only faults are the connections (D-109 and its amendments)
-    const env = productionEnv({
+    const faults = {
       DATABASE_URL: 'postgresql://hvli_app:db-password-1@db.hvl.no:5432/hvli',
       REDIS_URL: 'redis://:redis-password-1@redis.hvl.no:6379',
       S3_ENDPOINT: 'http://s3.hvl.no',
       AWS_ENDPOINT_URL_S3: 'http://127.0.0.1:9',
-    });
+    };
     // Act
-    const main = startMain({ PATH: process.env.PATH, ...env });
+    const main = startMain({ PATH: process.env.PATH, ...productionEnv(faults) });
     const code = await main.exit;
     // Assert
     expect(code).toBe(1);
-    for (const name of ['DATABASE_URL', 'REDIS_URL', 'S3_ENDPOINT', 'AWS_ENDPOINT_URL_S3']) {
-      expect(main.output()).toContain(name);
-    }
+    for (const name of Object.keys(faults)) expect(main.output()).toContain(name);
     expect(main.output()).not.toMatch(/password-1|postgresql:|redis:\/\/|listening/);
   }, 30_000);
 });
