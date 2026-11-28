@@ -25,14 +25,14 @@ import type { InsightCountCell, InsightMedianCell, InsightRateCell } from '@hvl-
 import type { InsightReport, MisconceptionInsight } from '../insightReport.js';
 
 /** The part of the report a row comes from. */
-export type InsightCsvSection = 'participation' | 'items' | 'choices' | 'gaps' | 'video';
+export type InsightCsvSection = 'participation' | 'items' | 'choices' | 'gaps' | 'video' | 'decisions';
 
 /** One CSV row. */
 export interface InsightCsvRow {
   readonly section: InsightCsvSection;
   /** The question's `subContentId`; '' for the activity itself or for participation. */
   readonly item: string;
-  /** The option or gap number (from 1), or an interaction's second in the video; '' for a whole question. */
+  /** The option or gap number (from 1), or an interaction's second in the video; '' for a whole question or decision. */
   readonly part: string;
   /** The activity's own text, or a wrong answer's text; '' for participation. */
   readonly label: string;
@@ -103,7 +103,7 @@ function misconceptionRows(entry: MisconceptionInsight, k: number): InsightCsvRo
 /**
  * The CSV rows of a report.
  * @param report - An insight report, already suppressed.
- * @returns Its rows: participation, items (hardest first), choices, gaps, then video interactions.
+ * @returns Its rows: participation, items (hardest first), choices, gaps, video interactions, then decisions.
  * @spec INS-009
  */
 export function insightCsvRows(report: InsightReport): InsightCsvRow[] {
@@ -160,5 +160,20 @@ export function insightCsvRows(report: InsightReport): InsightCsvRow[] {
         value: csvValue(cell, k, decimals),
       })),
     ),
+    ...(report.branching ?? []).flatMap((entry) => {
+      const row = (part: string, label: string, measure: string, cell: Cell) => ({
+        section: 'decisions' as const,
+        item: entry.item,
+        part,
+        label,
+        measure,
+        value: csvValue(cell, k),
+      });
+      return [
+        row('', entry.questionText, 'choosers', entry.learners),
+        ...entry.options.map((o) => row(String(o.index + 1), o.text, 'firstChoice', o.learners)),
+        row('', '', 'choseAgain', entry.choseAgain),
+      ];
+    }),
   ];
 }

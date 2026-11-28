@@ -128,6 +128,27 @@ export interface VideoInteractionInsight {
   readonly share: InsightRateCell;
 }
 
+/** INS-004: one option of a decision. */
+export interface BranchingOptionInsight {
+  /** The option's place in the stored parameters, from 0. */
+  readonly index: number;
+  readonly text: string;
+  /** Learners whose first choice at the decision this option was. */
+  readonly learners: InsightCountCell;
+}
+
+/** INS-004: one decision of a BranchingScenario. */
+export interface BranchingDecisionInsight {
+  /** The decision's `subContentId`. */
+  readonly item: string;
+  readonly questionText: string;
+  /** Learners who chose at the decision. */
+  readonly learners: InsightCountCell;
+  readonly options: readonly BranchingOptionInsight[];
+  /** Learners who chose at the decision more than once (a loop, the back button or a new run). */
+  readonly choseAgain: InsightCountCell;
+}
+
 /** One insight view, already suppressed. */
 export interface InsightReport {
   readonly scope: InsightScope;
@@ -146,4 +167,9 @@ export interface InsightReport {
   readonly misconceptions: readonly MisconceptionInsight[];
   /** Only for an InteractiveVideo; null otherwise. */
   readonly videoEngagement: readonly VideoInteractionInsight[] | null;
+  /**
+   * Only for a BranchingScenario, null otherwise: its decisions in the content's order (INS-004). Empty for an older
+   * version, whose options are not stored (D-093), and for a scenario without a decision.
+   */
+  readonly branching: readonly BranchingDecisionInsight[] | null;
 }

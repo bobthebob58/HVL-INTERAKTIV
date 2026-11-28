@@ -287,7 +287,8 @@
         "items": "Questions",
         "choices": "Answer distribution",
         "gaps": "Gaps",
-        "video": "Video"
+        "video": "Video",
+        "decisions": "Decisions"
       },
       "note": {
         "formative": "Formative assessment",
@@ -332,7 +333,10 @@
         "otherWrong": "Other wrong answers (students, first answer)",
         "empty": "Empty gap (students, first answer)",
         "answered": "Students who answered",
-        "share": "Share of those who started"
+        "share": "Share of those who started",
+        "choosers": "Students who chose",
+        "firstChoice": "First choice (students)",
+        "choseAgain": "Chose again (students)"
       }
     }
   }
