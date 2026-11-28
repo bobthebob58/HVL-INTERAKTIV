@@ -2,7 +2,7 @@
  * Browser integration tests of a Branching Scenario's choices in the real player (full Chromium, the real
  * BranchingScenario 1.10 example): what the library itself does at a choice (pinned, since the bridge relies on
  * it), and that the bridge sends each choice once, cut down, in order, through a loop, the back button, a reload
- * and a restart, and never an old choice again.
+ * while a feedback screen shows and a restart, and never an old choice again.
  *
  * Spec: INS-004, LTI-010, DATA-012
  */
@@ -109,7 +109,8 @@ describeWithServices('[INS-004] the choices of a Branching Scenario in the real 
             await steps.goOn();
             await steps.choose(1, false);
             await waitForStatements(received, learner, 5);
-            // Assert
+            await new Promise((resolve) => setTimeout(resolve, 2_500));
+            // Assert: five items and no sixth with the bridge's next batch
             const items = itemsFrom(received, learner);
             expect(lines(items, scenario()).sort()).toEqual(
               [
@@ -126,12 +127,13 @@ describeWithServices('[INS-004] the choices of a Branching Scenario in the real 
             ]);
             expect(new Set(items.map((item) => item.statementId)).size).toBe(5);
             expect(JSON.stringify(items)).not.toMatch(/actor|mailto|en-US|samlinga|description|choices/i);
-            expect(items.find((item) => lines([item], scenario())[0] === 'answered 05=1 1')).toMatchObject({
-              object: {
-                id: `${scenario()}?subContentId=${DECISIONS[1]}`,
-                definition: { interactionType: 'choice' },
-              },
-              result: { completion: true, response: '1' },
+            // PRIVACY: of H5P's result a choice carries the index alone: not the time spent at the decision
+            const choices = items.filter((item) => lines([item], scenario())[0]?.startsWith('answered'));
+            const index = (response: string) => ({ response });
+            expect(choices.map((item) => item.result)).toEqual([index('1'), index('0'), index('1')]);
+            expect(choices.at(-1)?.object).toEqual({
+              id: `${scenario()}?subContentId=${DECISIONS[1]}`,
+              definition: { interactionType: 'choice' },
             });
           } finally {
             await play.close();
@@ -141,24 +143,26 @@ describeWithServices('[INS-004] the choices of a Branching Scenario in the real 
       );
 
       it(
-        '[INS-004] the back button, a reload and «Start på nytt» send each new choice and no earlier one again',
+        '[INS-004] the back button, a reload during a feedback screen and «Start på nytt» send each choice once',
         async () => {
           // Arrange
           const learner = await learnerOf();
           const play = await openXapiPlay(browser(), server, scenario(), learner);
           try {
-            // Act: option 0, back to the decision, option 1; a reload, which resumes on node 3; the loop back and
-            // option 0, on to the last decision's option 2; then a new run with option 1
+            // Act: option 0, back to the decision, option 1 picked; a reload while its feedback screen shows, which
+            // H5P shows again by pressing the option itself; on from the feedback, the loop back and option 0, on to
+            // the last decision's option 2; then a new run with option 1
             let steps = scenarioSteps(play);
             await steps.start();
             await steps.goOn();
             await steps.choose(0, true);
             await steps.back();
-            await steps.choose(1, true);
-            await waitForStatements(received, learner, 3);
+            await steps.pick(1);
+            await waitForStatements(received, learner, 2);
             await waitForSavedState(play, server, learner);
             await play.reload();
             steps = scenarioSteps(play);
+            await steps.passFeedback();
             await steps.goOn();
             await steps.choose(0, true);
             await steps.goOn();
@@ -167,6 +171,8 @@ describeWithServices('[INS-004] the choices of a Branching Scenario in the real 
             await steps.goOn();
             await steps.choose(1, true);
             await waitForStatements(received, learner, 8);
+            // WHY: a choice sent twice would come with the bridge's next 2-second batch, after the eighth item.
+            await new Promise((resolve) => setTimeout(resolve, 2_500));
             // Assert: two page loads, each with its own first `attempted`; the second run is the second attempt
             const sent = lines(itemsFrom(received, learner), scenario());
             expect(sent.filter((line) => line.startsWith('answered'))).toEqual([

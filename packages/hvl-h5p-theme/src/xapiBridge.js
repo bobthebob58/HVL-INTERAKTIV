@@ -30,13 +30,13 @@
  * Collaborators: ./xapiStatements.js, ./xapiBatching.js, ./xapiBranchingChoices.js, apps/server/src/h5p/h5pAssets.ts,
  *   apps/server/src/h5p/render/xapiBridgeConfig.ts (the configuration), `POST /api/h5p/xapi`.
  * Tests: packages/hvl-h5p-theme/test/xapiBridge.test.ts, packages/hvl-h5p-theme/test/xapiBridgeSending.test.ts,
- *   packages/hvl-h5p-theme/test/xapiBridgeRecovery.test.ts, packages/hvl-h5p-theme/test/xapiBranchingChoices.test.ts,
- *   apps/server/test/h5p/xapiBridge.browser.int.test.ts
+ *   packages/hvl-h5p-theme/test/xapiBridgeRecovery.test.ts, apps/server/test/h5p/xapiBridge.browser.int.test.ts,
+ *   packages/hvl-h5p-theme/test/xapiBranchingChoicesBridge.test.ts
  */
 (function hvlXapiBridge() {
   'use strict';
   var MAX_QUEUE = 1000;
-  // SECURITY: segments of `[\w-]` only. A looser test passes `/\t/host`, which the URL parser reads as `//host`.
+  // SECURITY: `[\w-]` segments only: `/\t/host` would parse as `//host`, another origin that would get the token.
   var SAME_ORIGIN_PATH = /^(?:\/[\w-]+)+$/;
 
   var frame;

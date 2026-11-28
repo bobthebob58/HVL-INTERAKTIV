@@ -81,20 +81,16 @@ describe('[INS-004] a Branching Scenario’s choice (D-154)', () => {
       verb: { id: 'http://adlnet.gov/expapi/verbs/answered' },
       object: { id: `${C}?subContentId=${decision}`, definition: { interactionType: 'choice' } },
       context: { contextActivities: { parent: [{ id: C }], category } },
-      result: { completion: true, duration: 'PT1.2S', response: '1' },
+      result: { response: '1' },
     });
     // Act
     const row = xapiStatementRow(item, FACTS, new Date());
     // Assert
     expect(classifyXapiItem(item, FACTS)).toEqual({ kind: 'store', rootResult: false });
-    expect(row).toMatchObject({ subContentId: decision, verb: 'answered', response: '1', completion: true });
-    expect([row.scoreRaw, row.scoreMax, row.scaled, row.success, row.durationMs]).toEqual([
-      null,
-      null,
-      null,
-      null,
-      1200,
-    ]);
+    expect(row).toMatchObject({ subContentId: decision, verb: 'answered', response: '1' });
+    // PRIVACY: nothing but the index: no score, no verdict, and not the time spent at the decision (D-154).
+    const rest = [row.scoreRaw, row.scoreMax, row.scaled, row.success, row.completion, row.durationMs];
+    expect(rest).toEqual([null, null, null, null, null, null]);
   });
 });
 

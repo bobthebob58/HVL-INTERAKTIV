@@ -7,11 +7,13 @@
  *      test can show that none of them leaves the page.
  * Spec: INS-004, LTI-010
  * Invariants:
- *   - `move` does what the scenario does: it puts the statement of the node it leaves last on `xAPIData`, then calls
- *     the `navigated` listeners in the order they were added, with the move's data as `event.data`.
+ *   - `move` does what the scenario does: it puts the statement of the node it leaves (`kept`, when that node has
+ *     one: a page that is a question, or an answered decision, on any move, a back move and a resume too) last on
+ *     `xAPIData`, then calls the `navigated` listeners in the order they were added, with the move's data.
  *   - `restart` gives the scenario a new, empty list, as its `resetTask` does.
  * Collaborators: ../../src/xapiBranchingChoices.js, ./bridgeDocument.ts.
- * Tests: packages/hvl-h5p-theme/test/xapiBranchingChoices.test.ts
+ * Tests: packages/hvl-h5p-theme/test/xapiBranchingChoices.test.ts,
+ *   packages/hvl-h5p-theme/test/xapiBranchingChoicesBridge.test.ts
  */
 import { CONTENT_ID, type Statement } from './bridgeDocument.js';
 

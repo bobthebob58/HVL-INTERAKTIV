@@ -107,7 +107,8 @@ export const movesOf = (frame: Frame): Promise<ScenarioMove[]> =>
 /**
  * The learner's steps in the current player document.
  * @param play - The session, or anything that gives the player document; read at each step, so a reload is fine.
- * @returns `start`, `goOn`, `choose` (with the option's feedback screen passed when `feedback`), `back`, `restart`.
+ * @returns `start`, `goOn`, `choose` (with the option's feedback screen passed when `feedback`), `pick` and
+ *   `passFeedback` for the two halves of such a choice, `back`, `restart`.
  */
 export function scenarioSteps(play: Pick<XapiPlay, 'frame'>) {
   const path = () =>
@@ -135,6 +136,8 @@ export function scenarioSteps(play: Pick<XapiPlay, 'frame'>) {
   };
   const visible = (selector: string) => play.frame().locator(selector).filter({ visible: true });
   const alternatives = () => visible('.h5p-branching-question-alternative');
+  const feedbackOn = () =>
+    play.frame().getByRole('dialog').getByRole('button', { name: 'Gå vidare' }).click();
   return {
     start: () => play.frame().getByRole('button', { name: 'Start scenarioet' }).click(),
     goOn: () => move(() => visible('.h5p-proceed-button').first().click()),
@@ -142,9 +145,16 @@ export function scenarioSteps(play: Pick<XapiPlay, 'frame'>) {
     choose: (index: number, feedback: boolean) =>
       move(async () => {
         await alternatives().nth(index).click();
-        if (feedback)
-          await play.frame().getByRole('dialog').getByRole('button', { name: 'Gå vidare' }).click();
+        if (feedback) await feedbackOn();
       }),
+    /** Picks option `index` and stays on its feedback screen. */
+    pick: (index: number) => alternatives().nth(index).click(),
+    /** Goes on from a feedback screen that is showing, also one H5P showed again after a reload. */
+    passFeedback: async () => {
+      const before = await path();
+      await feedbackOn();
+      await expect.poll(path, { timeout: MOVE_MS, message: 'the scenario did not move' }).not.toBe(before);
+    },
     // WHY: on a decision the scenario shows a back button of the overlay over the page's own; the last one is on top.
     back: () => move(() => visible('.h5p-back-button').last().click()),
     restart: async () => {

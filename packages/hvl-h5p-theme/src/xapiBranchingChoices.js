@@ -7,8 +7,8 @@
  *      `interacted` without a result, and the last choice before an end screen raises nothing (D-115, probe P1).
  *      But for every choice it makes the question's `answered` statement (H5P's report contract, `getXAPIData()`)
  *      and puts it last on its own list `xAPIData`, and it fires its own `navigated` event with the chosen
- *      option's index (probe of 2026-11-28, D-154). This module watches that event and hands the kept statement
- *      to the bridge, which cuts and queues it like a dispatched one.
+ *      option's index (probe of 2026-11-28, D-154). This module watches that event and hands the bridge what
+ *      that statement says about the choice, which the bridge cuts and queues like a dispatched one.
  * Spec: INS-004, LTI-010, DATA-012
  * Invariants:
  *   - Only an instance whose `libraryInfo.machineName` (set by H5P.newRunnable) is `H5P.BranchingScenario` is
@@ -18,9 +18,15 @@
  *     H5P.BranchingQuestion and answers with that same index. Anything else hands on nothing: a decision then has
  *     no learners in insight, never a wrong count.
  *   - A resume sends nothing again: the entries the saved state gave back are there before the first move. A
- *     decision made again (a loop, the back button, a restart) is a new entry and is handed on again.
- *   - PRIVACY: the statement holds the question's and the options' texts; ./xapiStatements.js `cut` keeps the
- *     verb, the IDs, the interaction type, `completion`, `duration` and the index only (DATA-012).
+ *     decision made again (a loop, the back button, a restart) is a new entry and is handed on again. A back
+ *     move or a resume can add a page's own entry to the list; that is no choice and is never handed on.
+ *   - PRIVACY: what is handed on is a new object with the statement's verb, object and context and, as its
+ *     result, the index alone: not the time the learner spent at the decision (`result.duration`), `completion`,
+ *     the timestamp or the actor. Of the object, ./xapiStatements.js `cut` keeps the IDs and the interaction
+ *     type, never the question's or the options' texts (DATA-012).
+ *   - A scenario is watched from the first xAPI event it raises, the root's `attempted` when H5P attaches it,
+ *     which comes before any choice. H5P offers a BranchingScenario as main content only, never inside another
+ *     type.
  *   - Changes nothing in the scenario, never throws into H5P. Defined once per window, as a read-only global,
  *     before ./xapiBridge.js reads it.
  * SPEC-DEVIATION: D-154 — LTI-010's bridge sends what `H5P.externalDispatcher` raises; this statement is read
@@ -29,6 +35,7 @@
  *   handed), ./xapiStatements.js (`cut`), apps/server/src/h5p/h5pAssets.ts (a player-only script),
  *   apps/server/src/insight/aggregate/branchingChoices.ts (counts the stored choices).
  * Tests: packages/hvl-h5p-theme/test/xapiBranchingChoices.test.ts,
+ *   packages/hvl-h5p-theme/test/xapiBranchingChoicesBridge.test.ts,
  *   apps/server/test/h5p/xapiBranchingChoices.browser.int.test.ts
  */
 (function hvlXapiBranchingChoices() {
@@ -63,8 +70,9 @@
 
   /**
    * Watches a scenario's choices.
-   * `source`: the instance that raised an xAPI event; `send`: called with the kept statement of each choice made
-   * from now on. Does nothing for any other instance, or one already watched.
+   * `source`: the instance that raised an xAPI event; `send`: called for each choice made from now on, with the
+   * kept statement's verb, object and context and the chosen index. Does nothing for any other instance, or one
+   * already watched.
    */
   function watch(source, send) {
     try {
@@ -79,8 +87,11 @@
           var data = event && event.data;
           if (!data || data.isResuming || !isIndex(data.chosenAlternative)) return;
           // WHY: an entry that was there before this move belongs to an earlier choice, whatever it answers.
-          if (last && last !== previous && isChoice(last.statement, data.chosenAlternative))
-            send(last.statement);
+          if (!last || last === previous || !isChoice(last.statement, data.chosenAlternative)) return;
+          var kept = last.statement;
+          // PRIVACY: the index only; H5P's result also holds how long the learner stayed at the decision.
+          var result = { response: data.chosenAlternative };
+          send({ verb: kept.verb, object: kept.object, context: kept.context, result: result });
         } catch {
           // WHY: another version of the library may keep its record otherwise; then there is no choice to send.
         }

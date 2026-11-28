@@ -13,7 +13,9 @@
  *   ../../src/xapiBatching.js, ../../src/xapiBridge.js.
  * Tests: packages/hvl-h5p-theme/test/xapiBridge.test.ts, packages/hvl-h5p-theme/test/xapiBridgeSending.test.ts,
  *   packages/hvl-h5p-theme/test/xapiBridgeRecovery.test.ts, packages/hvl-h5p-theme/test/xapiStatements.test.ts,
- *   packages/hvl-h5p-theme/test/xapiBatching.test.ts
+ *   packages/hvl-h5p-theme/test/xapiBatching.test.ts, packages/hvl-h5p-theme/test/xapiSingleChoiceSet.test.ts,
+ *   packages/hvl-h5p-theme/test/xapiBranchingChoices.test.ts,
+ *   packages/hvl-h5p-theme/test/xapiBranchingChoicesBridge.test.ts
  */
 import { readFileSync } from 'node:fs';
 import { JSDOM, VirtualConsole } from 'jsdom';
