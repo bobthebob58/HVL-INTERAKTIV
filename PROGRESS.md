@@ -3873,9 +3873,59 @@ Append one entry per session: date, session, what was done, gate output, and any
     `npm run privacy:dpia-check` now also fails when the brief's table does not name every residual of §12
     exactly once, when a theme's count is wrong, or when the brief cites a residual §12 does not list
     (`tools/privacy/dpoBriefProblems.mjs`, with tests).
-  - The gate found one thing: a document test in the server suite still expected the DPO to be asked about
-    «R1–R41» (`dpiaRecordedLearners.test.ts`). It had not been run again after the DPIA input gained R42 and R43.
-    The test now reads the table's last residual instead of a number typed by hand.
+  - The gate found two things that GitHub would have refused. A document test in the server suite still
+    expected the DPO to be asked about «R1–R41» (`dpiaRecordedLearners.test.ts`): it had not been run again
+    after the DPIA input gained R42 and R43, and it now reads the table's last residual instead of a number
+    typed by hand. And `npm run docs:api` stopped on a warning: the type of the text reader that the second
+    read's correction gave `branchingDecisions` was not exported, so the API documentation named a type it did
+    not hold. It is exported and described now (`DecisionTextReader`).
+  - The browser test that changed after the second read (a reload while a feedback screen shows) then ran with
+    every answer 1.5 s late and with every processor busy, and passed both ways.
+  - The gate: the build, the Docker smoke test, the server suite, the end-to-end tests, the accessibility
+    suites and the live seam ran on commit `da19b855c649`. The five smaller suites and the static checks ran
+    after the corrections and the two papers, on the files of this commit: the session's own run script had
+    passed those five suites a wrong name the first time, so they had not run. Apart from the two things above,
+    nothing failed that does not fail in this container for every step. The accessibility run is recorded in
+    the conformance report (578 tests, 183 scans) on commit `da19b855c649`. Gate output:
+
+  ```
+  $ npm run build                                      exit 0
+  $ HVLI_DOCKER_SANDBOX=1 bash deploy/smoke/dockerSmoke.sh   passed in 232 s (the PDF printed in the app
+      container with the sandbox seen in /proc; the standstill and restart checks passed)
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run lint:css                                   exit 0
+  $ npm run doc:lint && npm run check:filesize         11 checks passed; file-size passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run privacy:dpia-check                         13 sections, the developer key, the residuals and the DPO's brief agree
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins && npm run check:licences       every version pinned; 489 production packages compatible
+  $ npm run check:lockfile                             949 packages from the registry with sha512; 4 install scripts reviewed
+  $ npm run check:workflows                            3 workflows: actions by commit, images by digest
+  $ npm run check:audit                                2 high/critical advisories, both covered by reviewed exceptions
+  $ npm run sbom -- --check                            current: 478 npm packages, 12 H5P components, 3 images
+  $ npm run content:check && npm run tokens:check      exit 0
+  $ node tools/spec-site/buildSpecSite.mjs --check     up to date
+  $ node tools/deploy-check/checkDeployFiles.mjs       exit 0
+  $ npm run docs:api                                   exit 0 (after the correction; the first run stopped on the warning)
+  $ npm run a11y:report -- --check                     exit 0
+  $ npx vitest run --project web                       693 passed (107 files)
+  $ npx vitest run --project api-contract              124 passed (15 files)
+  $ npx vitest run --project tools                     609 passed (82 files)
+  $ npx vitest run --project design-tokens             162 passed
+  $ npx vitest run --project hvl-h5p-theme             226 passed
+  $ LIVE_TARGET=mock npm run test:live                 36 passed
+  $ npm run test:a11y                                  578 passed (19 files)
+  $ npm run test:e2e                                   43 passed, 1 skipped; 1 file failed: learnerDataRights
+      (needs the privileged database, like DATA-010's tests)
+  $ npx vitest run --project server                    27203 passed, 31 skipped; 2 failed in 5 files: a
+      privileged database (three files) and the seccomp PDF sandbox, limits of this container (DATA-010,
+      MAPPE-004), and the document test named above
+  $ npx vitest run --project server apps/server/test/insight apps/server/test/privacy \
+      apps/server/test/learningDesign/safeEditing/answerKeyVersions.int.test.ts
+                                                       after both corrections: 404 passed, 5 skipped; 1 file
+      failed: operationsClis (the privileged database)
+  ```
   - One existing figure changes for a scenario: «median tid» is measured from a page load's first to its last
     stored statement, so a learner who chose at least once without finishing now has a measured time.
   - A second reader, not the writer, read the whole change and ran nothing. No fault in what is sent, stored,
