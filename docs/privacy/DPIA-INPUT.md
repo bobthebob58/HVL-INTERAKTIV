@@ -7,6 +7,7 @@
 | **Controller** | Høgskulen på Vestlandet (HVL) |
 | **Status** | Complete for the S6 build, 2026-11-05; updated 2026-11-28 for the choices of a Branching Scenario (O4, O7, R42, R43 and question 9; D-154). Nothing here has run against HVL's real Canvas, Feide or servers yet; values marked *(verify)* need HVL's facts. This is engineering input, not a legal conclusion: every "legal basis", "accept" or "option" below is for the DPO to decide. |
 | **Sources** | [DATA-INVENTORY.md](DATA-INVENTORY.md) (every stored field, its purpose, category, retention and location), [spec 05](../specs/05-analytics-privacy.md) §1–§5, spec 02 (login and Canvas), [`docs/DECISIONS.md`](../DECISIONS.md), the runbooks in [`docs/ops/`](../ops/README.md), [`docs/reference/canvas-lti13-developer-key.json`](../reference/canvas-lti13-developer-key.json) and [`canvas-platform-values.md`](../reference/canvas-platform-values.md) |
+| **Short way in** | [dpo-first-meeting.md](dpo-first-meeting.md), a brief for the DPO's first meeting: what the service does with personal data, the residuals of §12 by theme, and what a first meeting should decide. This file is the authority |
 | **Keep it true** | Update this file, and the inventory, **before** any of these changes: the Canvas developer key's `privacy_level`, scopes, placements or custom fields (§6); a new stored field; a new recipient or host the server or the learner's browser talks to; a new purpose (for example research, [research-export.md](research-export.md)) |
 
 ## 1. The service in brief
