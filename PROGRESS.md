@@ -16,7 +16,7 @@ what is done, what is verified, and what is blocked.
 | S4+ | Whole-code-base simplification pass (owner decision, 2026-10-24) | — | ✅ Done (2026-10-25): 59 changes, 569 lines shorter, every test kept, S4 gate green again; a second round is the owner's call |
 | S5 | Læringsdesign studio, patterns, planner, pedagogisk mappe export | 04; 00 S5 rows | ✅ Gate passed (2026-10-30); the ALU and pilot review (Q17), the bank consent text and the manual PDF check open; the Canvas side in S6 |
 | S6 | xAPI → AGS grade bridge, insight, privacy jobs, Docker, conformance report | 02 §4–§8; 05; 00 §3 (journeys J1–J5), §6; 01 `H5P-009`, `H5P-010`, `SEC-004`, `SEC-006`; 03 `UD-003`, §6 (`UD-040`); 04 `MAPPE-003`, `MAPPE-004` (D-101) | ✅ Done (gate passed 2026-11-06; started 2026-10-30; D-101…D-116) |
-| SR | Security repairs after the S6 gate: 36 steps, each with tests, a gate run and a decision entry | The spec a step names | ✅ Done (2026-11-20 to 2026-11-27; D-117…D-152; session log, steps 1–36); open: HVL IT's and the owner's questions Q32, Q33 and Q34, with the earlier ones |
+| SR | Security repairs after the S6 gate: 37 steps, each with tests, a gate run and a decision entry | The spec a step names | ✅ Done (2026-11-20 to 2026-11-28; D-117…D-153; session log, steps 1–37); open: HVL IT's and the owner's questions Q32, Q33 and Q34, with the earlier ones |
 
 Legend: ⬜ not started · 🟨 in progress · ✅ done (gate passed, output pasted below) · ⛔ blocked
 

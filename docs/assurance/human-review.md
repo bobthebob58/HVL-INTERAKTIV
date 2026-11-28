@@ -184,7 +184,7 @@ deployment ID nor the platform's active flag, so our code does (D-050, D-051), a
 
 **Paths:** `security/` (`SvgSanitizer.ts`, `svg/`, `FileTypeSniffer.ts`, `sniff/`, `zipEntryGuard.ts`,
 `ContentFileHeaders.ts`, `malware/`), `http/multipartUpload.ts`, `http/filesOriginRouter.ts`,
-`http/routes/signedFileRoutes.ts`, `http/routes/fileRoutes.ts`, `h5p/HvlUrlGenerator.ts`, `h5p/contentFileGrants.ts`,
+`http/routes/signedFileRoutes.ts`, `http/routes/signedUploadRoutes.ts`, `h5p/HvlUrlGenerator.ts`, `h5p/contentFileGrants.ts`,
 `h5p/libraries/packageLibraryCheck.ts`, `config/filesOrigin.ts`.
 
 **Why:** CVE-2025-7062 (stored XSS through uploads) is unpatched in Lumi 10.0.4, so this code is the defence (D-003).
@@ -195,9 +195,9 @@ deployment ID nor the platform's active flag, so our code does (D-050, D-051), a
 - [ ] A file whose bytes do not match its extension is refused (`SEC-002`).
 - [ ] Zip-slip, absolute paths, links, duplicate names and size bombs are refused before extraction (`SEC-005`).
 - [ ] An author's package cannot install or change library code (`SEC-003`).
-- [ ] The files host serves only `GET` and `HEAD` of signed player grants (and the CORS preflight for them), reads
-      no cookie, session, ltik or `Authorization` header, and answers 404 to everything else (`SEC-004`;
-      `http/filesOriginRouter.ts`).
+- [ ] The files host serves only `GET` and `HEAD` with a signed grant of the path's own kind (player, editor, upload;
+      and the CORS preflight), reads no cookie, session, ltik or `Authorization` header, and answers 404 to everything
+      else; the app host answers 404 on those paths (`SEC-004`; `http/filesOriginRouter.ts`, `http/createH5pRouter.ts`).
 - [ ] Every user file has `nosniff` and the `sandbox` policy, and everything but raster images, audio, video and
       captions is an attachment (`security/ContentFileHeaders.ts`).
 - [ ] A grant is an HMAC compared in constant time (`h5p/contentFileGrants.ts:112`), issued only after a View or Edit
@@ -205,13 +205,13 @@ deployment ID nor the platform's active flag, so our code does (D-050, D-051), a
 - [ ] The scanner refuses the upload when clamd gives no verdict, fails or times out (`SEC-006`), and refuses every
       upload while its settings probe has not proven `AlertEncrypted` and `AlertExceedsMax`
       (`security/malware/ClamdSettingsProbe.ts`; `npm run clamd:check`; D-110's amendment of 2026-11-06).
-- [ ] Judge the open items: the editor's files on the app origin (`SPEC-DEVIATION: D-110`) and the cookie-authenticated
-      routes in `http/routes/fileRoutes.ts` (D-110; `PROGRESS.md`, S6 step 6, «Still open»).
+- [ ] Judge the open item: `files.<host>` is the same site as the app (D-110). Since D-153 the app origin serves no
+      uploaded file, and the two cookie routes for files are gone.
 - [ ] Try it: polyglots, SVGs with script in every encoding, HTML named as an image, paths with NUL bytes.
 
 **Tests that claim it:** `test/security/` (among them `SvgSanitizer.bypass.test.ts` and
 `FileTypeSniffer.bypass.test.ts`), `test/http/filesOrigin.int.test.ts`, `signedFiles.int.test.ts`,
-`contentFiles.int.test.ts`, `editorUpload.int.test.ts`, `packageImport.int.test.ts`, `malwareScan.int.test.ts`,
+`contentFiles.int.test.ts`, `editorFiles.int.test.ts`, `editorUpload.int.test.ts`, `packageImport.int.test.ts`, `malwareScan.int.test.ts`,
 `test/security/malware/` (among them `FailClosedMalwareScanner.settings.test.ts` and `realClamdSettings.test.ts`).
 
 #### A3. The grade worker (about 2,500 lines; estimate 3.5 days)
@@ -401,7 +401,7 @@ HVL's bachelor students in programming are asked to review this code in spring 2
 tools, but it is a one-term student project and does not replace IT's security review or the DPO's review.
 
 **Known open items** that reviewers should judge rather than report as new (each is recorded): CVE-2025-7062 in Lumi
-10.0.4 (D-003); the editor's files on the app origin and the cookie routes (D-110); scores computed in the browser
+10.0.4 (D-003); the files host on the same site as the app (D-110); scores computed in the browser
 (limitation 1 in `docs/EVALUATOR-GUIDE.md` §6); tokens in some URLs, so the proxy must not log query strings (limitation 9); only a
 backstop ceiling on login and launch in the app (ROS-07); the residuals R1–R41 in `docs/privacy/DPIA-INPUT.md` §12.
 

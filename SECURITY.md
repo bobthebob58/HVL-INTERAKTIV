@@ -53,7 +53,7 @@ public.
 
 **Known and mitigated:** CVE-2025-7062 (stored XSS through uploaded files) is not fixed in any release of
 `@lumieducation/h5p-server`, including 10.0.4, which HVL Interaktiv uses. HVL Interaktiv sanitises every SVG on both
-upload paths, checks file contents against their type, and serves the player's user files from a separate origin with
-`Content-Security-Policy: sandbox` and `X-Content-Type-Options: nosniff`; the editor's files stay on the app origin
-under grants of their own (decisions D-003 and D-110, requirements `SEC-001` and `SEC-004`). A report that names the
+upload paths, checks file contents against their type, and serves every uploaded file from a separate origin with
+`Content-Security-Policy: sandbox` and `X-Content-Type-Options: nosniff`, in the player and the editor alike, and
+never from the app origin (decisions D-003, D-110 and D-153, requirements `SEC-001` and `SEC-004`). A report that names the
 CVE alone is known; a way around these measures is very welcome.

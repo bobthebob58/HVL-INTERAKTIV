@@ -27,8 +27,8 @@ mode. These eight points needed a cast or a workaround on our side; items 1–6 
    `apps/server/src/http/h5pErrorResponse.ts`; test `h5pErrorResponse.test.ts`).
 2. **Range callback type.** `H5PAjaxEndpoint.getTemporaryFile`'s `getRangeCallback` is typed to return
    `{ end, start }`, but the code also handles `undefined` (the whole file). *Expected:* the return type includes
-   `undefined`. *Actual:* a host that returns `undefined` for "no range" needs a cast
-   (`apps/server/src/http/routes/fileRoutes.ts`).
+   `undefined`. *Actual:* a host that returns `undefined` for "no range" needs a cast (our code needed one until
+   D-153 removed its cookie route for fresh uploads; it no longer calls this method).
 3. **A miss in `IContentUserDataStorage.getContentUserData`.** The interface returns `Promise<IContentUserData>`,
    but `FileContentUserDataStorage` returns `null` for a miss and `ContentUserDataManager` passes it on.
    *Expected:* `Promise<IContentUserData | null>`. *Actual:* an implementation must cast `null`

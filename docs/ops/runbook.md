@@ -219,7 +219,7 @@ be matched. Watch the API's p95 (`NFR-001`: ≤ 300 ms) and the rate of 5xx answ
 on `retention purge` lines that are not `done`, and on the start-up warning `pseudonym secrets of purged academic
 years are still configured`. A `fatal` line means the process has ended with exit code 1 (a fault nothing handled,
 or a start that failed); the fault itself is in that line, cleaned like every other, and nothing is printed
-outside the log (D-133). In production the start-up warning `not in production mode` must never appear.
+outside the log (D-133). In production the start-up warning `not in production mode` must never appear, nor, behind a proxy, `TRUST_PROXY is 0` (D-153).
 The start line `memory limits` gives the container's limit and what the server may use, in MiB; alert on the two
 warnings that can follow it (`the container has no memory limit`, `the memory limit is below what the server may
 use`). A container that restarts by itself has ended its process: look for the `fatal` line before the restart, or,
@@ -318,10 +318,10 @@ Tick every line before the first learner, and again after a change of hosting:
       without public access; the temporary bucket has a 1-day lifecycle rule.
 - [ ] No AWS config file is mounted, and `AWS_ENDPOINT_URL_S3` and `AWS_ENDPOINT_URL` are unset.
 - [ ] The reverse proxy: TLS for both names; its access log leaves out the query string (a few routes accept
-      `?ltik=`, which the server keeps out of its own log but cannot remove from the proxy's, `NFR-006`); it passes
+      `?ltik=`, which the server keeps out of its own log but cannot remove from the proxy's, `NFR-006`) and masks the grant in a file address, the path segment after `/h5p/files/`, `/h5p/editor-files/` and `/h5p/uploads/` (for 12 to 13 hours it opens those files; D-058, D-153); it passes
       its request ID as `X-Request-Id` (a UUID or 32 hexadecimal digits); `TRUST_PROXY` is the number of proxies in
-      front (usually 1), and the LTI and Feide login ceilings count by the client address it gives (D-141, D-150); it
-      compresses scripts and stylesheets (gzip or brotli).
+      front (usually 1), and the LTI and Feide login ceilings count by the client address it gives (D-141, D-150), and the
+      start line `reverse proxies trusted` shows it, with a warning when production has 0 (D-153); it compresses scripts and stylesheets (gzip or brotli).
 - [ ] The reverse proxy answers a request whose headers are too large with a page that tells the person to clear
       the site's cookies: cookies that other `hvl.no` sites set for the whole domain can cause it (threat model
       T-43).
@@ -330,7 +330,7 @@ Tick every line before the first learner, and again after a change of hosting:
 - [ ] The files origin (`SEC-004`): a DNS name and a TLS certificate for `files.<host>` (or `FILES_BASE_URL`, a
       separate registrable domain if HVL prefers, Q5); the proxy sends both host names to the same server and passes
       `Host` on, and behind `TRUST_PROXY` it sets `X-Forwarded-Host` itself rather than forwarding the client's;
-      people open the app at exactly `PUBLIC_BASE_URL`, the one origin the files origin allows (CORS).
+      people open the app at exactly `PUBLIC_BASE_URL`, the one origin the files origin allows (CORS). Every uploaded file, in the player and the editor alike, comes from the files origin (D-153).
 - [ ] ClamAV: `CLAMAV_HOST` is set, `CLAMAV_TLS=true` unless clamd is on the loopback (its TLS proxy presents the
       certificate for `CLAMAV_HOST` without SNI), no `CLAMSCAN_*` or `CLAMDSCAN_*` variable is set; clamd has
       `AlertExceedsMax yes` and `AlertEncrypted yes` (required: without them clamd answers "clean" for files it did

@@ -6912,3 +6912,106 @@ loading of one spec per session are kept.
   Evaluator Guide, the hand-off index, the meeting brief, the phase file and ALU's packet keep their line counts;
   spec 00 and the web app's README grew, and no reference points into either. The status overview counts 36
   steps.
+
+### D-153 · Step 37: every uploaded file comes from the files origin; the picture tool works; two start-up items (SEC-004, H5P-001, NFR-002, NFR-006)
+- **Context:** `SEC-004` asks that files users upload come from a separate origin, so a script in a crafted file
+  can reach neither the app's origin nor its cookies or the ltik. Since S6 that held for the player (D-110's
+  amendment of 2026-11-05). Two exceptions stood as `SPEC-DEVIATION: D-110`: the editor's saved files and fresh
+  uploads came from the app origin (`/h5p/editor-files/…`, `/h5p/uploads/…`), because H5P's picture tool was
+  expected to fail on a picture from another origin; and two routes on the app origin served an activity's
+  files and fresh uploads to a session cookie (`GET /h5p/content/<id>/<file>`, `GET /h5p/temp-files/<file>`),
+  kept as H5P's fallback. Before anything was planned, a browser test pressed «Rediger bilete», turned a
+  picture and saved it in the real editor, in four set-ups: as the code was, the tool did not open at all
+  (`Cropper is not defined`); with the tool's script added, it worked; with the pictures from the files origin
+  and H5P's `crossorigin` setting, it worked; with the pictures from the files origin and without that setting,
+  the browser refused the export («Tainted canvases may not be exported»), as D-110 had expected.
+- **Decision — the picture tool's script (`H5P-001`, `H5P-009`).** H5P's editor does not load the tool's script
+  (`libs/cropper.js`) with the page. `h5peditor-image-popup.js` fetches it when the tool is first opened, with
+  jQuery's `dataType: 'script'`, and jQuery runs a same-origin script by adding a `<script>` element with its
+  text: an inline script. No H5P page of ours allows inline script (D-070), so the browser refused it, jQuery
+  reported success all the same, and the tool threw at `new Cropper(`. «Rediger bilete» has therefore done
+  nothing since the editor got its page policy, wherever the picture came from. The policy is not relaxed.
+  `EDITOR_ON_DEMAND_SCRIPTS` (`apps/server/src/h5p/h5pAssets.ts`) puts the file among the editor frame's own
+  script files, which `script-src 'self'` allows; the tool's own attempt is still refused at its first opening,
+  with no effect, because `Cropper` is then defined. A test fails when the pinned editor stops loading the file
+  that way. No test had pressed the button, so nothing had shown the fault. A report for H5P's editor is drafted
+  (`docs/upstream/h5p-editor-cropper-loader.md`). The first reading of the fault, that the server library's file
+  list lacked the script, was wrong: that list follows H5P's own, and the second reader of the change found the
+  loader.
+- **Decision — the editor's files come from the files origin (`SEC-004`, `H5P-007`).** The editor page now
+  points H5P at `<files origin>/h5p/editor-files/<grant>/<contentId>` for saved files and at
+  `<files origin>/h5p/uploads/<grant>/<owner>` for fresh uploads (`h5p/render/editorIntegration.ts`), in the
+  portal and in Canvas (`/lti/edit`) alike. The files origin's router serves three paths, each to its own kind
+  of grant (the player's, the editor's, an account's uploads; `http/filesOriginRouter.ts`): the grants are
+  signed with different purpose keys, so one kind opens nothing on another's path. On the app origin nothing
+  reads a file on those three paths: they answer 404 whatever the grant, and a request that carries an ltik is
+  refused before it reaches them, as on every address that is not on its list (D-130; `http/createH5pRouter.ts`). The editor's settings carry
+  `crossorigin: 'anonymous'`, as the player's have since S6: H5P then loads each uploaded file in CORS mode
+  without credentials, and the files origin already answered every request with
+  `Access-Control-Allow-Origin: <app origin>` and never `-Credentials`. That is what lets the picture tool draw
+  a picture into its canvas and export it. The editor page's policy names the files origin in `img-src` and
+  `media-src` and nowhere else (`http/h5pPageCsp.ts`): nothing from it runs as script, is framed, or is fetched
+  by script (`connect-src 'self'` stands).
+- **SECURITY — what CORS gives here.** A script on the app origin may read the bytes of a file whose signed
+  address it holds. It could before, when the editor's files were same-origin. No other origin may, and no
+  cookie, session or ltik is ever sent to the files origin or read there. A grant is still bound to one activity
+  (or one account's uploads), to one purpose, and to its 12 to 13 hours.
+- **Decision — the two cookie routes are removed.** A browser test opens the editor of each of the ten content
+  types on its example, then copies the Image Hotspots example with H5P's own copy button and pastes it over a
+  draft and into a new activity (`e2e/editorFilesOrigin.e2e.test.ts`). Every request for an uploaded file went
+  to the files origin; none went to the app origin. H5P asks `<url>/content/<id>/…` only when a page names no
+  `contentUrl` for an activity, and both our pages name one; a pasted piece's files are asked for under the
+  page's signed addresses, never under those routes. So `http/routes/fileRoutes.ts` is deleted: both paths
+  answer as any path that is no route, to the file's owner too. Tests that read a stored upload back use its
+  owner's signed address.
+- **Known limit — a pasted picture shows after «Lagre».** A piece copied in one activity and pasted into another
+  (or into a new one) carries the first activity's file names. H5P asks for them under the pasting page's own
+  signed address, and a grant opens one activity's files (or one account's uploads) only, so the files origin
+  refuses and the editor shows the picture's alternative text. Saving copies the files into the activity
+  (D-092), and from then on the picture shows. It was so before this step, with the same refusal on the app
+  origin; the browser test of the paste ran on both. Showing it earlier would need a grant that speaks for a
+  person and a View check on the files origin, which reads no session by design. Not built.
+- **Decision — the start says how many proxies it trusts (`NFR-006`).** Production runs behind a reverse proxy
+  (threat model, assumption A1). With `TRUST_PROXY` left at 0 the app then takes the proxy's address for every
+  visitor's, so the request ceilings per address on the Feide login and the LTI login and launch count everyone
+  as one. Every start now writes the setting in one line, and a production start with 0 writes one warning
+  (`server/proxyTrustWarning.ts`). The start is not refused: a server with no proxy in front is a valid set-up,
+  and the app cannot see which it is. The local stack runs in development mode, so its smoke test cannot show
+  the warning; the test of the real start reads the line with the setting.
+- **Decision — the standstill watch reads its own clock (`NFR-002`, D-144).** The watch used Node's
+  `monitorEventLoopDelay`, which records a standstill when its own timer next runs. When the event loop ran
+  again and the watch's check ran before that timer, the check read a measurement without the standstill, and
+  the line came one check (10 s) late; one run of the image's smoke test on GitHub failed on that. The watch now
+  reads the clock at a beat of 20 ms and at every check; what a reading shows beyond one beat is time the loop
+  did not run, and each reading starts the next measurement. The first check after a standstill reports it,
+  once, whichever timer runs first. A standstill is measured up to 20 ms short, as before.
+- **Residual:** the files origin is a sub-host of the app's host by default (`files.<host>`), so the two are the
+  same site; a separate registrable domain isolates more and is HVL IT's choice (D-110, the runbook). The app
+  origin still sends an activity's `.h5p` export (`GET /h5p/download/<id>`): a zip, sent as a download with
+  `nosniff` to a signed-in person who may see the activity; it holds the files and shows none. The files origin
+  is chosen by host name, and behind a trusted proxy by its `X-Forwarded-Host`, so the proxy must set that header
+  itself (the runbook; the start-up warning now says so). A grant stands in the path of a file address, so the
+  proxy's access log should mask that segment; the runbook's checklist asks for it. The
+  upload defences stand unchanged (sniffing, the SVG sanitiser, `nosniff`, the sandbox policy, the malware
+  scan). H5P's `crossorigin` setting applies to files with a relative path only, so outside media (Panopto)
+  load as before. At its first opening the picture tool still asks for its script as inline script, and the
+  browser writes one refusal to the console; the browser test of the tool names it and allows nothing else.
+- **Verified:** tests that failed first. `test/h5p/H5pFactories.test.ts`: the editor frame's scripts hold
+  `libs/cropper.js`, and the pinned tool still loads it the refused way. `e2e/editorImageTool.e2e.test.ts`: «Rediger bilete» opens, turns, crops and saves a saved
+  picture with real presses, with no page error; the saved picture and the edited upload both came from the
+  files origin and nothing from the app's own. `test/h5p/render/editorIntegration.test.ts` and
+  `test/http/h5pPageCspFiles.test.ts`: the addresses, the setting and the policy. `test/http/editorFiles.int.test.ts`
+  on the whole app: each kind of grant opens its file on the files origin with the user-file headers, CORS for
+  the app and no cookie; the same addresses are 404 on the app origin; a grant opens no other activity's or
+  account's file, expires, and opens nothing on another kind's path; the Canvas editor page points at the files
+  origin. `test/http/contentFiles.int.test.ts`: the two cookie routes answer 404 to the owner (200 before).
+  `test/server/eventLoopWatch.test.ts`: a check straight after a standstill reports it (0 before), and the next
+  one does not. `test/server/proxyTrustWarning.test.ts` and the start test in `main.smoke.test.ts`. The Docker
+  smoke test asks for the player's file, the editor's file and a fresh upload on the files origin and gets 404
+  for each on the app origin. Two reads of the change by other readers, one of them on the security rules
+  alone; step 37 in `PROGRESS.md` has what they found and the gate's output.
+- **Consequences:** `SEC-004` holds for every uploaded file; its amendment in spec 01 says so, and the
+  `SPEC-DEVIATION: D-110` marks for the two exceptions are gone from the code. The threat model, the ROS
+  analysis, the architecture paper, the review guide, the hand-off index, the runbook, the server's README and
+  the Evaluator Guide (limitation 10, the end-to-end row) follow. No change of database or contract and no new
+  stored data, so the data inventory and the DPIA input stand. The status overview counts 37 steps.

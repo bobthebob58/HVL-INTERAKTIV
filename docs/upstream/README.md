@@ -43,7 +43,6 @@ owner's check** means a decision or a fact only the owner can settle comes first
 | [lumi-alter-language-file.md](lumi-alter-language-file.md) | `alterLibraryLanguageFile` drops `libraryStrings` and every other key (D-111) | Ready |
 | [lumi-core128-new-hub.md](lumi-core128-new-hub.md) | A 10.0.x backport of `master`'s three Core 1.28 and new-Hub fixes (spec 01 §1, F1–F3) | Needs the owner's check: only if the release request is declined or not answered in about four weeks |
 | [lumi-small-api-issues.md](lumi-small-api-issues.md) | Eight small API, typing and save-order gaps our `UPSTREAM:` tags work around | Needs the owner's check: whether to file, and as one issue or several |
-| [lumi-editor-cropper-script.md](lumi-editor-cropper-script.md) | The editor's asset list has `libs/cropper.css` and not `libs/cropper.js`, so «Edit image» throws `Cropper is not defined` (D-153) | Needs the owner's check: `master` not read; do not file if it already lists the file |
 
 ### H5P (one GitHub repository per library)
 
@@ -76,6 +75,7 @@ the content as an exported `.h5p` file.
 | [interactive-video.md](h5p-accessibility/interactive-video.md) | H5P.InteractiveVideo 1.28.37 | End screen: a scored question's summary always English, a misnamed key (3.1.2) | Ready |
 | [h5p-questionset-retry-several-sets.md](h5p-questionset-retry-several-sets.md) | H5P.QuestionSet 1.21.13 | Not a barrier: "Retry" throws when a page holds several sets (D-115, Q20) | Ready |
 | [h5p-single-choice-set-xapi-response.md](h5p-single-choice-set-xapi-response.md) | H5P.SingleChoiceSet 1.11.89 | Not a barrier: a question's xAPI `answered` gives the alternative's place on screen as the response and judges by it (D-151) | Ready |
+| [h5p-editor-cropper-loader.md](h5p-editor-cropper-loader.md) | H5P editor, `h5p-editor-php-library` ab2daa18 | Not a barrier: «Edit image» loads its script in a way that needs inline script, so a page policy without `'unsafe-inline'` gets `Cropper is not defined` (D-153) | Needs the owner's check: `master` not read |
 
 These cover every entry of D-080's register (`apps/server/a11y/support/upstreamRegister.ts`: its two findings and
 three English texts; InteractiveVideo's was found by D-111's review and added at step 7's integration), every run-time repair of `a11yRepairs.js` and `a11yEditorRepairs.js`, the theme's upstream

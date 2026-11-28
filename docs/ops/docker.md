@@ -167,8 +167,8 @@ throwaway secrets; checks `/healthz`, that every migration is applied, that `H5P
 were seeded, that `/hjelp` (nn), one of its scripts and `/h5p/core/js/h5p.js` are served from the image; that an
 upload is scanned and served from the files origin (`deploy/smoke/uploadProof.mjs` in the app container: the stack's
 clamd refuses the EICAR test file as `upload.file.malwareFound` and passes a clean PNG, which is saved in a draft
-activity; the player's URL for it answers 200 on `files.localhost:<port>` with a sandbox policy, `nosniff` and no
-cookie, and 404 on the app's own host; the upload goes through the route's sanitisers and Lumi's `files` action, not
+activity; the player's and the editor's URL for it and the URL of a fresh upload each answer 200 on `files.localhost:<port>` with a sandbox policy, `nosniff` and no
+cookie, and 404 on the app's own host (D-153); the upload goes through the route's sanitisers and Lumi's `files` action, not
 the HTTP route, because the stack has no Feide or LTI login); and that the mappe sample prints **inside the app container with the sandbox on** (`pdftotext` finds `æ ø å Æ Ø Å`, `pdffonts`
 shows every font embedded, `pdfinfo` says `Tagged: yes` and A4); reads the sandbox from `/proc` while a page renders
 (`deploy/smoke/sandboxProof.mjs`: every renderer in a PID namespace of its own and under Chromium's own seccomp filter,
