@@ -11,8 +11,7 @@ import { MAX_FILE_SIZE } from '../../src/h5p/H5pConfigFactory.js';
 import { t } from '../../src/i18n/translate.js';
 import { openHttpTestbed, type HttpTestbed, type TestActor } from '../support/httpTestbed.js';
 import { describeWithServices } from '../support/services.js';
-import { PNG_1X1, rawBody, uploadEditorFile } from '../support/uploadFixtures.js';
-import { requestAs } from '../support/requestAs.js';
+import { PNG_1X1, readUpload, uploadEditorFile } from '../support/uploadFixtures.js';
 
 const EVIL_SVG =
   '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" onload="alert(1)"><script>alert(2)</script>' +
@@ -34,9 +33,7 @@ describeWithServices('H5P editor uploads', () => {
     // Assert: accepted, and served back sandboxed and without active content
     expect(res.status, JSON.stringify(res.body)).toBe(200);
     const { path } = res.body as { path: string };
-    const file = await requestAs(tb.app, author, 'get', `/h5p/temp-files/${path.replace(/#tmp$/, '')}`)
-      .buffer(true)
-      .parse(rawBody);
+    const file = await readUpload(tb, author, path);
     expect(file.status).toBe(200);
     expect(file.headers['content-security-policy']).toMatch(/^sandbox/);
     const stored = (file.body as Buffer).toString('utf8');
@@ -85,7 +82,7 @@ describeWithServices('H5P editor uploads', () => {
     expect(res.status, JSON.stringify(res.body)).toBe(200);
     const { path, mime } = res.body as { path: string; mime: string };
     expect(mime).toBe('image/png');
-    const file = await requestAs(tb.app, author, 'get', `/h5p/temp-files/${path.replace(/#tmp$/, '')}`);
+    const file = await readUpload(tb, author, path);
     expect(file.headers['content-type']).toBe('image/png');
     expect(file.headers['content-disposition'] ?? 'inline').toMatch(/^inline/);
   });
@@ -95,9 +92,9 @@ describeWithServices('H5P editor uploads', () => {
     expect((await uploadEditorFile(tb.app, learner, 'a.png', PNG_1X1)).status).toBe(403);
     const { path } = (await uploadEditorFile(tb.app, author, 'b.png', PNG_1X1)).body as { path: string };
     const colleague = await tb.actor('author');
-    const other = await requestAs(tb.app, colleague, 'get', `/h5p/temp-files/${path.replace(/#tmp$/, '')}`);
-    expect(other.status).toBeGreaterThanOrEqual(400);
-    expect(other.status).toBeLessThan(500);
+    // WHY: a grant names its account, and the storage reads under that account only (signedUploads.int.test.ts).
+    expect((await readUpload(tb, colleague, path)).status).toBe(404);
+    expect((await readUpload(tb, author, path)).status).toBe(200);
   });
 
   it('[SEC-005] no upload folder is left behind, whether the upload is accepted or refused', async () => {

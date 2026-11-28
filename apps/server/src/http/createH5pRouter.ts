@@ -6,13 +6,15 @@
  *      then the `authenticate` middleware S3 provides, then the editor, learner-state, content and player routes,
  *      and last the error handler that translates every failure and never leaks a message. No file an author
  *      uploaded is served here: the files origin serves the player's files, the editor's and fresh uploads, each
- *      behind a signed grant (./filesOriginRouter.ts, D-058, D-069, D-110 amendment of 2026-11-05, D-153).
+ *      behind a signed grant (./filesOriginRouter.ts, D-058, D-069, D-110 amendment of 2026-11-05, D-153), and
+ *      the two routes that once served files to a session cookie (`/content/<id>/<file>`, `/temp-files/<file>`)
+ *      are gone: no page of ours pointed H5P at them.
  * Spec: H5P-004, H5P-006, H5P-007, SEC-004
  * Invariants:
  *   - Only `/core`, `/editor`, `/libraries`, `/boot` and `/theme` answer without an actor; everything else needs
  *     `authenticate`.
  *   - `/files/…`, `/editor-files/…` and `/uploads/…`, the paths of the grant-checked files, are 404 here whatever the
- *     grant: the app origin never serves a file an author uploaded.
+ *     grant: the app origin never serves a file an author uploaded, neither to a grant nor to a signed-in person.
  *   - The files host's router answers only requests for the host of `FILES_BASE_URL` (./filesOriginRouter.ts).
  *   - The error handler is the last middleware; no route sends its own error body.
  *   - A path under the router that matches no route gets the translated 404 answer, never Express's page.
@@ -20,7 +22,7 @@
  *   ./filesOriginRouter.ts (the grant-checked files, `GRANTED_FILE_PATHS`), ../config/filesOrigin.ts,
  *   ../server/createApp.ts (mounts both).
  * Tests: apps/server/test/http/router.int.test.ts, apps/server/test/http/editorFiles.int.test.ts,
- *   apps/server/test/http/filesOrigin.int.test.ts
+ *   apps/server/test/http/filesOrigin.int.test.ts, apps/server/test/http/contentFiles.int.test.ts
  */
 import { Router, type RequestHandler } from 'express';
 import { filesOriginOf, type FilesOriginSettings } from '../config/filesOrigin.js';
@@ -37,7 +39,6 @@ import type { Authenticate } from './h5pLocals.js';
 import type { H5pRouteDeps } from './h5pRouteDeps.js';
 import { ajaxRoutes } from './routes/ajaxRoutes.js';
 import { contentRoutes } from './routes/contentRoutes.js';
-import { fileRoutes } from './routes/fileRoutes.js';
 import { playerRoutes } from './routes/playerRoutes.js';
 import { editorRoutes } from './routes/editorRoutes.js';
 import { staticRoutes } from './routes/staticRoutes.js';
@@ -63,7 +64,6 @@ export function createH5pRouter(deps: H5pRouteDeps, authenticate: Authenticate):
   // SECURITY: everything below answers a signed-in person: never cached, never embedded by another site (D-131).
   router.use(ownAnswerHeaders);
   router.use(ajaxRoutes(deps));
-  router.use(fileRoutes(deps));
   router.use(userDataRoutes(deps));
   router.use(contentRoutes(deps));
   router.use(playerRoutes(deps));

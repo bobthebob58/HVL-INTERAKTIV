@@ -14,7 +14,7 @@ import { buildH5pPackage, removeBuiltPackages } from '../support/h5pPackageBuild
 import { openHttpTestbed, type HttpTestbed, type TestActor } from '../support/httpTestbed.js';
 import { describeWithServices } from '../support/services.js';
 import { MULTI_CHOICE, NOT_AUTHORABLE } from '../support/tenTypeLibraries.js';
-import { rawBody } from '../support/uploadFixtures.js';
+import { readUpload } from '../support/uploadFixtures.js';
 import { requestAs } from '../support/requestAs.js';
 
 const PARAMS = { question: 'Importert?', answers: ['Ja'] };
@@ -61,9 +61,7 @@ describeWithServices('H5P package import over HTTP', () => {
     const imported = JSON.stringify(res.body).match(/images\/[^"#]*\.svg/)?.[0];
     expect(imported).toBeDefined();
     // Act: read the stored SVG back.
-    const file = await requestAs(tb.app, author, 'get', `/h5p/temp-files/${imported}`)
-      .buffer(true)
-      .parse(rawBody);
+    const file = await readUpload(tb, author, imported ?? '');
     // Assert: the drawing stays; the script and the event handler are gone.
     expect(file.status).toBe(200);
     const stored = (file.body as Buffer).toString('utf8');
