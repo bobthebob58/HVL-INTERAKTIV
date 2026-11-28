@@ -20,7 +20,7 @@ describe('[DATA-011] H5P page policy', () => {
     expect(csp.get('default-src')).toEqual(["'none'"]);
     expect(csp.get('script-src')).toEqual(["'self'"]);
     expect(policy).not.toMatch(/'sha(256|384|512)-|'nonce-|'unsafe-inline' *;? *script|'strict-dynamic'/);
-    for (const page of [{}, { playerFiles: true }]) {
+    for (const page of [{}, { player: true }]) {
       const scripts = directives(h5pPageCsp({ externalMediaOrigins: [] }, ["'self'"], page)).get(
         'script-src',
       );
@@ -83,7 +83,7 @@ describe('[DATA-011] H5P page policy', () => {
     const none = { externalMediaOrigins: [] as string[] };
     const panopto = { externalMediaOrigins: ['https://hvl.cloud.panopto.eu'] };
     const frames = (settings: typeof none, player: boolean) =>
-      directives(h5pPageCsp(settings, ["'self'"], { playerFiles: player })).get('frame-src');
+      directives(h5pPageCsp(settings, ["'self'"], { player })).get('frame-src');
     // Act and assert
     expect(frames(none, true)).toEqual(["'none'"]);
     expect(frames(panopto, true)).toEqual(['https://hvl.cloud.panopto.eu']);

@@ -1,15 +1,15 @@
 /**
- * signedFileRoutes — serves an activity's files to whoever holds a valid grant: the player's file URLs on the files
- * origin, and the editor's on the app origin.
+ * signedFileRoutes — serves an activity's files to whoever holds a valid grant: the player's file URLs and the
+ * editor's, both on the files origin, each on its own path.
  *
  * Why: H5P loads images, audio and video from `contentUrl + "/" + path`, from `<img>` and `<video>` tags that can
  *      carry neither the ltik (a header) nor the portal session in a Canvas iframe without third-party cookies.
  *      The player render, after its View check, signs `contentUrl` with a grant (D-058, ../../h5p/HvlUrlGenerator.ts),
  *      and so does the editor render after its Edit check (D-069, ../../h5p/render/editorIntegration.ts). This
  *      public route serves the files when the grant is valid, with the same headers as every user file (`SEC-004`,
- *      D-045). Each mount accepts one kind of grant: the player's on the files origin (../filesOriginRouter.ts), the
- *      editor's on the app origin (../createH5pRouter.ts), so a grant never opens a file on the other origin (D-110
- *      amendment of 2026-11-05).
+ *      D-045). Each mount accepts one kind of grant: the player's at `/files`, the editor's at `/editor-files`, both
+ *      on the files origin (../filesOriginRouter.ts), so a grant never opens a file on the other's path, and none
+ *      on the app origin (D-110 amendment of 2026-11-05, D-153).
  * Spec: H5P-007, SEC-004, H5P-004
  * Invariants:
  *   - The grant is verified, with the mount's own purpose key, before storage is read; any failure is 403
@@ -23,8 +23,8 @@
  *   - No identity is read or set here: no actor, session, ltik or cookie. Storage receives an anonymous user
  *     that no permission check accepts, so a check added there later fails closed.
  * Collaborators: ../../h5p/contentFileGrants.ts, ../sendUserFile.ts, ../routeParams.ts, ../authErrors.ts,
- *   ../HttpError.ts, ../../h5p/storage/s3Objects.ts (`assertSafeObjectName`), ../filesOriginRouter.ts and ../createH5pRouter.ts (mount it before any authentication), Lumi's ContentManager
- *   (`contentStorage`).
+ *   ../HttpError.ts, ../../h5p/storage/s3Objects.ts (`assertSafeObjectName`), ../filesOriginRouter.ts (mounts it,
+ *   where nothing authenticates), Lumi's ContentManager (`contentStorage`).
  * Tests: apps/server/test/http/signedFiles.int.test.ts, apps/server/test/http/filesOrigin.int.test.ts,
  *   apps/server/test/http/editorFiles.int.test.ts
  */

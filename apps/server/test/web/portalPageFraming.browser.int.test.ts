@@ -19,7 +19,7 @@ import { serveBuiltWebApp, WEB_APP_BUILT } from './webTestServer.js';
 const SETTINGS = { externalMediaOrigins: [] };
 /** A page of our own origin with an H5P page's policy, standing for the player or the editor document. */
 const h5pLikePage = (player: boolean) => (_req: express.Request, res: express.Response) => {
-  res.set('Content-Security-Policy', h5pPageCsp(SETTINGS, ["'self'"], { playerFiles: player }));
+  res.set('Content-Security-Policy', h5pPageCsp(SETTINGS, ["'self'"], { player }));
   res.type('html').send('<!doctype html><title>H5P</title><main>content</main>');
 };
 

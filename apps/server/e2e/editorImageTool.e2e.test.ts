@@ -2,8 +2,9 @@
  * End-to-end test of the editor's picture tool in Chromium (H5P-001, SEC-004, D-153): the signed-in Feide author
  * opens a saved Image Hotspots activity on **Rediger**, presses «Rediger bilete», turns the picture, crops it and
  * saves. The tool opens (its script is one the H5P server library leaves out of its list), draws the saved picture
- * into its canvas and exports it, and the edited picture is uploaded and shown. The whole server with the built
- * web app and the real content types (../test/support/realWebApp.ts); a failed step names itself
+ * into its canvas and exports it, and the edited picture is uploaded and shown. Both the saved picture and the fresh
+ * upload come from the files origin, and no request for an uploaded file goes to the app's own. The whole server
+ * with the built web app and the real content types (../test/support/realWebApp.ts); a failed step names itself
  * (../test/support/flowRecorder.ts).
  *
  * Spec: H5P-001, SEC-004
@@ -14,6 +15,7 @@ import { editorFrame } from '../a11y/support/pages.js';
 import { recordFlow } from '../test/support/flowRecorder.js';
 import { openRealWebApp, type RealWebApp } from '../test/support/realWebApp.js';
 import { describeWithRealWebApp } from '../test/support/realWebAppPrerequisites.js';
+import { distinctUserFileRequests, recordUserFileRequests } from './support/userFileRequests.js';
 
 /** The picture tool's own buttons, in the order H5P's cropper draws them: turn left, turn right, crop. */
 const TOOL_BUTTONS = '.cropper-image-button';
@@ -61,6 +63,7 @@ describeWithRealWebApp('[H5P-001] the picture tool of the editor', () => {
       ignoreConsole: (m) =>
         m.text().includes('inline script') && m.location().url.includes('/core/js/jquery.js'),
     });
+    const files = recordUserFileRequests(page);
     const errors: string[] = [];
     page.on('pageerror', (error) => errors.push(error.message.split('\n')[0] ?? ''));
     const uploaded = () =>
@@ -96,6 +99,12 @@ describeWithRealWebApp('[H5P-001] the picture tool of the editor', () => {
     expect(seen.status).toBe(200);
     expect(seen.file).toMatch(/^images\/.+#tmp$/);
     expect(seen.shown).toContain(seen.file.replace('#tmp', ''));
+    // Assert: the saved picture and the upload came from the files origin, and nothing from the app's own
+    expect(seen.shown.startsWith(`${app.filesBase}/h5p/uploads/`)).toBe(true);
+    expect(distinctUserFileRequests(files)).toEqual([
+      `${app.filesBase} editor-files 200`,
+      `${app.filesBase} uploads 200`,
+    ]);
     expect(flow.problems).toEqual([]);
     await context.close();
   }, 300_000);

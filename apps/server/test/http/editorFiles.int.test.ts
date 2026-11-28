@@ -1,8 +1,8 @@
 /**
- * Integration tests of the editor's files on the app origin (`/h5p/editor-files/<grant>/…`), which stay there for now
- * (SPEC-DEVIATION: D-110): an editor grant opens its own activity's files with `SEC-004`'s headers and no session,
- * and nothing else; the player's grants open nothing on the app origin; the Canvas editor page points at the app
- * origin and its policy never names the files origin (D-110 amendment of 2026-11-05).
+ * Integration tests of the editor's files on the whole app (`createApp`): an editor grant opens its own activity's
+ * saved files, and an upload grant its owner's fresh uploads, on the files origin only, with `SEC-004`'s headers and no
+ * session; each kind of grant opens nothing on another kind's path; the app origin answers 404 on all three paths;
+ * and the editor page in Canvas points H5P at the files origin, in CORS mode (D-153).
  *
  * Spec: SEC-004, H5P-007
  */
@@ -13,69 +13,105 @@ import { filesOriginOf } from '../../src/config/filesOrigin.js';
 import { GRANT_LIFETIME_SECONDS } from '../../src/h5p/contentFileGrants.js';
 import { USER_FILE_CSP } from '../../src/security/ContentFileHeaders.js';
 import { openAppTestbed, type AppTestbed } from '../support/appTestbed.js';
-import { onAppOrigin, signedPath, storeUserFiles, STORED } from '../support/filesOriginFixtures.js';
+import * as files from '../support/filesOriginFixtures.js';
 import { launchFromCanvas } from '../support/ltiLaunchDriver.js';
 import { integrationFromPage } from '../support/playerIntegration.js';
 import { describeWithServices } from '../support/services.js';
 import { PNG_1X1 } from '../support/uploadFixtures.js';
 
-describeWithServices('[SEC-004] the editor’s files on the app origin', () => {
+const { onAppOrigin, onFilesOrigin, signedPath, STORED, UPLOADED } = files;
+const [PLAYER, EDITOR, UPLOADS] = ['/h5p/files', '/h5p/editor-files', '/h5p/uploads'] as const;
+
+describeWithServices('[SEC-004] the editor’s files on the files origin', () => {
   let tb: AppTestbed;
+  let owner: string;
   let contentId: string;
   let otherId: string;
   beforeAll(async () => {
     tb = await openAppTestbed();
-    const owner = await tb.staffAccount();
+    owner = await tb.staffAccount();
     contentId = await tb.activity(owner);
     otherId = await tb.activity(owner);
-    await storeUserFiles(tb, contentId);
-    await storeUserFiles(tb, otherId);
+    await files.storeUserFiles(tb, contentId);
+    await files.storeUserFiles(tb, otherId);
+    await files.storeUpload(tb, owner);
   }, 60_000);
   afterAll(() => tb?.close());
 
-  const editorPath = (file: string, inPath = contentId, at = new Date()) =>
-    signedPath(tb.runtime.editorFileGrants, '/h5p/editor-files', contentId, file, inPath, at);
+  const saved = (file: string = STORED.image, inPath = contentId, at = new Date()) =>
+    signedPath(tb.runtime.editorFileGrants, EDITOR, contentId, file, inPath, at);
+  const upload = (inPath = owner, at = new Date()) =>
+    signedPath(tb.runtime.uploadGrants, UPLOADS, owner, UPLOADED, inPath, at);
 
-  it('[SEC-004] an editor grant opens its activity’s file with nosniff and the sandbox policy, without a session', async () => {
+  it('[SEC-004] an editor grant and an upload grant open their file on the files origin, with the user-file headers and no session', async () => {
     // Act
-    const image = await onAppOrigin(tb, editorPath(STORED.image));
-    const svg = await onAppOrigin(tb, editorPath(STORED.svg));
+    const answers = [
+      await onFilesOrigin(tb, saved()),
+      await onFilesOrigin(tb, upload()).set('Cookie', '__Host-hvli_sid=not-read-here'),
+      await onFilesOrigin(tb, saved(STORED.svg)),
+    ];
     // Assert
-    expect(image.status).toBe(200);
-    expect(Buffer.compare(image.body as Buffer, PNG_1X1)).toBe(0);
-    for (const res of [image, svg]) {
+    for (const res of answers) {
+      expect(res.status).toBe(200);
       expect(res.headers['x-content-type-options']).toBe('nosniff');
       expect(res.headers['content-security-policy']).toBe(USER_FILE_CSP);
+      // WHY: the picture tool reads a picture's pixels, which a browser allows only with this header (D-153).
+      expect(res.headers['access-control-allow-origin']).toBe(tb.toolUrl);
+      expect(res.headers['access-control-allow-credentials']).toBeUndefined();
+      expect(res.headers['cache-control']).toMatch(/^private, max-age=\d+$/);
       expect(res.headers['set-cookie']).toBeUndefined();
     }
-    expect(svg.headers['content-disposition']).toMatch(/^attachment/);
+    expect(Buffer.compare(answers[0]?.body as Buffer, PNG_1X1)).toBe(0);
+    expect(Buffer.compare(answers[1]?.body as Buffer, PNG_1X1)).toBe(0);
+    expect(answers[2]?.headers['content-disposition']).toMatch(/^attachment/);
   });
 
-  it('[SEC-004] an editor grant opens no other activity’s file and expires; a player’s grant opens nothing here', async () => {
+  it('[SEC-004] the app origin answers 404 on every path of a grant-checked file, whatever the grant', async () => {
+    // Arrange: the very URLs that open a file on the files origin, and the player's
+    const player = signedPath(tb.runtime.fileGrants, PLAYER, contentId, STORED.image);
+    // Act
+    const answers = await Promise.all([saved(), upload(), player].map((path) => onAppOrigin(tb, path)));
+    // Assert
+    for (const res of answers) {
+      expect(res.status).toBe(404);
+      expect(res.headers['content-type']).toMatch(/^application\/json/);
+    }
+  });
+
+  it('[SEC-004] a grant opens no other activity’s or account’s file, expires, and opens nothing on another kind’s path', async () => {
     // Arrange
     const expired = new Date(Date.now() - (GRANT_LIFETIME_SECONDS + 7200) * 1000);
-    const player = signedPath(tb.runtime.fileGrants, '/h5p/editor-files', contentId, STORED.image);
+    const { fileGrants, editorFileGrants, uploadGrants } = tb.runtime;
+    const refused = [
+      saved(STORED.image, otherId),
+      saved(STORED.image, contentId, expired),
+      upload(await tb.staffAccount()),
+      upload(owner, expired),
+      signedPath(fileGrants, EDITOR, contentId, STORED.image),
+      signedPath(uploadGrants, EDITOR, contentId, STORED.image),
+      signedPath(fileGrants, UPLOADS, owner, UPLOADED),
+      signedPath(editorFileGrants, UPLOADS, owner, UPLOADED),
+    ];
     // Act and assert
-    for (const path of [
-      editorPath(STORED.image, otherId),
-      editorPath(STORED.image, contentId, expired),
-      player,
-    ]) {
-      expect((await onAppOrigin(tb, path)).status, path).toBe(403);
+    for (const path of refused) {
+      const res = await onFilesOrigin(tb, path);
+      expect(res.status, path).toBe(403);
+      expect(res.headers['content-security-policy']).toBe(USER_FILE_CSP);
     }
-    expect((await onAppOrigin(tb, editorPath('images/missing.png'))).status).toBe(404);
+    expect((await onFilesOrigin(tb, saved('images/missing.png'))).status).toBe(404);
+    expect((await onFilesOrigin(tb, upload().replace(UPLOADED, 'images/missing.png'))).status).toBe(404);
   });
 
-  it('[SEC-004] the player’s path answers 404 on the app origin whatever the grant, also to a launched learner', async () => {
+  it('[SEC-004] a launched learner’s ltik opens no file path on the app origin either', async () => {
     // Arrange: a learner with a valid ltik for this very activity
     const published = await tb.activity(await tb.staffAccount(), { published: true });
-    await storeUserFiles(tb, published);
+    await files.storeUserFiles(tb, published);
     const { ltik } = await launchFromCanvas(tb.app, tb.mock.canvas, {
       user: CANVAS_USERS.student,
       custom: { contentId: published },
       resourceLinkId: `editor-files-${published}`,
     });
-    const path = signedPath(tb.runtime.fileGrants, '/h5p/files', published, STORED.image);
+    const path = signedPath(tb.runtime.fileGrants, PLAYER, published, STORED.image);
     // Act
     const anonymous = await onAppOrigin(tb, path);
     const launched = await onAppOrigin(tb, path).set('Authorization', `Bearer ${ltik ?? ''}`);
@@ -87,7 +123,7 @@ describeWithServices('[SEC-004] the editor’s files on the app origin', () => {
     }
   });
 
-  it('[SEC-004] the editor page in Canvas opens saved files on the app origin, and its policy never names the files origin', async () => {
+  it('[SEC-004] the editor page in Canvas points H5P at the files origin in CORS mode, and its policy names it only for media', async () => {
     // Arrange: a Canvas teacher who owns an activity with stored files
     const launch = async (id: string) =>
       (
@@ -100,25 +136,33 @@ describeWithServices('[SEC-004] the editor’s files on the app origin', () => {
     const first = await tb.activity(await tb.staffAccount(), { published: true });
     const { principal } = await tb.lti.resolveLtik(await launch(first));
     const owned = await tb.activity(principal.userId, { published: true });
-    await storeUserFiles(tb, owned);
-    const ltik = await launch(owned);
+    await files.storeUserFiles(tb, owned);
+    const origin = filesOriginOf(tb.env);
     // Act: the Canvas editor (/lti/edit); the portal's editor page is on no ltik's list (D-130), and
-    //      ./editorRoutes.int.test.ts covers its file addresses with a portal session
-    const pages = [await request(tb.app).get(`/lti/edit?ltik=${encodeURIComponent(ltik)}`)];
-    const portalPage = await request(tb.app).get(`/h5p/edit/${owned}`).set('Authorization', `Bearer ${ltik}`);
+    //      ../../e2e/editorImageTool.e2e.test.ts covers its file addresses with a portal session
+    const page = await request(tb.app).get(`/lti/edit?ltik=${encodeURIComponent(await launch(owned))}`);
+    const integration = integrationFromPage<{
+      contents: Record<string, { contentUrl: string }>;
+      editor: { filesPath: string };
+      crossorigin?: string;
+    }>(page.text);
+    const contentUrl = integration?.contents[`cid-${owned}`]?.contentUrl ?? '';
     // Assert
-    expect([portalPage.status, portalPage.body.errorCode]).toEqual([403, 'hvl:not-from-canvas']);
-    for (const page of pages) {
-      expect(page.status).toBe(200);
-      expect(String(page.headers['content-security-policy'])).not.toContain(filesOriginOf(tb.env));
-      const integration = integrationFromPage<{ contents: Record<string, { contentUrl: string }> }>(
-        page.text,
-      );
-      const contentUrl = integration?.contents[`cid-${owned}`]?.contentUrl ?? '';
-      expect(contentUrl).toMatch(new RegExp(`^/h5p/editor-files/[\\w-]+\\.\\d+\\.[\\w-]{43}/${owned}$`));
-      const file = await onAppOrigin(tb, `${contentUrl}/${STORED.image}`);
-      expect(file.status).toBe(200);
-      expect(Buffer.compare(file.body as Buffer, PNG_1X1)).toBe(0);
-    }
+    expect(page.status).toBe(200);
+    const naming = String(page.headers['content-security-policy'])
+      .split('; ')
+      .filter((directive) => directive.split(' ').includes(origin))
+      .map((directive) => directive.split(' ')[0]);
+    expect(naming).toEqual(['img-src', 'media-src']);
+    expect(integration?.crossorigin).toBe('anonymous');
+    const grant = '[\\w-]+\\.\\d+\\.[\\w-]{43}';
+    const escaped = origin.replace(/\./g, '\\.');
+    expect(contentUrl).toMatch(new RegExp(`^${escaped}/h5p/editor-files/${grant}/${owned}$`));
+    expect(integration?.editor.filesPath).toMatch(
+      new RegExp(`^${escaped}/h5p/uploads/${grant}/${principal.userId}$`),
+    );
+    const file = await onFilesOrigin(tb, `${contentUrl.slice(origin.length)}/${STORED.image}`);
+    expect(file.status).toBe(200);
+    expect(Buffer.compare(file.body as Buffer, PNG_1X1)).toBe(0);
   });
 });
